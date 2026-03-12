@@ -15,7 +15,7 @@ npm install -g vercel
 vercel --prod
 ```
 
-**Done! Your app is live at: `https://billmint.vercel.app`** 🎉
+**Done! Your app is live at: `https://bill-indol.vercel.app`** 🎉
 
 **Total time:** 5 minutes  
 **Total cost:** ₹0 forever

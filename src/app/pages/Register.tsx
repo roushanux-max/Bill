@@ -34,7 +34,7 @@ export default function Register() {
           if (stores && stores.length > 0) {
             localStorage.setItem('active_store_id', stores[0].id);
             localStorage.setItem('hasCompletedOnboarding', 'true');
-            navigate('/');
+            navigate('/dashboard');
           } else {
             navigate('/setup-shop');
           }

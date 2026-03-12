@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import HomeRoute from "./pages/HomeRoute";
 import BrandingSettings from "./pages/BrandingSettings";
 import InvoicePreview from "./pages/InvoicePreview";
@@ -9,11 +10,12 @@ import Invoices from "./pages/Invoices";
 import SetupShop from "./pages/SetupShop";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import LandingPage from "./pages/LandingPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: HomeRoute,
+    Component: LandingPage,
   },
   {
     path: "/login",
@@ -24,35 +26,45 @@ export const router = createBrowserRouter([
     Component: Register,
   },
   {
-    path: "/setup-shop",
-    Component: SetupShop,
-  },
-  {
-    path: "/branding",
-    Component: BrandingSettings,
-  },
-  {
-    path: "/invoice-preview",
-    Component: InvoicePreview,
-  },
-  {
-    path: "/create-invoice",
-    Component: CreateInvoice,
-  },
-  {
-    path: "/edit-invoice/:id",
-    Component: CreateInvoice,
-  },
-  {
-    path: "/invoices",
-    Component: Invoices,
-  },
-  {
-    path: "/customers",
-    Component: Customers,
-  },
-  {
-    path: "/products",
-    Component: Products,
-  },
+    path: "/",
+    element: <ProtectedRoute><Outlet /></ProtectedRoute>,
+    children: [
+      {
+        path: "/dashboard",
+        Component: HomeRoute,
+      },
+      {
+        path: "/setup-shop",
+        Component: SetupShop,
+      },
+      {
+        path: "/branding",
+        Component: BrandingSettings,
+      },
+      {
+        path: "/invoice-preview",
+        Component: InvoicePreview,
+      },
+      {
+        path: "/create-invoice",
+        Component: CreateInvoice,
+      },
+      {
+        path: "/edit-invoice/:id",
+        Component: CreateInvoice,
+      },
+      {
+        path: "/invoices",
+        Component: Invoices,
+      },
+      {
+        path: "/customers",
+        Component: Customers,
+      },
+      {
+        path: "/products",
+        Component: Products,
+      },
+    ]
+  }
 ]);

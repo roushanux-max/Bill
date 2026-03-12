@@ -89,7 +89,7 @@ npm run build
 vercel --prod
 
 # Follow prompts, done in 2 minutes!
-# Your PWA is live: https://billmint.vercel.app
+# Your PWA is live: https://bill-indol.vercel.app
 ```
 
 **Post-Deploy Verification:**
@@ -203,7 +203,7 @@ npm run deploy
 
 ### **First Visit:**
 ```
-User opens billmint.vercel.app
+User opens bill-indol.vercel.app
     ↓
 Browses app (30 seconds)
     ↓
@@ -321,13 +321,13 @@ Works offline, saves to home screen, feels like a native app!
 ✅ Free forever
 ✅ Install in 1 click
 
-Try it: billmint.vercel.app
+Try it: bill-indol.vercel.app
 ```
 
 **Email Signature:**
 ```
 BillMint - Free Invoice Generator
-Install our app: https://billmint.vercel.app
+Install our app: https://bill-indol.vercel.app
 📱 Available on all devices (no app store needed!)
 ```
 

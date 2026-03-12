@@ -53,7 +53,7 @@ export default function Header() {
 
     return (
         <nav style={navStyles}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }} className="group">
+            <Link to={user ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }} className="group">
                 <div style={{
                     width: 40, height: 40, borderRadius: 12,
                     background: 'white',
@@ -97,7 +97,7 @@ export default function Header() {
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
-                                <Link to="/" className="cursor-pointer w-full flex items-center">
+                                <Link to="/dashboard" className="cursor-pointer w-full flex items-center">
                                     Dashboard
                                 </Link>
                             </DropdownMenuItem>

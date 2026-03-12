@@ -30,7 +30,7 @@ vercel --prod
 # - Development Command: npm run dev
 # ? Want to modify these settings? [y/N] N
 
-# ✅ Done! Your site is live at: https://billmint.vercel.app
+# ✅ Done! Your site is live at: https://bill-indol.vercel.app
 ```
 
 ### **Option B: GitHub Integration (Best for updates)**

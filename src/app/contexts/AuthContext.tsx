@@ -136,6 +136,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear all user-specific local data to prevent data leaks between sessions
+    const keysToRemove = [
+      'billmint_store_info',
+      'billmint_branding_settings',
+      'billmint_customers',
+      'billmint_products',
+      'billmint_invoices',
+      'active_store_id',
+      'hasCompletedOnboarding',
+      'invoiceDraft'
+    ];
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
     await supabase.auth.signOut();
   };
 

@@ -28,10 +28,10 @@ export interface BrandingSettings {
 export const defaultBrandingSettings: BrandingSettings = {
   logo: null,
   logoSize: 'medium',
-  primaryColor: '#5452F8',
+  primaryColor: '#FF0000',
   headerStyle: 'modern',
   showBorder: true,
-  fontFamily: 'inter',
+  fontFamily: 'roboto',
   fontSize: 'medium',
   showFooter: true,
   footerText: 'Thank you for your business!',

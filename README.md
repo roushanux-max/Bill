@@ -4,7 +4,7 @@
 
 Create professional invoices for Indian businesses with complete GST compliance (CGST/SGST/IGST). Works offline, installs like a native app, costs nothing.
 
-**[🚀 Live Demo](https://bill-app.vercel.app)** • **[📖 Quick Start](#quick-start)** • **[💡 Features](#features)**
+**[🚀 Live Demo](https://bill-indol.vercel.app)** • **[📖 Quick Start](#quick-start)** • **[💡 Features](#features)**
 
 ---
 
@@ -376,7 +376,7 @@ Using BillMint? Share your story!
 npm run build && vercel --prod
 ```
 
-**Your app will be live in 5 minutes at: https://billmint.vercel.app**
+**Your app will be live in 5 minutes at: https://bill-indol.vercel.app**
 
 ---
 

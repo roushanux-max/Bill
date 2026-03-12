@@ -216,7 +216,7 @@ export default function SetupShop() {
 
     if (success) {
       toast.success('Shop created successfully!');
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
@@ -257,7 +257,7 @@ export default function SetupShop() {
 
     setSavingLater(false);
     toast.success('You can complete your profile later in Settings.');
-    navigate('/');
+    navigate('/dashboard');
   };
 
   // --- Render Steps ---
@@ -460,7 +460,7 @@ export default function SetupShop() {
                 Edit Store Details
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 className="w-full px-6 py-3.5 bg-white text-slate-600 font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all"
               >
                 Go to Dashboard

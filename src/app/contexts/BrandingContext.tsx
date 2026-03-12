@@ -111,34 +111,8 @@ function applyBrandingStyles(settings: BrandingSettings) {
   const dynamicTextColor = adjustBrightness(settings.primaryColor, -60);      // Very dark shade for text on light backgrounds
   const dynamicBorderColor = adjustBrightness(settings.primaryColor, 80);     // Very light shade for borders
 
-  // Set CSS Variables for colors
-  root.style.setProperty('--primary', settings.primaryColor);
-  root.style.setProperty('--primary-foreground', getContrastColor(settings.primaryColor));
-  root.style.setProperty('--color-primary', settings.primaryColor);
-  root.style.setProperty('--color-primary-hover', adjustBrightness(settings.primaryColor, -15));
-  root.style.setProperty('--color-primary-light', adjustBrightness(settings.primaryColor, 85));
-  root.style.setProperty('--color-secondary', dynamicSecondaryColor);
-  root.style.setProperty('--color-text', dynamicTextColor);
-  root.style.setProperty('--color-border', dynamicBorderColor);
-
-  // Set font family
-  const fontFamilyMap: Record<string, string> = {
-    'inter': '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    'roboto': '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    'lato': '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    'opensans': '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  };
-
-  root.style.setProperty('--font-family', fontFamilyMap[settings.fontFamily] || fontFamilyMap['inter']);
-
-  // Set font size scale
-  const fontSizeMap: Record<string, string> = {
-    'small': '0.875',
-    'medium': '1',
-    'large': '1.125',
-  };
-
-  root.style.setProperty('--font-size-scale', fontSizeMap[settings.fontSize] || '1');
+  // We only set CSS variables via the dynamic stylesheet inside .user-theme, NOT on the root element.
+  // This isolates branding exclusively to authenticated dashboard areas.
 
   // Create dynamic stylesheet for theme colors
   let styleId = 'branding-theme-styles';

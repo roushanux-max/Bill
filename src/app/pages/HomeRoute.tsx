@@ -1,8 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
 import Dashboard from './Dashboard';
-import LandingPage from './LandingPage';
 import { Loader2 } from 'lucide-react';
-import UserThemeProvider from '../components/UserThemeProvider';
 
 export default function HomeRoute() {
     const { user, loading } = useAuth();
@@ -16,11 +14,5 @@ export default function HomeRoute() {
         );
     }
 
-    return user ? (
-        <UserThemeProvider>
-            <Dashboard />
-        </UserThemeProvider>
-    ) : (
-        <LandingPage />
-    );
+    return <Dashboard />;
 }

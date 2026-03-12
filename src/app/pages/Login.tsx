@@ -44,7 +44,7 @@ export default function Login() {
             // Returning user with a store
             localStorage.setItem('active_store_id', stores[0].id);
             localStorage.setItem('hasCompletedOnboarding', 'true');
-            navigate('/');
+            navigate('/dashboard');
           } else {
             // New user or no store setup yet
             navigate('/setup-shop');

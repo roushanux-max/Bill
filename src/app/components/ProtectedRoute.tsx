@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import UserThemeProvider from './UserThemeProvider';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -33,5 +34,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/setup-shop" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <UserThemeProvider>
+      {children}
+    </UserThemeProvider>
+  );
 }
