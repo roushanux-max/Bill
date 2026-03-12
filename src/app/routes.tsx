@@ -8,6 +8,7 @@ import Customers from "./pages/Customers";
 import Products from "./pages/Products";
 import Invoices from "./pages/Invoices";
 import SetupShop from "./pages/SetupShop";
+import StressTest from "./pages/StressTest";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: "/setup-shop",
         Component: SetupShop,
+      },
+      {
+        path: "/stress-test",
+        Component: StressTest,
       },
       {
         path: "/branding",
