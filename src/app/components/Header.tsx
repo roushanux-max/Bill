@@ -21,9 +21,10 @@ export default function Header() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const primaryColor = settings.primaryColor;
+    const primaryColor = user ? settings.primaryColor : '#FF0000';
     const contrastColor = getContrastColor(primaryColor);
-    const businessName = storeInfo?.name || 'BillMint';
+    const businessName = user && storeInfo?.name ? storeInfo.name : 'BillMint';
+    const displayLogo = user && settings.logo ? settings.logo : null;
 
     const isLandingPage = location.pathname === '/' && !user;
     const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
@@ -61,8 +62,8 @@ export default function Header() {
                     border: '1px solid var(--color-primary-light)',
                     overflow: 'hidden'
                 }} className="transition-transform group-hover:scale-105 shadow-sm">
-                    {settings.logo ? (
-                        <img src={settings.logo} alt={businessName} className="w-full h-full object-contain" />
+                    {displayLogo ? (
+                        <img src={displayLogo} alt={businessName} className="w-full h-full object-contain" />
                     ) : (
                         <Logo className="w-7 h-7" />
                     )}

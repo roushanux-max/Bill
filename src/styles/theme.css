@@ -10,7 +10,7 @@
   --card-foreground: #252525;
   --popover: #ffffff;
   --popover-foreground: #252525;
-  --primary: var(--color-primary, #FF0000);
+  --primary: #FF0000;
   --primary-hover: #CC0000;
   --primary-light: #FFEDED;
   --primary-foreground: #ffffff;
