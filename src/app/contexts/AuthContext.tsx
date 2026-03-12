@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/setup-shop`,
+        redirectTo: `${window.location.origin}/dashboard`,
       },
     });
     return { error };
@@ -150,6 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
     
+    // Dispatch a storage event to immediately update BrandingContext to defaults
+    window.dispatchEvent(new Event('storage'));
+
     await supabase.auth.signOut();
   };
 

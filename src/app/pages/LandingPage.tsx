@@ -111,7 +111,7 @@ export default function LandingPage() {
                 <div style={{
                     position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)',
                     width: 700, height: 500,
-                    background: 'radial-gradient(ellipse at center, var(--color-primary-light, rgba(84, 82, 248, 0.08)) 0%, transparent 70%)',
+                    background: 'radial-gradient(ellipse at center, var(--color-primary-light, #FFEDED) 0%, transparent 70%)',
                     pointerEvents: 'none',
                     zIndex: -1
                 }} />
@@ -120,11 +120,11 @@ export default function LandingPage() {
                     {/* Pill badge */}
                     <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: 8,
-                        background: 'var(--color-primary-light, #eef2ff)',
+                        background: 'var(--color-primary-light, #FFEDED)',
                         opacity: 0.9,
-                        border: '1px solid var(--color-primary, rgba(84, 82, 248, 0.2))',
+                        border: '1px solid var(--color-primary, #FF0000)',
                         borderRadius: 100, padding: '6px 16px', marginBottom: 32,
-                        fontSize: 13, fontWeight: 500, color: 'var(--color-primary, #5452F8)',
+                        fontSize: 13, fontWeight: 500, color: 'var(--color-primary, #FF0000)',
                     }}>
                         <Zap size={14} fill="currentColor" className="animate-pulse" />
                         <span>Proprietary PWA technology • 100% Free</span>
@@ -133,7 +133,7 @@ export default function LandingPage() {
                     <h1 style={{ fontSize: 'clamp(42px, 7vw, 76px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-2.5px', color: '#0f172a', margin: '0 0 24px' }}>
                         Invoicing made<br />
                         <span style={{
-                            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 50%, var(--color-primary-light) 100%)',
+                            background: 'linear-gradient(135deg, var(--color-primary, #FF0000) 0%, var(--color-primary-hover, #CC0000) 50%, var(--color-primary-light, #FFEDED) 100%)',
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
                             effortless.
@@ -147,14 +147,14 @@ export default function LandingPage() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 80 }}>
                         <Link to="/register" style={{
                             fontSize: 18, fontWeight: 700, color: 'white', textDecoration: 'none',
-                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))',
+                            background: 'linear-gradient(135deg, var(--color-primary, #FF0000), var(--color-primary-hover, #CC0000))',
                             padding: '16px 36px', borderRadius: 16,
                             display: 'flex', alignItems: 'center', gap: 8,
-                            boxShadow: '0 15px 30px -10px var(--color-primary, rgba(84, 82, 248, 0.4))',
+                            boxShadow: '0 15px 30px -10px var(--color-primary-light, #FFEDED)',
                             transition: 'transform 0.2s, box-shadow 0.2s',
                         }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary, rgba(84, 82, 248, 0.5))'; }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary, rgba(84, 82, 248, 0.4))'; }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light, #FFEDED)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light, #FFEDED)'; }}
                         >
                             Start Billing Now <ArrowRight size={20} />
                         </Link>

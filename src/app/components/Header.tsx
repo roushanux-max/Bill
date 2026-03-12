@@ -36,7 +36,7 @@ export default function Header() {
 
     const handleSignOut = async () => {
         await signOut();
-        navigate('/', { replace: true });
+        window.location.href = '/';
     };
 
     const navStyles: React.CSSProperties = {
@@ -114,7 +114,7 @@ export default function Header() {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="hidden md:flex items-center gap-3">
                         {location.pathname !== '/login' && (
                             <Link to="/login" style={{
                                 color: '#475569', fontSize: 15, fontWeight: 600,
