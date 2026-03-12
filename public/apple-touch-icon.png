@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Apple requires no rounded corners -->
+  <rect width="180" height="180" fill="#8B1A1A"/>
+  
+  <!-- Invoice Icon -->
+  <rect x="45" y="45" width="90" height="112" rx="8" fill="white"/>
+  
+  <!-- Header -->
+  <rect x="56" y="56" width="68" height="8" rx="2" fill="#8B1A1A"/>
+  
+  <!-- Lines -->
+  <rect x="56" y="75" width="56" height="4" rx="2" fill="#E5E7EB"/>
+  <rect x="56" y="86" width="68" height="4" rx="2" fill="#E5E7EB"/>
+  <rect x="56" y="97" width="48" height="4" rx="2" fill="#E5E7EB"/>
+  
+  <!-- Table -->
+  <rect x="56" y="112" width="68" height="30" rx="4" fill="#F3F4F6"/>
+  <line x1="56" y1="123" x2="124" y2="123" stroke="#8B1A1A" stroke-width="2"/>
+  <line x1="90" y1="112" x2="90" y2="142" stroke="#8B1A1A" stroke-width="2"/>
+</svg>

@@ -1,0 +1,224 @@
+/* Print-friendly overrides for html2canvas compatibility */
+/* This stylesheet converts Tailwind oklch() colors to RGB equivalents */
+
+@media print {
+
+  /* Reset text colors to RGB equivalents */
+  .text-gray-600 {
+    color: rgb(75, 85, 99) !important;
+  }
+
+  .text-gray-500 {
+    color: rgb(107, 114, 128) !important;
+  }
+
+  .text-gray-700 {
+    color: rgb(51, 65, 85) !important;
+  }
+
+  .text-gray-800 {
+    color: rgb(31, 41, 55) !important;
+  }
+
+  .text-gray-900 {
+    color: rgb(17, 24, 39) !important;
+  }
+
+  /* Reset backgrounds to RGB equivalents */
+  .bg-white {
+    background-color: rgb(255, 255, 255) !important;
+  }
+
+  .bg-gray-50 {
+    background-color: rgb(249, 250, 251) !important;
+  }
+
+  .bg-gray-100 {
+    background-color: rgb(243, 244, 246) !important;
+  }
+
+  .bg-gray-200 {
+    background-color: rgb(229, 231, 235) !important;
+  }
+
+  /* Border colors as RGB */
+  .border {
+    border-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-b {
+    border-bottom-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-r {
+    border-right-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-l {
+    border-left-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-t {
+    border-top-color: rgb(229, 231, 235) !important;
+  }
+}
+
+.print-mode {
+
+  /* Reset text colors to RGB equivalents */
+  .text-gray-600 {
+    color: rgb(75, 85, 99) !important;
+  }
+
+  .text-gray-500 {
+    color: rgb(107, 114, 128) !important;
+  }
+
+  .text-gray-700 {
+    color: rgb(51, 65, 85) !important;
+  }
+
+  .text-gray-800 {
+    color: rgb(31, 41, 55) !important;
+  }
+
+  .text-gray-900 {
+    color: rgb(17, 24, 39) !important;
+  }
+
+  /* Reset backgrounds to RGB equivalents */
+  .bg-white {
+    background-color: rgb(255, 255, 255) !important;
+  }
+
+  .bg-gray-50 {
+    background-color: rgb(249, 250, 251) !important;
+  }
+
+  .bg-gray-100 {
+    background-color: rgb(243, 244, 246) !important;
+  }
+
+  .bg-gray-200 {
+    background-color: rgb(229, 231, 235) !important;
+  }
+
+  /* Border colors as RGB */
+  .border {
+    border-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-b {
+    border-bottom-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-r {
+    border-right-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-l {
+    border-left-color: rgb(229, 231, 235) !important;
+  }
+
+  .border-t {
+    border-top-color: rgb(229, 231, 235) !important;
+  }
+}
+
+/* Direct class for html2canvas rendering */
+.invoice-print-ready {
+  color: rgb(17, 24, 39) !important;
+}
+
+.invoice-print-ready .text-gray-600 {
+  color: rgb(75, 85, 99) !important;
+}
+
+.invoice-print-ready .text-gray-500 {
+  color: rgb(107, 114, 128) !important;
+}
+
+.invoice-print-ready .text-gray-700 {
+  color: rgb(51, 65, 85) !important;
+}
+
+.invoice-print-ready .text-gray-800 {
+  color: rgb(31, 41, 55) !important;
+}
+
+.invoice-print-ready .text-gray-900 {
+  color: rgb(17, 24, 39) !important;
+}
+
+.invoice-print-ready .bg-white {
+  background-color: rgb(255, 255, 255) !important;
+}
+
+.invoice-print-ready .bg-gray-50 {
+  background-color: rgb(249, 250, 251) !important;
+}
+
+.invoice-print-ready .bg-gray-100 {
+  background-color: rgb(243, 244, 246) !important;
+}
+
+.invoice-print-ready .bg-gray-200 {
+  background-color: rgb(229, 231, 235) !important;
+}
+
+.invoice-print-ready .border {
+  border-color: rgb(229, 231, 235) !important;
+}
+
+.invoice-print-ready .border-b {
+  border-bottom-color: rgb(229, 231, 235) !important;
+}
+
+.invoice-print-ready .border-r {
+  border-right-color: rgb(229, 231, 235) !important;
+}
+
+.invoice-print-ready .border-l {
+  border-left-color: rgb(229, 231, 235) !important;
+}
+
+.invoice-print-ready .border-t {
+  border-top-color: rgb(229, 231, 235) !important;
+}
+
+/* Force exact A4 dimensions for PDF extraction and printing */
+.invoice-print-ready {
+  width: 794px !important;
+  /* A4 width at 96DPI */
+  min-height: 1123px !important;
+  /* A4 height at 96DPI */
+  margin: 0 auto !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice-template,
+  #invoice-template * {
+    visibility: visible;
+  }
+
+  #invoice-template {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    /* Strict A4 Width */
+    padding: 10mm;
+    box-sizing: border-box;
+  }
+}

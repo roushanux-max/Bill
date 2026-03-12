@@ -1,0 +1,565 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../contexts/AuthContext';
+import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin, Hash } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '../utils/supabase';
+
+// Helper to determine active step
+const steps = [
+  { id: 'welcome', title: 'Welcome' },
+  { id: 'basic', title: 'Basic Info', icon: Building2 },
+  { id: 'location', title: 'Location', icon: MapPin },
+  { id: 'tax', title: 'Tax Details', icon: Hash },
+];
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+];
+
+export default function SetupShop() {
+  const navigate = useNavigate();
+  const { user, displayEmail } = useAuth();
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [savingLater, setSavingLater] = useState(false);
+  const [hasExistingStore, setHasExistingStore] = useState(false);
+
+  const [formData, setFormData] = useState({
+    shopName: '',
+    ownerName: user?.user_metadata?.name || '',
+    email: displayEmail || user?.email || '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    gstin: '',
+  });
+
+  // Load existing store as a draft so the user can edit
+  useEffect(() => {
+    const loadExisting = async () => {
+      if (!user) return;
+      try {
+        const { data } = await supabase
+          .from('stores')
+          .select('id, business_name, email, phone, address, city, state, pincode, gstin, owner_name')
+          .eq('user_id', user.id)
+          .limit(1);
+
+        if (data && data.length > 0) {
+          setHasExistingStore(true);
+          const s = data[0];
+          localStorage.setItem('active_store_id', s.id);
+          setFormData(prev => ({
+            ...prev,
+            shopName: s.business_name || prev.shopName,
+            email: s.email || prev.email,
+            phone: s.phone || prev.phone,
+            address: s.address || prev.address,
+            city: s.city || prev.city,
+            state: s.state || prev.state,
+            pincode: s.pincode || prev.pincode,
+            gstin: s.gstin || prev.gstin,
+            ownerName: s.owner_name || prev.ownerName,
+          }));
+        }
+      } catch (err) {
+        console.error('Error loading existing store:', err);
+      }
+    };
+    loadExisting();
+  }, [user]);
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('shopSetupDraft');
+    if (draft) {
+      try {
+        const parsedDraft = JSON.parse(draft);
+        setFormData(prev => ({ ...prev, ...parsedDraft }));
+      } catch (e) {
+        console.error('Error parsing shop setup draft:', e);
+      }
+    }
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+    localStorage.setItem('shopSetupDraft', JSON.stringify(newFormData));
+  };
+
+  const handleNext = () => {
+    // Basic validation per step
+    if (currentStepIndex === 1) { // Basic Info
+      if (!formData.shopName || !formData.phone) {
+        toast.error('Please fill in required fields');
+        return;
+      }
+      if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+        toast.error('Please enter a valid 10-digit phone number');
+        return;
+      }
+    } else if (currentStepIndex === 2) { // Location
+      if (!formData.address || !formData.city || !formData.state || !formData.pincode) {
+        toast.error('Please fill in all location details');
+        return;
+      }
+    }
+
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStepIndex(curr => curr + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(curr => curr - 1);
+    }
+  };
+
+  const createInitialStore = async (isSkipped = false) => {
+    if (!user) {
+      toast.error('You must be logged in to create a store');
+      return false;
+    }
+
+    try {
+      const existingId = localStorage.getItem('active_store_id') || `offline-${Date.now()}`;
+
+      const storeData: any = {
+        user_id: user.id,
+        business_name: isSkipped ? (formData.shopName || 'My Business') : formData.shopName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        gstin: formData.gstin ? formData.gstin.toUpperCase() : null,
+      };
+
+      if (existingId && !existingId.startsWith('offline-')) {
+        storeData.id = existingId;
+      } else if (existingId.startsWith('offline-')) {
+        storeData.id = existingId; // Some local ID
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('stores')
+          .upsert([storeData])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Persist locally
+        localStorage.setItem('active_store_id', data.id);
+
+        // Update cached store info so Dashboard/Header reflect new name immediately
+        const storeInfo = {
+          name: data.business_name || '',
+          gstin: data.gstin || '',
+          address: data.address || '',
+          state: data.state || '',
+          phone: data.phone || '',
+          email: data.email || '',
+        };
+        localStorage.setItem('billmint_store_info', JSON.stringify(storeInfo));
+
+      } catch (err: any) {
+        console.warn('Supabase sync failed, saving locally instead:', err);
+        // Fallback: save locally
+        localStorage.setItem('active_store_id', existingId);
+
+        const storeInfo = {
+          name: storeData.business_name || '',
+          gstin: storeData.gstin || '',
+          address: storeData.address || '',
+          state: storeData.state || '',
+          phone: storeData.phone || '',
+          email: storeData.email || '',
+        };
+        localStorage.setItem('billmint_store_info', JSON.stringify(storeInfo));
+      }
+
+      // Mark onboarding complete and remove draft
+      localStorage.setItem('hasCompletedOnboarding', 'true');
+      localStorage.removeItem('shopSetupDraft');
+
+      return true;
+
+    } catch (error: any) {
+      console.error('Error in store wizard:', error);
+      // We only reach this outer catch if something structurally failed outside the fetch
+      toast.error('Failed to finish setup. Please try again.');
+      return false;
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    const success = await createInitialStore(false);
+    setLoading(false);
+
+    if (success) {
+      toast.success('Shop created successfully!');
+      navigate('/');
+    }
+  };
+
+  const handleSkip = async () => {
+    setSavingLater(true);
+
+    // Create a barebones local store to allow user to bypass
+    const existingId = localStorage.getItem('active_store_id') || `offline-${Date.now()}`;
+    localStorage.setItem('active_store_id', existingId);
+
+    // Just save enough locally to make the app work
+    const storeInfo = {
+      name: formData.shopName || 'My Business',
+      gstin: '',
+      address: '',
+      state: '',
+      phone: '',
+      email: '',
+    };
+    localStorage.setItem('billmint_store_info', JSON.stringify(storeInfo));
+    localStorage.setItem('hasCompletedOnboarding', 'true');
+    localStorage.removeItem('shopSetupDraft');
+
+    // Optionally try to tell Supabase in the background, but never block on it
+    if (user) {
+      (async () => {
+        try {
+          await supabase.from('stores').upsert([{
+            id: existingId.startsWith('offline-') ? undefined : existingId,
+            user_id: user.id,
+            business_name: storeInfo.name
+          }]);
+        } catch (e) {
+          // ignore
+        }
+      })();
+    }
+
+    setSavingLater(false);
+    toast.success('You can complete your profile later in Settings.');
+    navigate('/');
+  };
+
+  // --- Render Steps ---
+
+  const renderWelcome = () => (
+    <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-20 h-20 bg-[var(--color-primary-light)] rounded-full flex items-center justify-center mx-auto mb-6">
+        <Store className="w-10 h-10 text-[var(--color-primary)]" />
+      </div>
+      <h2 className="text-3xl font-bold text-slate-900 mb-4">Welcome to BillMint</h2>
+      <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
+        Let's get your business set up. We just need a few details to start generating professional invoices.
+      </p>
+
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <button
+          onClick={handleNext}
+          className="w-full sm:w-auto px-8 py-3.5 bg-[var(--color-primary)] text-white text-lg font-semibold rounded-xl shadow-lg shadow-[var(--color-primary)]/30 hover:shadow-[var(--color-primary)]/40 hover:-translate-y-0.5 transition-all"
+        >
+          Get Started
+        </button>
+        <button
+          onClick={handleSkip}
+          disabled={savingLater}
+          className="w-full sm:w-auto px-8 py-3.5 bg-white text-slate-600 text-lg font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex justify-center"
+        >
+          {savingLater ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Skip for now'}
+        </button>
+      </div>
+      <p className="mt-4 text-sm text-slate-500">You can always add these details later in Settings.</p>
+    </div>
+  );
+
+  const renderBasicInfo = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">
+            Business/Shop Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="shopName"
+            value={formData.shopName}
+            onChange={handleChange}
+            placeholder="e.g. Acme Electronics"
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
+            autoFocus
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              Owner Name
+            </label>
+            <input
+              type="text"
+              name="ownerName"
+              value={formData.ownerName}
+              onChange={handleChange}
+              placeholder="Full Name"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              Phone Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="10-digit mobile number"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLocation = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">
+            Business Address <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            rows={2}
+            placeholder="Shop No, Building, Street"
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400 resize-none"
+            autoFocus
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              City <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="City"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              State <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all"
+            >
+              <option value="">Select State</option>
+              {INDIAN_STATES.map(state => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              PIN Code <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="pincode"
+              value={formData.pincode}
+              onChange={handleChange}
+              maxLength={6}
+              placeholder="6 digits"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTax = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">
+            GSTIN (Optional)
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="gstin"
+              value={formData.gstin}
+              onChange={handleChange}
+              placeholder="22AAAAA0000A1Z5"
+              maxLength={15}
+              className="w-full px-4 py-3 uppercase bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400 placeholder:normal-case font-mono"
+              autoFocus
+            />
+            {formData.gstin && formData.gstin.length === 15 && (
+              <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+            )}
+          </div>
+          <p className="mt-2 text-sm text-slate-500">
+            If you provide a GST number, invoices will be generated as Tax Invoices. Otherwise, they will be standard Bills of Supply.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const CurrentStepIcon = steps[currentStepIndex].icon || Building2;
+
+  if (hasExistingStore) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col pt-12 md:pt-24 px-4 items-center">
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Store className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Store Already Configured</h2>
+            <p className="text-slate-600 mb-8">
+              Your store details are already set up. You can manage your business information, upload a logo, and customize invoice templates in the Store Settings.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate('/branding')}
+                className="w-full px-6 py-3.5 bg-[var(--color-primary)] text-white font-semibold rounded-xl hover:opacity-90 shadow-lg shadow-[var(--color-primary)]/20 hover:-translate-y-0.5 transition-all"
+              >
+                Edit Store Details
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full px-6 py-3.5 bg-white text-slate-600 font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center pt-12 md:pt-24 px-4 overflow-x-hidden">
+
+      {/* Top Navigation / Progress */}
+      {currentStepIndex > 0 && (
+        <div className="w-full max-w-2xl mb-8 flex items-center justify-between">
+          <button
+            onClick={handleBack}
+            className="flex items-center text-slate-500 hover:text-slate-900 transition-colors font-medium"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          </button>
+          <div className="flex items-center gap-2">
+            {steps.map((step, idx) => {
+              if (idx === 0) return null; // Skip welcome dot
+              return (
+                <div
+                  key={step.id}
+                  className={`h-2 rounded-full transition-all duration-300 ${idx === currentStepIndex ? 'w-8 bg-primary' :
+                    idx < currentStepIndex ? 'w-2 bg-primary/40' : 'w-2 bg-slate-200'
+                    }`}
+                />
+              );
+            })}
+          </div>
+          <button
+            onClick={handleSkip}
+            disabled={savingLater}
+            className="text-[var(--color-primary)] hover:opacity-80 font-medium transition-colors"
+          >
+            Skip Setup
+          </button>
+        </div>
+      )}
+
+      {/* Main Card */}
+      <div className={`w-full max-w-2xl ${currentStepIndex === 0 ? 'bg-transparent shadow-none' : 'bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden'}`}>
+
+        {currentStepIndex > 0 && (
+          <div className="px-8 pt-8 pb-6 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <CurrentStepIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">{steps[currentStepIndex].title}</h2>
+                <p className="text-sm text-slate-500">Step {currentStepIndex} of {steps.length - 1}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="p-8">
+          {currentStepIndex === 0 && renderWelcome()}
+          {currentStepIndex === 1 && renderBasicInfo()}
+          {currentStepIndex === 2 && renderLocation()}
+          {currentStepIndex === 3 && renderTax()}
+        </div>
+
+        {/* Footer Actions */}
+        {currentStepIndex > 0 && (
+          <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button
+              onClick={handleNext}
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[var(--color-primary)] text-white font-semibold rounded-xl hover:opacity-90 hover:shadow-lg hover:shadow-[var(--color-primary)]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : currentStepIndex === steps.length - 1 ? (
+                <>
+                  <CheckCircle2 className="w-5 h-5" />
+                  Finish Setup
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
