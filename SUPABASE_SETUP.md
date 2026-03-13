@@ -1,11 +1,11 @@
-# BillMint - Supabase Setup Guide
+# Bill - Supabase Setup Guide
 
 This guide will walk you through setting up your Supabase project, getting your API keys, and creating the necessary database tables so your new SaaS users' data remains completely private.
 
 ## Step 1: Create a Project
 1. Go to [database.new](https://database.new) and sign in.
 2. Click **New Project**.
-3. Choose your Organization (or create one), enter a **Name** (e.g., `BillMint`), and generate a secure **Database Password**.
+3. Choose your Organization (or create one), enter a **Name** (e.g., `Bill`), and generate a secure **Database Password**.
 4. Choose a region close to your users (e.g., `Mumbai (ap-south-1)`).
 5. Click **Create new project**.
 

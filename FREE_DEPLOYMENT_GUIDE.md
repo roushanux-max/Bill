@@ -1,4 +1,4 @@
-# BillMint - 100% FREE Deployment Guide 🎉
+# Bill - 100% FREE Deployment Guide 🎉
 
 ## 💰 **Zero Cost Architecture**
 
@@ -52,8 +52,8 @@ vercel
 
 # Follow prompts:
 # - Link to GitHub (optional)
-# - Project name: billmint
-# - Done! You get: https://billmint.vercel.app
+# - Project name: bill
+# - Done! You get: https://bill.vercel.app
 ```
 
 **GitHub Integration (Recommended):**
@@ -93,7 +93,7 @@ netlify deploy --prod
 
 **Features:**
 - ✅ Unlimited bandwidth (fair use)
-- ✅ Free subdomain: username.github.io/billmint
+- ✅ Free subdomain: username.github.io/bill
 - ✅ Custom domain support
 
 **Setup:**
@@ -104,7 +104,7 @@ npm install --save-dev gh-pages
 
 # 2. Add to package.json
 {
-  "homepage": "https://yourusername.github.io/billmint",
+  "homepage": "https://yourusername.github.io/bill",
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
@@ -162,8 +162,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'BillMint - Invoice Generator',
-        short_name: 'BillMint',
+        name: 'Bill - Invoice Generator',
+        short_name: 'Bill',
         description: 'GST-compliant invoice generation app',
         theme_color: '#8B1A1A',
         background_color: '#ffffff',
@@ -230,7 +230,7 @@ flutter build apk --release
    - Upload APK to your site
    - Add download button
    - Users download & install directly
-   - Example: `https://billmint.vercel.app/download/billmint.apk`
+   - Example: `https://bill.vercel.app/download/bill.apk`
 
 2. **GitHub Releases** (Professional)
    - Create GitHub release
@@ -308,7 +308,7 @@ class LocalDatabase {
   Future<Database> _initDB() async {
     final path = await getDatabasesPath();
     return await openDatabase(
-      '$path/billmint.db',
+      '$path/bill.db',
       version: 1,
       onCreate: _createDB,
     );
@@ -378,7 +378,7 @@ const exportData = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `billmint-backup-${new Date().toISOString()}.json`;
+  a.download = `bill-backup-${new Date().toISOString()}.json`;
   a.click();
 };
 
@@ -418,7 +418,7 @@ If you REALLY need cloud sync (optional, not required):
 
 ```
 1. Go to https://www.freenom.com
-2. Search for: billmint.tk
+2. Search for: bill.tk
 3. Register for FREE
 4. Point to Vercel/Netlify
 5. Done!
@@ -427,14 +427,14 @@ If you REALLY need cloud sync (optional, not required):
 ### **Option 2: Free Subdomain Services**
 
 - **is-a.dev** - yourname.is-a.dev (FREE, for developers)
-- **pp.ua** - billmint.pp.ua (FREE)
-- **eu.org** - billmint.eu.org (FREE)
+- **pp.ua** - bill.pp.ua (FREE)
+- **eu.org** - bill.eu.org (FREE)
 
 ### **Option 3: Use Provided Free Domain**
 
-- Vercel: `billmint.vercel.app` (FREE)
-- Netlify: `billmint.netlify.app` (FREE)
-- GitHub: `yourusername.github.io/billmint` (FREE)
+- Vercel: `bill.vercel.app` (FREE)
+- Netlify: `bill.netlify.app` (FREE)
+- GitHub: `yourusername.github.io/bill` (FREE)
 
 ---
 
@@ -482,7 +482,7 @@ npm run build
 vercel --prod
 
 # 3. Done! Your app is live at:
-# https://billmint.vercel.app
+# https://bill.vercel.app
 ```
 
 ### **Flutter Mobile App**
@@ -601,8 +601,8 @@ Market this as a **FEATURE**:
 
 ## 🎉 **You're Live with ZERO Costs!**
 
-**Web App:** https://billmint.vercel.app
-**APK Download:** https://github.com/yourusername/billmint/releases
+**Web App:** https://bill.vercel.app
+**APK Download:** https://github.com/yourusername/bill/releases
 **Total Cost:** ₹0/month forever
 
 **Questions?**

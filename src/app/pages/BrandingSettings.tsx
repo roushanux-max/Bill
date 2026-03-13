@@ -659,7 +659,7 @@ export default function BrandingSettingsPage() {
                   <div className="space-y-3">
                     <Label className="text-sm font-semibold text-slate-700">Font Family</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {(['inter', 'roboto', 'lato', 'opensans'] as const).map((font) => (
+                      {(['aptos', 'inter', 'roboto', 'lato', 'opensans'] as const).map((font) => (
                         <button
                           key={font}
                           onClick={() => updateSettings('fontFamily', font)}
@@ -668,10 +668,10 @@ export default function BrandingSettingsPage() {
                             : 'border-slate-200 hover:border-slate-300 bg-white'
                             }`}
                         >
-                          <p className="text-sm font-medium capitalize" style={{ fontFamily: font }}>
+                          <p className="text-sm font-medium capitalize" style={{ fontFamily: font === 'aptos' ? "'Aptos', 'Segoe UI', system-ui, sans-serif" : font }}>
                             {font}
                           </p>
-                          <p className="text-xs text-slate-500 mt-1" style={{ fontFamily: font }}>
+                          <p className="text-xs text-slate-500 mt-1" style={{ fontFamily: font === 'aptos' ? "'Aptos', 'Segoe UI', system-ui, sans-serif" : font }}>
                             The quick brown fox
                           </p>
                         </button>

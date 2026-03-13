@@ -138,11 +138,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     // Clear all user-specific local data to prevent data leaks between sessions
     const keysToRemove = [
-      'billmint_store_info',
-      'billmint_branding_settings',
-      'billmint_customers',
-      'billmint_products',
-      'billmint_invoices',
+      'bill_store_info',
+      'bill_branding_settings',
+      'bill_customers',
+      'bill_products',
+      'bill_invoices',
       'active_store_id',
       'hasCompletedOnboarding',
       'invoiceDraft'

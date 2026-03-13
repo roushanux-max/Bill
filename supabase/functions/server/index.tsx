@@ -56,15 +56,15 @@ app.post("/make-server-d504a230/signup", async (c) => {
     (async () => {
       try {
         const sendgridKey = Deno.env.get('SENDGRID_API_KEY');
-        const fromEmail = Deno.env.get('MAIL_FROM') || 'noreply@billmint.app';
-        const appUrl = Deno.env.get('APP_URL') || 'https://app.billmint.app';
+        const fromEmail = Deno.env.get('MAIL_FROM') || 'noreply@bill.app';
+        const appUrl = Deno.env.get('APP_URL') || 'https://app.bill.app';
 
         if (!sendgridKey) {
           console.warn('SENDGRID_API_KEY not configured; skipping welcome email');
           return;
         }
 
-        const subject = `Welcome to BillMint, ${name || 'there'}!`;
+        const subject = `Welcome to Bill, ${name || 'there'}!`;
 
         const safeName = name || '';
         const html = `
@@ -83,7 +83,7 @@ app.post("/make-server-d504a230/signup", async (c) => {
                         <td style="padding:24px 28px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;gap:12px;">
                           <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;">B</div>
                           <div>
-                            <div style="font-size:16px;font-weight:600;color:#0f172a">Welcome to BillMint</div>
+                            <div style="font-size:16px;font-weight:600;color:#0f172a">Welcome to Bill</div>
                             <div style="font-size:12px;color:#64748b">Smart, fast invoicing for modern businesses</div>
                           </div>
                         </td>
@@ -91,13 +91,13 @@ app.post("/make-server-d504a230/signup", async (c) => {
                       <tr>
                         <td style="padding:28px;">
                           <h1 style="margin:0 0 12px 0;font-size:20px;color:#0f172a;">Hey ${safeName},</h1>
-                          <p style="margin:0 0 16px 0;color:#374151;line-height:1.5;">Thanks for signing up — we’re excited to have you on board. BillMint helps you create and send beautiful invoices in seconds, track revenue, and manage customers and products effortlessly.</p>
+                          <p style="margin:0 0 16px 0;color:#374151;line-height:1.5;">Thanks for signing up — we’re excited to have you on board. Bill helps you create and send beautiful invoices in seconds, track revenue, and manage customers and products effortlessly.</p>
                           <p style="margin:0 0 20px 0;color:#374151;line-height:1.5;">Get started by creating your first invoice or exploring the dashboard. If you ever need help, reply to this email — we read every message.</p>
                           <p style="margin:0 0 24px 0;">
-                            <a href="${appUrl}" style="display:inline-block;padding:12px 20px;background:#6366f1;color:white;border-radius:8px;text-decoration:none;font-weight:600;">Go to BillMint</a>
+                            <a href="${appUrl}" style="display:inline-block;padding:12px 20px;background:#6366f1;color:white;border-radius:8px;text-decoration:none;font-weight:600;">Go to Bill</a>
                           </p>
                           <hr style="border:none;border-top:1px solid #eef2f7;margin:20px 0" />
-                          <p style="margin:0;color:#6b7280;font-size:13px;">Tips to get the most out of BillMint:</p>
+                          <p style="margin:0;color:#6b7280;font-size:13px;">Tips to get the most out of Bill:</p>
                           <ul style="color:#374151;margin:8px 0 0 18px;padding:0 0 0 0;">
                             <li style="margin-bottom:6px">Add your store details from Settings so invoices have your branding.</li>
                             <li style="margin-bottom:6px">Save products to reuse them when creating invoices faster.</li>
@@ -106,7 +106,7 @@ app.post("/make-server-d504a230/signup", async (c) => {
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding:18px 28px;background:#f8fafc;color:#94a3b8;font-size:12px;">© ${new Date().getFullYear()} BillMint — Built for small businesses</td>
+                        <td style="padding:18px 28px;background:#f8fafc;color:#94a3b8;font-size:12px;">© ${new Date().getFullYear()} Bill — Built for small businesses</td>
                       </tr>
                     </table>
                   </td>
@@ -118,7 +118,7 @@ app.post("/make-server-d504a230/signup", async (c) => {
 
         const payload = {
           personalizations: [{ to: [{ email }], subject }],
-          from: { email: fromEmail, name: 'BillMint' },
+          from: { email: fromEmail, name: 'Bill' },
           content: [{ type: 'text/html', value: html }],
         };
 

@@ -71,7 +71,7 @@ vercel --prod
 
 ## 💰 Cost Breakdown
 
-| Service | Traditional | BillMint |
+| Service | Traditional | Bill |
 |---------|-------------|----------|
 | Web Hosting | ₹500/month | **₹0** |
 | Database | ₹1,000/month | **₹0** |
@@ -259,7 +259,7 @@ Want to add features? Fork and submit a PR!
 
 ```bash
 # Fork the repo
-git clone https://github.com/yourusername/billmint.git
+git clone https://github.com/yourusername/bill.git
 
 # Create feature branch
 git checkout -b feature/amazing-feature
@@ -281,10 +281,10 @@ MIT License - feel free to use for personal or commercial projects!
 
 ## 🌟 Show Your Support
 
-If you find BillMint useful:
+If you find Bill useful:
 
 ⭐ **Star this repo** on GitHub  
-🐦 **Share on Twitter** with #BillMint  
+🐦 **Share on Twitter** with #Bill  
 💼 **Share on LinkedIn**  
 📢 **Tell your friends**  
 
@@ -326,9 +326,9 @@ Keep it free or add premium features:
 
 ## 🎊 Success Stories
 
-Using BillMint? Share your story!
+Using Bill? Share your story!
 
-**Tweet:** *"Just saved ₹50,000/year by switching to @BillMint for invoicing! 100% free, works offline, no subscriptions. 🎉"*
+**Tweet:** *"Just saved ₹50,000/year by switching to @Bill for invoicing! 100% free, works offline, no subscriptions. 🎉"*
 
 ---
 
@@ -344,19 +344,19 @@ Using BillMint? Share your story!
 
 ---
 
-## 🏆 Why BillMint?
+## 🏆 Why Bill?
 
 ### **vs Zoho Invoice**
 - ❌ Zoho: ₹300/month, 1000 invoices/year limit
-- ✅ BillMint: ₹0/month, unlimited invoices
+- ✅ Bill: ₹0/month, unlimited invoices
 
 ### **vs QuickBooks**
 - ❌ QuickBooks: ₹1,500/month, cloud only
-- ✅ BillMint: ₹0/month, works offline
+- ✅ Bill: ₹0/month, works offline
 
 ### **vs Tally**
 - ❌ Tally: ₹18,000/year, desktop only
-- ✅ BillMint: ₹0/year, works everywhere
+- ✅ Bill: ₹0/year, works everywhere
 
 ---
 
@@ -390,7 +390,7 @@ You have a production-ready, free-forever invoice generator!
 
 ---
 
-**[🚀 Deploy Now](./QUICK_START.md)** • **[📖 Documentation](./PWA_SETUP_COMPLETE.md)** • **[💬 Issues](https://github.com/yourusername/billmint/issues)**
+**[🚀 Deploy Now](./QUICK_START.md)** • **[📖 Documentation](./PWA_SETUP_COMPLETE.md)** • **[💬 Issues](https://github.com/yourusername/bill/issues)**
 
 ---
 

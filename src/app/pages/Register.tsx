@@ -88,7 +88,7 @@ export default function Register() {
             <div className="bg-white rounded-3xl p-4 shadow-2xl border border-slate-200 mb-8 inline-block">
               <img
                 src="/bill_illustration.png?v=2"
-                alt="BillMint Illustration"
+                alt="Bill Illustration"
                 className="w-full max-w-sm h-auto"
               />
             </div>
@@ -194,7 +194,7 @@ export default function Register() {
           )}
 
           <div className="p-8 text-center border-t border-slate-50 text-xs text-slate-400 lg:text-left lg:px-24">
-            © 2026 BillMint. All rights reserved.
+            © 2026 Bill. All rights reserved.
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-# BillMint - 100% FREE Forever ✨
+# Bill - 100% FREE Forever ✨
 
 ## 💰 **Total Cost: ₹0/month | ₹0/year | ₹0 FOREVER**
 
@@ -52,7 +52,7 @@ npm run build
 # 2. Deploy to Vercel (FREE)
 npx vercel --prod
 
-# 3. Done! Live at: https://billmint.vercel.app
+# 3. Done! Live at: https://bill.vercel.app
 ```
 
 **Alternative FREE hosts:**
@@ -162,7 +162,7 @@ importData(file); // Restores from JSON
 
 ## 🎨 **Features Comparison**
 
-| Feature | BillMint FREE | Paid Alternatives |
+| Feature | Bill FREE | Paid Alternatives |
 |---------|---------------|-------------------|
 | Invoice Generation | ✅ Unlimited | ⚠️ 50-100/month |
 | PDF Export | ✅ Yes | ✅ Yes |
@@ -252,7 +252,7 @@ importData(file); // Restores from JSON
 ### **Domain**
 - Freenom (.tk, .ml, .ga) - FREE
 - is-a.dev - FREE
-- Or use provided: billmint.vercel.app
+- Or use provided: bill.vercel.app
 
 ### **SSL Certificate**
 - Auto-included (FREE)
@@ -430,7 +430,7 @@ Analytics:
 └─ Vercel Analytics (FREE)
 
 Domain:
-├─ billmint.vercel.app (FREE)
+├─ bill.vercel.app (FREE)
 └─ Custom domain (FREE options available)
 
 SSL/CDN:
@@ -484,7 +484,7 @@ npm run build
 npx vercel --prod
 
 # Your app is now LIVE! 🚀
-# Example: https://billmint.vercel.app
+# Example: https://bill.vercel.app
 
 # Total cost: ₹0
 # Monthly fees: ₹0
@@ -503,7 +503,7 @@ User → Internet → Your Server → Database → Processing → Response
     $50-500/month
 ```
 
-### **BillMint (FREE)**
+### **Bill (FREE)**
 ```
 User → Browser → Local Storage → Processing → Display
         ↓

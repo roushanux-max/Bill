@@ -15,7 +15,7 @@ const BrandingContext = createContext<BrandingContextType | undefined>(undefined
 export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<BrandingSettings>(() => {
     try {
-      const saved = localStorage.getItem('billmint_branding_settings');
+      const saved = localStorage.getItem('bill_branding_settings');
       return saved ? JSON.parse(saved) : defaultBrandingSettings;
     } catch (e) {
       console.error('Error loading initial branding settings:', e);
@@ -24,7 +24,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   });
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(() => {
     try {
-      const saved = localStorage.getItem('billmint_store_info');
+      const saved = localStorage.getItem('bill_store_info');
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       console.error('Error loading initial store info:', e);
@@ -64,14 +64,14 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for storage changes (when settings are updated in another tab/window)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'billmint_branding_settings' && e.newValue) {
+      if (e.key === 'bill_branding_settings' && e.newValue) {
         try {
           const newSettings = JSON.parse(e.newValue) as BrandingSettings;
           setSettings(newSettings);
           applyBrandingStyles(newSettings);
         } catch (e) { }
       }
-      if (e.key === 'billmint_store_info' && e.newValue) {
+      if (e.key === 'bill_store_info' && e.newValue) {
         try {
           const newStoreInfo = JSON.parse(e.newValue) as StoreInfo;
           setStoreInfo(newStoreInfo);
@@ -124,7 +124,7 @@ function applyBrandingStyles(settings: BrandingSettings) {
     document.head.appendChild(existingStyle);
   }
 
-  // Generate CSS for dynamic theme
+    // Generate CSS for dynamic theme
   const themeCSS = `
     .user-theme {
       --primary: ${settings.primaryColor};
@@ -132,7 +132,7 @@ function applyBrandingStyles(settings: BrandingSettings) {
       --primary-light: ${adjustBrightness(settings.primaryColor, 85)};
       --primary-foreground: ${getContrastColor(settings.primaryColor)};
       color: ${dynamicTextColor};
-      font-family: var(--font-family);
+      font-family: ${getFontFamilyString(settings.fontFamily)};
     }
 
     /* Input focus states */
@@ -208,4 +208,18 @@ function adjustBrightness(color: string, percent: number): string {
   B = B < 0 ? 0 : B > 255 ? 255 : B;
 
   return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+}
+
+/**
+ * Get CSS font-family string from setting
+ */
+function getFontFamilyString(font: string): string {
+  switch (font) {
+    case 'aptos': return "'Aptos', 'Segoe UI', system-ui, sans-serif";
+    case 'inter': return "'Inter', sans-serif";
+    case 'roboto': return "'Roboto', sans-serif";
+    case 'lato': return "'Lato', sans-serif";
+    case 'opensans': return "'Open Sans', sans-serif";
+    default: return "'Aptos', 'Segoe UI', system-ui, sans-serif";
+  }
 }

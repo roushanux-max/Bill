@@ -18,8 +18,8 @@ export default function Login() {
 
   // Load saved credentials on mount
   useEffect(() => {
-    const savedEmail = localStorage.getItem('billmint_saved_email');
-    const isRemembered = localStorage.getItem('billmint_remember_me') === 'true';
+    const savedEmail = localStorage.getItem('bill_saved_email');
+    const isRemembered = localStorage.getItem('bill_remember_me') === 'true';
 
     if (savedEmail && isRemembered) {
       setEmail(savedEmail);
@@ -66,12 +66,12 @@ export default function Login() {
 
     // Save credentials if "Remember Me" is checked
     if (rememberMe) {
-      localStorage.setItem('billmint_saved_email', email);
-      localStorage.setItem('billmint_remember_me', 'true');
+      localStorage.setItem('bill_saved_email', email);
+      localStorage.setItem('bill_remember_me', 'true');
     } else {
       // Clear saved credentials if unchecked
-      localStorage.removeItem('billmint_saved_email');
-      localStorage.removeItem('billmint_remember_me');
+      localStorage.removeItem('bill_saved_email');
+      localStorage.removeItem('bill_remember_me');
     }
 
     const { error } = await signIn(email, password);
@@ -108,7 +108,7 @@ export default function Login() {
             <div className="rounded-3xl p-4 flex justify-center items-center">
               <img
                 src="/bill_illustration.png?v=2"
-                alt="BillMint Platform Illustration"
+                alt="Bill Platform Illustration"
                 className="w-full max-w-sm h-auto drop-shadow-2xl"
               />
             </div>
@@ -242,7 +242,7 @@ export default function Login() {
                   </form>
 
                   <p className="text-center text-slate-600 text-sm">
-                    New to BillMint?{' '}
+                    New to Bill?{' '}
                     <Link to="/register" className="text-primary font-bold hover:opacity-80 transition-all">
                       Create an account
                     </Link>
@@ -254,7 +254,7 @@ export default function Login() {
 
           {/* Simple Footer */}
           <div className="p-8 text-center border-t border-slate-50 text-xs text-slate-400 lg:text-left lg:px-24">
-            © 2026 BillMint. All rights reserved.
+            © 2026 Bill. All rights reserved.
           </div>
         </div>
       </div>

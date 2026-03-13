@@ -77,10 +77,10 @@ export default function LandingPage() {
         window.addEventListener('scroll', onScroll, { passive: true });
 
         // Silent SEO Optimization
-        document.title = "BillMint | Professional GST Billing Software for Indian Businesses";
+        document.title = "Bill | Professional GST Billing Software for Indian Businesses";
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) {
-            metaDesc.setAttribute("content", "Generate GST-compliant invoices in seconds. BillMint is a fast, free, and secure business management tool designed specifically for Indian small enterprises and freelancers.");
+            metaDesc.setAttribute("content", "Generate GST-compliant invoices in seconds. Bill is a fast, free, and secure business management tool designed specifically for Indian small enterprises and freelancers.");
         }
 
         let metaKeywords = document.querySelector('meta[name="keywords"]');
@@ -209,7 +209,7 @@ export default function LandingPage() {
                         Engineered for modern business.
                     </h2>
                     <p style={{ fontSize: 18, color: '#475569', maxWidth: 600, margin: '0 auto' }}>
-                        BillMint provides a powerful suite of tools to manage your invoicing, customers, and inventory with zero friction.
+                        Bill provides a powerful suite of tools to manage your invoicing, customers, and inventory with zero friction.
                     </p>
                 </div>
 
@@ -242,7 +242,7 @@ export default function LandingPage() {
                         {
                             icon: Zap,
                             title: 'Offline Optimized (PWA)',
-                            desc: 'Install BillMint on your phone or desktop. Works perfectly offline, so you can continue billing even without an internet connection.',
+                            desc: 'Install Bill on your phone or desktop. Works perfectly offline, so you can continue billing even without an internet connection.',
                             color: '#8b5cf6', bg: '#f5f3ff'
                         },
                         {
@@ -284,7 +284,7 @@ export default function LandingPage() {
                         }}>
                             <Logo className="w-6 h-6" />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: 18, color: '#111' }}>BillMint</span>
+                        <span style={{ fontWeight: 700, fontSize: 18, color: '#111' }}>Bill</span>
                     </div>
                     <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, maxWidth: 500, marginBottom: 40 }}>
                         The simplest, fastest way to bill your customers. GST-compliant and proudly made for Indian small businesses.
@@ -292,7 +292,7 @@ export default function LandingPage() {
 
                     <div style={{ borderTop: '1px solid #f1f5f9', width: '100%', paddingTop: 32 }}>
                         <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.8 }}>
-                            © 2026 BillMint. All rights reserved. • Powered by LocalStorage Technology • Design and Developed by <a href="https://roushan.framer.website" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>roushan.framer.website</a>
+                            © 2026 Bill. All rights reserved. • Powered by LocalStorage Technology • Design and Developed by <a href="https://roushan.framer.website" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>roushan.framer.website</a>
                         </p>
                     </div>
                 </div>

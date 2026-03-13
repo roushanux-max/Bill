@@ -23,7 +23,7 @@ export default function Header() {
 
     const primaryColor = user ? settings.primaryColor : '#FF0000';
     const contrastColor = getContrastColor(primaryColor);
-    const businessName = user && storeInfo?.name ? storeInfo.name : 'BillMint';
+    const businessName = user && storeInfo?.name ? storeInfo.name : 'Bill';
     const displayLogo = user && settings.logo ? settings.logo : null;
 
     const isLandingPage = location.pathname === '/' && !user;

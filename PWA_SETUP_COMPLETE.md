@@ -2,7 +2,7 @@
 
 ## 🎯 **What's Been Configured**
 
-Your BillMint app is now a **Progressive Web App (PWA)** that users can install on any device!
+Your Bill app is now a **Progressive Web App (PWA)** that users can install on any device!
 
 ### **✅ Completed Setup:**
 
@@ -128,7 +128,7 @@ npm run deploy
 - Icon appears on home screen
 
 **Manual Install:**
-- Menu (⋮) → "Install BillMint"
+- Menu (⋮) → "Install Bill"
 - Or: "Add to Home Screen"
 
 ### **iOS (Safari):**
@@ -209,7 +209,7 @@ Browses app (30 seconds)
     ↓
 Install banner slides up
     ↓
-"Install BillMint" button
+"Install Bill" button
     ↓
 User clicks "Install"
     ↓
@@ -237,7 +237,7 @@ Full screen
 
 ## 📊 **PWA Advantages**
 
-| Feature | Native App | PWA (BillMint) |
+| Feature | Native App | PWA (Bill) |
 |---------|-----------|----------------|
 | Install Cost | ₹1,850-7,500 | **FREE** |
 | Update Speed | Days (review) | Instant |
@@ -306,7 +306,7 @@ Open DevTools → Application → Service Workers
 
 **On Your Website:**
 ```
-🎉 Install BillMint on your phone!
+🎉 Install Bill on your phone!
 
 No app store needed - just click "Install" when prompted.
 Works offline, saves to home screen, feels like a native app!
@@ -314,7 +314,7 @@ Works offline, saves to home screen, feels like a native app!
 
 **Social Media:**
 ```
-📱 BillMint is now installable!
+📱 Bill is now installable!
 
 ✅ No app store
 ✅ Works offline
@@ -326,7 +326,7 @@ Try it: bill-indol.vercel.app
 
 **Email Signature:**
 ```
-BillMint - Free Invoice Generator
+Bill - Free Invoice Generator
 Install our app: https://bill-indol.vercel.app
 📱 Available on all devices (no app store needed!)
 ```

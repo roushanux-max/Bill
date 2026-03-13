@@ -1,4 +1,4 @@
-# Deploy BillMint - FREE FOREVER 🚀
+# Deploy Bill - FREE FOREVER 🚀
 
 ## 🎯 **5-Minute Deployment Guide**
 
@@ -19,10 +19,10 @@ npm run build
 vercel --prod
 
 # Follow the prompts:
-# ? Set up and deploy "~/billmint"? [Y/n] Y
+# ? Set up and deploy "~/bill"? [Y/n] Y
 # ? Which scope do you want to deploy to? Your Name
 # ? Link to existing project? [y/N] N
-# ? What's your project's name? billmint
+# ? What's your project's name? bill
 # ? In which directory is your code located? ./
 # Auto-detected Project Settings (Vite):
 # - Build Command: npm run build
@@ -41,7 +41,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/yourusername/billmint.git
+git remote add origin https://github.com/yourusername/bill.git
 git push -u origin main
 ```
 
@@ -66,7 +66,7 @@ npm run build
 netlify deploy --prod
 
 # Follow prompts, choose "dist" as publish directory
-# ✅ Done! Live at: https://billmint.netlify.app
+# ✅ Done! Live at: https://bill.netlify.app
 ```
 
 ---
@@ -98,8 +98,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'BillMint - Invoice Generator',
-        short_name: 'BillMint',
+        name: 'Bill - Invoice Generator',
+        short_name: 'Bill',
         description: 'GST-compliant invoice generation app for Indian businesses',
         theme_color: '#8B1A1A',
         background_color: '#ffffff',
@@ -190,7 +190,7 @@ Your `index.html` should have (check if missing):
     <link rel="icon" type="image/png" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <title>BillMint - Invoice Generator</title>
+    <title>Bill - Invoice Generator</title>
   </head>
   <body>
     <div id="root"></div>
@@ -214,7 +214,7 @@ vercel --prod
 ### **How Users Install:**
 
 **Android:**
-1. Open https://billmint.vercel.app in Chrome
+1. Open https://bill.vercel.app in Chrome
 2. Tap the "Add to Home Screen" prompt
 3. Or: Menu > "Install app"
 
@@ -238,7 +238,7 @@ If you build a Flutter APK later, host it FREE:
 ```
 /public
   /downloads
-    billmint-v1.0.apk
+    bill-v1.0.apk
     INSTALL_INSTRUCTIONS.md
 ```
 
@@ -251,15 +251,15 @@ Add route in your app:
 export function Download() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-4">Download BillMint</h1>
+      <h1 className="text-4xl font-bold mb-4">Download Bill</h1>
       
       <div className="max-w-2xl space-y-6">
         <div className="border rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-2">📱 Mobile App</h2>
-          <p className="mb-4">Install BillMint on your mobile device</p>
+          <p className="mb-4">Install Bill on your mobile device</p>
           
           <a 
-            href="/downloads/billmint-v1.0.apk"
+            href="/downloads/bill-v1.0.apk"
             download
             className="bg-maroon text-white px-6 py-3 rounded-lg inline-block"
           >
@@ -276,7 +276,7 @@ export function Download() {
           <p className="mb-4">Install from browser - works on iOS & Android</p>
           
           <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>Open billmint.vercel.app in mobile browser</li>
+            <li>Open bill.vercel.app in mobile browser</li>
             <li>Tap "Add to Home Screen"</li>
             <li>Use like a native app!</li>
           </ol>
@@ -292,7 +292,7 @@ export function Download() {
 ## Step 4: Custom Domain (FREE Options)
 
 ### **Option A: Use Vercel Domain (FREE)**
-- Your site: `billmint.vercel.app`
+- Your site: `bill.vercel.app`
 - Professional enough
 - No setup needed
 
@@ -300,11 +300,11 @@ export function Download() {
 
 **Freenom (.tk, .ml, .ga, .cf, .gq):**
 1. Go to https://www.freenom.com
-2. Search "billmint.tk"
+2. Search "bill.tk"
 3. Add to cart (FREE)
 4. Register (requires email)
 5. Go to Vercel > Settings > Domains
-6. Add "billmint.tk"
+6. Add "bill.tk"
 7. Follow DNS instructions
 8. ✅ Done in 5 minutes!
 
@@ -377,23 +377,23 @@ Deploy and you get:
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <!-- SEO Meta Tags -->
-  <title>BillMint - Free GST Invoice Generator for India</title>
+  <title>Bill - Free GST Invoice Generator for India</title>
   <meta name="description" content="Create professional GST-compliant invoices for free. Supports CGST, SGST, IGST. Perfect for Indian businesses and freelancers." />
   <meta name="keywords" content="invoice generator, GST invoice, free invoicing, Indian invoice, CGST, SGST, bill generator" />
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://billmint.vercel.app/" />
-  <meta property="og:title" content="BillMint - Free Invoice Generator" />
+  <meta property="og:url" content="https://bill.vercel.app/" />
+  <meta property="og:title" content="Bill - Free Invoice Generator" />
   <meta property="og:description" content="Create professional GST invoices for free" />
-  <meta property="og:image" content="https://billmint.vercel.app/og-image.png" />
+  <meta property="og:image" content="https://bill.vercel.app/og-image.png" />
   
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://billmint.vercel.app/" />
-  <meta property="twitter:title" content="BillMint - Free Invoice Generator" />
+  <meta property="twitter:url" content="https://bill.vercel.app/" />
+  <meta property="twitter:title" content="Bill - Free Invoice Generator" />
   <meta property="twitter:description" content="Create professional GST invoices" />
-  <meta property="twitter:image" content="https://billmint.vercel.app/og-image.png" />
+  <meta property="twitter:image" content="https://bill.vercel.app/og-image.png" />
   
   <meta name="theme-color" content="#8B1A1A" />
 </head>
@@ -407,7 +407,7 @@ Create `/public/robots.txt`:
 User-agent: *
 Allow: /
 
-Sitemap: https://billmint.vercel.app/sitemap.xml
+Sitemap: https://bill.vercel.app/sitemap.xml
 ```
 
 ### **Add sitemap.xml**
@@ -418,12 +418,12 @@ Create `/public/sitemap.xml`:
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://billmint.vercel.app/</loc>
+    <loc>https://bill.vercel.app/</loc>
     <lastmod>2025-03-03</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://billmint.vercel.app/dashboard</loc>
+    <loc>https://bill.vercel.app/dashboard</loc>
     <priority>0.8</priority>
   </url>
 </urlset>
@@ -464,7 +464,7 @@ Create `/public/sitemap.xml`:
 
 ### **Day 1: Soft Launch**
 ```
-📱 WhatsApp Status: "Just launched BillMint - free invoice generator!"
+📱 WhatsApp Status: "Just launched Bill - free invoice generator!"
 🐦 Twitter: "Built a free GST invoice generator. No subscriptions, no limits! 🚀"
 💼 LinkedIn: Professional post about solving invoice problems
 ```
@@ -472,10 +472,10 @@ Create `/public/sitemap.xml`:
 ### **Day 3: Product Hunt**
 1. Go to https://www.producthunt.com/posts/new
 2. Fill details:
-   - Name: BillMint
+   - Name: Bill
    - Tagline: Free GST-compliant invoice generator
    - Description: Your pitch
-   - Website: https://billmint.vercel.app
+   - Website: https://bill.vercel.app
    - Screenshots: Dashboard, invoice preview, PDF
 3. Launch at 12:01 AM PST for max visibility
 
@@ -489,15 +489,15 @@ Create `/public/sitemap.xml`:
 ```
 Title: Built a free invoice generator for Indian businesses
 
-I built BillMint - a completely free invoice generator with:
+I built Bill - a completely free invoice generator with:
 ✅ GST compliance (CGST/SGST/IGST)
 ✅ No subscriptions or hidden fees
 ✅ Unlimited invoices
 ✅ PDF export
 ✅ Works offline (PWA)
 
-Live: https://billmint.vercel.app
-GitHub: https://github.com/yourusername/billmint
+Live: https://bill.vercel.app
+GitHub: https://github.com/yourusername/bill
 
 Would love your feedback!
 ```
@@ -548,14 +548,14 @@ git push
 
 ### **Your FREE Stack:**
 ```
-✅ Website: https://billmint.vercel.app
+✅ Website: https://bill.vercel.app
 ✅ Mobile App: PWA (installable)
 ✅ Hosting: Vercel (FREE forever)
 ✅ SSL: Auto-included (FREE)
 ✅ CDN: Global (FREE)
 ✅ Analytics: Vercel Analytics (FREE)
 ✅ Deployment: Auto from GitHub (FREE)
-✅ Domain: billmint.vercel.app (FREE)
+✅ Domain: bill.vercel.app (FREE)
 ✅ Storage: LocalStorage (FREE)
 ✅ Backend: None needed (FREE)
 

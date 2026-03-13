@@ -16,10 +16,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function createTestUser() {
-    console.log("Creating test user: test@billmint.local / password123");
+    console.log("Creating test user: test@bill.local / password123");
 
     const { data, error } = await supabase.auth.signUp({
-        email: 'test@billmint.com',
+        email: 'test@bill.com',
         password: 'password123',
         options: {
             data: {
@@ -30,7 +30,7 @@ async function createTestUser() {
 
     if (error) {
         if (error.message.includes("User already registered")) {
-            console.log("✅ User already exists! You can log in with test@billmint.com / password123");
+            console.log("✅ User already exists! You can log in with test@bill.com / password123");
         } else {
             console.error("❌ Failed to create user:", error.message);
         }

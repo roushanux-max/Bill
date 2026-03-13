@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'BillMint - Invoice Generator',
-        short_name: 'BillMint',
+        name: 'Bill - Invoice Generator',
+        short_name: 'Bill',
         description: 'Free GST-compliant invoice generation app for Indian businesses',
         theme_color: '#8B1A1A',
         background_color: '#ffffff',

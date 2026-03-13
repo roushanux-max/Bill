@@ -8,7 +8,7 @@ const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SU
 
 async function checkLogin() {
     const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'test@billmint.com',
+        email: 'test@bill.com',
         password: 'password123'
     });
 

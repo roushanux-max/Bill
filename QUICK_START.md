@@ -1,4 +1,4 @@
-# 🚀 BillMint - Quick Start Guide
+# 🚀 Bill - Quick Start Guide
 
 ## **Deploy in 3 Commands** ⚡
 
@@ -92,19 +92,19 @@ vercel --prod
 ? Set up and deploy? [Y/n] Y
 ? Which scope? Your Name
 ? Link to existing project? [y/N] N
-? What's your project's name? billmint
+? What's your project's name? bill
 ? In which directory is your code located? ./
 ? Want to override settings? [y/N] N
 ```
 
-**✅ Done! Live at: https://billmint-xxx.vercel.app**
+**✅ Done! Live at: https://bill-xxx.vercel.app**
 
 ### **Update Custom Domain (Optional):**
 
 In Vercel dashboard:
 1. Go to your project
 2. Settings → Domains
-3. Add: `billmint.vercel.app` (or your custom domain)
+3. Add: `bill.vercel.app` (or your custom domain)
 
 ---
 
@@ -120,9 +120,9 @@ git init
 
 # 3. Push to GitHub
 git add .
-git commit -m "Initial commit - BillMint PWA"
+git commit -m "Initial commit - Bill PWA"
 git branch -M main
-git remote add origin https://github.com/yourusername/billmint.git
+git remote add origin https://github.com/yourusername/bill.git
 git push -u origin main
 ```
 
@@ -131,7 +131,7 @@ git push -u origin main
 1. Go to https://vercel.com
 2. Click "New Project"
 3. Import from GitHub
-4. Select "billmint" repo
+4. Select "bill" repo
 5. Click "Deploy"
 
 **✅ Now every git push auto-deploys!**
@@ -152,9 +152,9 @@ git push
 ### **Send to Friends:**
 
 ```
-Hey! Check out BillMint - a free invoice generator I built!
+Hey! Check out Bill - a free invoice generator I built!
 
-📱 Install it: https://billmint.vercel.app
+📱 Install it: https://bill.vercel.app
 
 Just open the link and tap "Install" - works on any phone!
 No app store needed, completely free! 🎉
@@ -163,7 +163,7 @@ No app store needed, completely free! 🎉
 ### **Social Media Post:**
 
 ```
-🚀 Just launched BillMint!
+🚀 Just launched Bill!
 
 Free GST-compliant invoice generator for Indian businesses.
 
@@ -172,9 +172,9 @@ Free GST-compliant invoice generator for Indian businesses.
 ✅ Works offline
 ✅ Install on any device (no app store!)
 
-Try it: https://billmint.vercel.app
+Try it: https://bill.vercel.app
 
-#BillMint #InvoiceGenerator #Free #PWA
+#Bill #InvoiceGenerator #Free #PWA
 ```
 
 ---
@@ -183,7 +183,7 @@ Try it: https://billmint.vercel.app
 
 ### **How Users Install:**
 
-1. **Open link:** `billmint.vercel.app`
+1. **Open link:** `bill.vercel.app`
 2. **Browse app** for 30 seconds
 3. **Install prompt** slides up
 4. **Click "Install App"**

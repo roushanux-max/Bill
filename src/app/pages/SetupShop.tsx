@@ -177,7 +177,7 @@ export default function SetupShop() {
           phone: data.phone || '',
           email: data.email || '',
         };
-        localStorage.setItem('billmint_store_info', JSON.stringify(storeInfo));
+        localStorage.setItem('bill_store_info', JSON.stringify(storeInfo));
 
       } catch (err: any) {
         console.warn('Supabase sync failed, saving locally instead:', err);
@@ -192,7 +192,7 @@ export default function SetupShop() {
           phone: storeData.phone || '',
           email: storeData.email || '',
         };
-        localStorage.setItem('billmint_store_info', JSON.stringify(storeInfo));
+        localStorage.setItem('bill_store_info', JSON.stringify(storeInfo));
       }
 
       // Mark onboarding complete and remove draft
@@ -236,7 +236,7 @@ export default function SetupShop() {
       phone: '',
       email: '',
     };
-    localStorage.setItem('billmint_store_info', JSON.stringify(storeInfo));
+    localStorage.setItem('bill_store_info', JSON.stringify(storeInfo));
     localStorage.setItem('hasCompletedOnboarding', 'true');
     localStorage.removeItem('shopSetupDraft');
 
@@ -267,7 +267,7 @@ export default function SetupShop() {
       <div className="w-20 h-20 bg-[var(--color-primary-light)] rounded-full flex items-center justify-center mx-auto mb-6">
         <Store className="w-10 h-10 text-[var(--color-primary)]" />
       </div>
-      <h2 className="text-3xl font-bold text-slate-900 mb-4">Welcome to BillMint</h2>
+      <h2 className="text-3xl font-bold text-slate-900 mb-4">Welcome to Bill</h2>
       <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
         Let's get your business set up. We just need a few details to start generating professional invoices.
       </p>
