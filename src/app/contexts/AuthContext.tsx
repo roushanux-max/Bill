@@ -8,6 +8,8 @@ interface AuthContextType {
   session: Session | null;
   displayEmail: string | null;
   loading: boolean;
+  hasStore: boolean | null;
+  refreshHasStore: () => Promise<void>;
   signUp: (email: string, password: string, name: string, mobile?: string, city?: string, dob?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -20,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasStore, setHasStore] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Check initial session
@@ -28,6 +31,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
+        
+        // If we have a hash fragment (OAuth redirect), let's wait a bit longer 
+        // for onAuthStateChange to fire if getSession returned null
+        if (!initialSession && window.location.hash) {
+           console.log("AuthContext: Detected hash fragment, waiting for session with timeout...");
+           // Fail-safe timeout to prevent infinite loading
+           setTimeout(() => {
+             setLoading(current => {
+               if (current) console.log("AuthContext: Redirect timeout hit, concluding no session.");
+               return false;
+             });
+           }, 2000);
+           return;
+        }
       } catch (e) {
         console.error('Error checking initial session:', e);
       } finally {
@@ -40,14 +57,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (session?.user && !localStorage.getItem('active_store_id')) {
+        // One-time proactive store restoration on auth change
+        const { data: stores } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .limit(1);
+        
+        if (stores && stores.length > 0) {
+          localStorage.setItem('active_store_id', stores[0].id);
+          // Dispatch storage event so other contexts know we have a store now
+          window.dispatchEvent(new Event('storage'));
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const refreshHasStore = async () => {
+    if (!user) {
+      setHasStore(null);
+      return;
+    }
+
+    // Fast path: localStorage
+    if (localStorage.getItem('hasCompletedOnboarding') === 'true' || localStorage.getItem('active_store_id')) {
+      setHasStore(true);
+      return;
+    }
+
+    try {
+      const { data: stores, error } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (!error && stores && stores.length > 0) {
+        localStorage.setItem('active_store_id', stores[0].id);
+        localStorage.setItem('hasCompletedOnboarding', 'true');
+        setHasStore(true);
+      } else {
+        setHasStore(false);
+      }
+    } catch (e) {
+      console.warn('AuthContext: Store check failed', e);
+      // Fallback: assume they have one if offline so we don't block them
+      setHasStore(true);
+    }
+  };
+
+  useEffect(() => {
+    if (user && hasStore === null) {
+      refreshHasStore();
+    } else if (!user) {
+      setHasStore(null);
+    }
+  }, [user]);
 
   // When user changes (login), ensure we have an active store id and migrate local drafts
   useEffect(() => {
@@ -161,6 +234,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     displayEmail: user?.email ?? null,
     loading,
+    hasStore,
+    refreshHasStore,
     signUp,
     signIn,
     signInWithGoogle,

@@ -24,7 +24,7 @@ export default function UserThemeProvider({ children }: { children: React.ReactN
         return () => {
             // Revert to Youtube Red default
             if (metaThemeColor) {
-                metaThemeColor.setAttribute('content', '#FF0000');
+                metaThemeColor.setAttribute('content', '#6366f1');
             }
         };
     }, [settings.primaryColor]);

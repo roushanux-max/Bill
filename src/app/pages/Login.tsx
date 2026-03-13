@@ -15,6 +15,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Load saved credentials on mount
   useEffect(() => {
@@ -144,6 +158,7 @@ export default function Login() {
                   <button
                     onClick={handleGoogleLogin}
                     className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-medium"
+                    title={isOffline ? "You appear to be offline. Google Sign-in requires an internet connection." : ""}
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path

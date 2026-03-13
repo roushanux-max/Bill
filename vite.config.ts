@@ -12,12 +12,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.svg'],
       manifest: {
         name: 'Bill - Invoice Generator',
         short_name: 'Bill',
         description: 'Free GST-compliant invoice generation app for Indian businesses',
-        theme_color: '#8B1A1A',
+        theme_color: '#6366f1',
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
@@ -25,28 +25,28 @@ export default defineConfig({
         orientation: 'portrait-primary',
         icons: [
           {
-            src: '/pwa-192x192.svg',
+            src: '/bill_software_icon.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/pwa-512x512.svg',
+            src: '/bill_software_icon.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/pwa-512x512.svg',
+            src: '/bill_software_icon.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable'
           }
         ],
         categories: ['business', 'finance', 'productivity'],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}', 'index.html', 'logo.svg'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

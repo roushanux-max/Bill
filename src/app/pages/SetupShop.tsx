@@ -29,6 +29,7 @@ export default function SetupShop() {
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [fetchingPincode, setFetchingPincode] = useState(false);
   const [savingLater, setSavingLater] = useState(false);
   const [hasExistingStore, setHasExistingStore] = useState(false);
 
@@ -49,11 +50,22 @@ export default function SetupShop() {
     const loadExisting = async () => {
       if (!user) return;
       try {
-        const { data } = await supabase
+        // 1. Try checking by user_id
+        let { data, error } = await supabase
           .from('stores')
           .select('id, business_name, email, phone, address, city, state, pincode, gstin, owner_name')
           .eq('user_id', user.id)
           .limit(1);
+
+        // 2. Fallback to ID check (old setup pattern)
+        if (!data || data.length === 0 || error) {
+          const fallback = await supabase
+            .from('stores')
+            .select('id, business_name, email, phone, address, city, state, pincode, gstin, owner_name')
+            .eq('id', user.id)
+            .limit(1);
+          data = fallback.data;
+        }
 
         if (data && data.length > 0) {
           setHasExistingStore(true);
@@ -93,9 +105,40 @@ export default function SetupShop() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    const { name, value } = e.target;
+    const newFormData = { ...formData, [name]: value };
     setFormData(newFormData);
     localStorage.setItem('shopSetupDraft', JSON.stringify(newFormData));
+
+    // Auto-fetch location if pincode is 6 digits
+    if (name === 'pincode' && value.length === 6 && /^\d{6}$/.test(value)) {
+      handlePincodeLookup(value);
+    }
+  };
+
+  const handlePincodeLookup = async (pincode: string) => {
+    setFetchingPincode(true);
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await response.json();
+
+      if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice[0]) {
+        const info = data[0].PostOffice[0];
+        const city = info.District;
+        const state = info.State;
+
+        setFormData(prev => {
+          const updated = { ...prev, city, state };
+          localStorage.setItem('shopSetupDraft', JSON.stringify(updated));
+          return updated;
+        });
+        toast.success(`Location identified: ${city}, ${state}`);
+      }
+    } catch (e) {
+      console.error('Pincode fetch error:', e);
+    } finally {
+      setFetchingPincode(false);
+    }
   };
 
   const handleNext = () => {
@@ -157,11 +200,18 @@ export default function SetupShop() {
       }
 
       try {
-        const { data, error } = await supabase
+        // Add a timeout to prevents infinite hanging on slow/blocked connections
+        const upsertPromise = supabase
           .from('stores')
           .upsert([storeData])
           .select()
           .single();
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('TIMEOUT')), 5000)
+        );
+
+        const { data, error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
 
         if (error) throw error;
 
@@ -393,15 +443,22 @@ export default function SetupShop() {
             <label className="block text-sm font-semibold text-slate-700 mb-1">
               PIN Code <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              name="pincode"
-              value={formData.pincode}
-              onChange={handleChange}
-              maxLength={6}
-              placeholder="6 digits"
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                name="pincode"
+                value={formData.pincode}
+                onChange={handleChange}
+                maxLength={6}
+                placeholder="6 digits"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
+              />
+              {fetchingPincode && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

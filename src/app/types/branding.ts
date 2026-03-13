@@ -18,6 +18,7 @@ export interface BrandingSettings {
   showFooter: boolean;
   footerText: string;
   invoiceNotes?: string;
+  termsAndConditions?: string;
 
   // Signature
   showSignature: boolean;
@@ -28,7 +29,7 @@ export interface BrandingSettings {
 export const defaultBrandingSettings: BrandingSettings = {
   logo: null,
   logoSize: 'medium',
-  primaryColor: '#FF0000',
+  primaryColor: '#6366f1',
   headerStyle: 'modern',
   showBorder: true,
   fontFamily: 'aptos',
@@ -36,6 +37,7 @@ export const defaultBrandingSettings: BrandingSettings = {
   showFooter: true,
   footerText: 'Thank you for your business!',
   invoiceNotes: 'All Subject to Arrah Jurisdiction only.\nGoods once sold will not be taken back.\nAll works transit will be entertained.',
+  termsAndConditions: '',
   showSignature: true,
   signatureImage: null,
   signatureText: 'Authorized Signatory',

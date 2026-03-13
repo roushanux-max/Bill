@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Search, Download, Filter, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Customer, Invoice } from '../types/invoice';
 import { getCustomers, saveCustomer, deleteCustomer, getInvoices } from '../utils/storage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Filter, X } from 'lucide-react';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -33,6 +32,7 @@ export default function Customers() {
   const [showFilters, setShowFilters] = useState(false);
   const [filterState, setFilterState] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'spending'>('date');
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -101,18 +101,26 @@ export default function Customers() {
       return;
     }
 
-    const customer: Customer = {
-      id: editingCustomer?.id || Date.now().toString(),
-      ...formData,
-      gstin: formData.gstin.toUpperCase(),
-      createdAt: editingCustomer?.createdAt || new Date().toISOString(),
-    };
+    setIsSaving(true);
+    try {
+      const customer: Customer = {
+        id: editingCustomer?.id || crypto.randomUUID(),
+        ...formData,
+        gstin: formData.gstin.toUpperCase(),
+        createdAt: editingCustomer?.createdAt || new Date().toISOString(),
+      };
 
-    await saveCustomer(customer);
-    await loadCustomers();
-    toast.success(editingCustomer ? 'Customer updated!' : 'Customer added!');
-    setIsDialogOpen(false);
-    resetForm();
+      await saveCustomer(customer);
+      await loadCustomers();
+      toast.success(editingCustomer ? 'Customer updated!' : 'Customer added!');
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (e) {
+      console.error('Error saving customer:', e);
+      toast.error('Failed to save customer. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Calculate total spending for a customer
@@ -324,8 +332,15 @@ export default function Customers() {
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
                         Cancel
                       </Button>
-                      <Button type="submit" className="flex-1">
-                        {editingCustomer ? 'Update' : 'Add'} Customer
+                      <Button type="submit" className="flex-1" disabled={isSaving}>
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          editingCustomer ? 'Update Customer' : 'Add Customer'
+                        )}
                       </Button>
                     </div>
                   </form>
@@ -437,10 +452,20 @@ export default function Customers() {
         <div className="grid grid-cols-1 gap-3 sm:gap-4">
           {filteredSortedCustomers.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center">
+              <CardContent className="py-12 text-center space-y-4">
                 <p className="text-slate-500 text-sm">
-                  {searchTerm ? 'No customers found' : 'No customers yet. Add your first customer!'}
+                  {searchTerm ? 'No customers found matching your search.' : 'No customers yet.'}
                 </p>
+                {!searchTerm && (
+                  <Button
+                    size="sm"
+                    onClick={() => setIsDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Your First Customer
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (

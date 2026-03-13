@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, Filter, X } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Search, Filter, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Product } from '../types/invoice';
 import { getProducts, saveProduct, deleteProduct, subscribeToProducts } from '../utils/storage';
@@ -23,6 +23,7 @@ export default function Products() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterGstRate, setFilterGstRate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'date'>('date');
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -88,17 +89,25 @@ export default function Products() {
       return;
     }
 
-    const product: Product = {
-      id: editingProduct?.id || Date.now().toString(),
-      ...formData,
-      createdAt: editingProduct?.createdAt || new Date().toISOString(),
-    };
+    setIsSaving(true);
+    try {
+      const product: Product = {
+        id: editingProduct?.id || crypto.randomUUID(),
+        ...formData,
+        createdAt: editingProduct?.createdAt || new Date().toISOString(),
+      };
 
-    await saveProduct(product);
-    await loadProducts();
-    toast.success(editingProduct ? 'Product updated!' : 'Product added!');
-    setIsDialogOpen(false);
-    resetForm();
+      await saveProduct(product);
+      await loadProducts();
+      toast.success(editingProduct ? 'Product updated!' : 'Product added!');
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (e) {
+      console.error('Error saving product:', e);
+      toast.error('Failed to save product. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const filteredProducts = products.filter(product =>
@@ -262,8 +271,15 @@ export default function Products() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
                       Cancel
                     </Button>
-                    <Button type="submit" className="flex-1">
-                      {editingProduct ? 'Update' : 'Add'} Product
+                    <Button type="submit" className="flex-1" disabled={isSaving}>
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        editingProduct ? 'Update Product' : 'Add Product'
+                      )}
                     </Button>
                   </div>
                 </form>

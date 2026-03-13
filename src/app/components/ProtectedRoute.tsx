@@ -4,61 +4,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import UserThemeProvider from './UserThemeProvider';
 import { supabase } from '../utils/supabase';
+import MobileNav from './MobileNav';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
-  const [onboardingChecked, setOnboardingChecked] = useState(false);
-  const [hasStore, setHasStore] = useState<boolean | null>(null);
+  const { user, loading, hasStore } = useAuth();
 
-  useEffect(() => {
-    if (!user) {
-      setOnboardingChecked(true);
-      return;
-    }
-
-    // First, check localStorage for a fast path
-    const localFlag = localStorage.getItem('hasCompletedOnboarding');
-    if (localFlag === 'true') {
-      setHasStore(true);
-      setOnboardingChecked(true);
-      return;
-    }
-
-    // Otherwise, query Supabase (handles Google OAuth returning users)
-    const checkStore = async () => {
-      try {
-        const { data: stores, error } = await supabase
-          .from('stores')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1);
-
-        if (!error && stores && stores.length > 0) {
-          localStorage.setItem('active_store_id', stores[0].id);
-          localStorage.setItem('hasCompletedOnboarding', 'true');
-          setHasStore(true);
-        } else {
-          setHasStore(false);
-        }
-      } catch {
-        setHasStore(false);
-      } finally {
-        setOnboardingChecked(true);
-      }
-    };
-
-    checkStore();
-  }, [user]);
-
-  if (loading || !onboardingChecked) {
+  if (loading || (user && hasStore === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#FF0000] mx-auto mb-4" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#6366f1] mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -70,14 +29,18 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Redirect new users to setup 
-  const currentPath = window.location.pathname;
-  if (hasStore === false && currentPath !== '/setup-shop') {
+  if (hasStore === false) {
     return <Navigate to="/setup-shop" replace />;
   }
 
   return (
     <UserThemeProvider>
-      {children}
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <div className="flex-1 pb-24 md:pb-0">
+          {children}
+        </div>
+        <MobileNav />
+      </div>
     </UserThemeProvider>
   );
 }

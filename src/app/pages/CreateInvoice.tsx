@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -303,6 +303,13 @@ export default function CreateInvoice() {
   };
 
   const handleAddCustomer = async () => {
+    // If a customer is already selected and no new name is entered, we can just proceed
+    if (selectedCustomerId && !newCustomerData.name) {
+      toast.success('Using selected customer');
+      scrollToSection(itemsCardRef);
+      return;
+    }
+
     if (!newCustomerData.name || !newCustomerData.phone) {
       toast.error('Please fill in customer name and phone');
       return;
@@ -374,14 +381,6 @@ export default function CreateInvoice() {
   };
 
   const handleSuggestionSelect = (suggestion: Customer) => {
-    setNewCustomerData({
-      name: suggestion.name,
-      phone: suggestion.phone,
-      gstin: suggestion.gstin || '',
-      address: suggestion.address || '',
-      state: suggestion.state || '',
-      email: suggestion.email || '',
-    });
     setSelectedCustomerId(suggestion.id);
     setActiveCustomer(suggestion);
     setIsNewCustomer(false);
@@ -389,21 +388,15 @@ export default function CreateInvoice() {
   };
 
   const handleSelectExistingCustomer = (value: string) => {
+    console.log("CreateInvoice: Selecting customer", value);
     setSelectedCustomerId(value);
 
-    // Auto-fill the customer form
+    // Set as active but don't auto-fill input fields (user wants supportive text instead)
     const customer = customers.find(c => c.id === value);
     if (customer) {
-      setNewCustomerData({
-        name: customer.name,
-        phone: customer.phone,
-        gstin: customer.gstin || '',
-        address: customer.address || '',
-        state: customer.state || '',
-        email: customer.email || '',
-      });
       setActiveCustomer(customer);
       setIsNewCustomer(false);
+      toast.success(`Selected customer: ${customer.name}`);
     }
   };
 
@@ -491,6 +484,11 @@ export default function CreateInvoice() {
     setNewItemData({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
     setSelectedProductId('');
     localStorage.removeItem('itemFormDraft');
+    
+    // Scroll to items list on mobile to show it was added
+    if (window.innerWidth < 768) {
+      itemsCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
   };
 
   const handleEditItem = (index: number) => {
@@ -515,7 +513,6 @@ export default function CreateInvoice() {
         name: product.name,
         hsn: product.hsnCode || '',
         quantity: 1,
-        unit: product.unit || 'pcs',
         rate: product.sellingPrice,
         taxRate: product.gstRate,
         amount: product.sellingPrice,
@@ -528,7 +525,6 @@ export default function CreateInvoice() {
       name: suggestion.name,
       hsn: suggestion.hsnCode || '',
       quantity: 1,
-      unit: suggestion.unit || 'pcs',
       rate: suggestion.sellingPrice,
       taxRate: suggestion.gstRate,
       amount: suggestion.sellingPrice,
@@ -645,7 +641,7 @@ export default function CreateInvoice() {
       items,
       transportCharges,
       discount,
-      notes,
+      notes: notes || settings.invoiceNotes || (settings as any).termsAndConditions || '',
       subtotal,
       totalTax,
       total,
@@ -853,9 +849,9 @@ export default function CreateInvoice() {
                   <div className="w-full sm:w-64">
                     <SearchableSelect
                       options={customers.map(c => ({ value: c.id, label: c.name, subLabel: c.phone }))}
-                      onSelect={handleSelectExistingCustomer}
-                      placeholder="Search customers..."
-                      onSearch={handleCustomerSearch}
+                      onValueChange={handleSelectExistingCustomer}
+                      placeholder="Select Customer"
+                      onSearchChange={handleCustomerSearch}
                       isLoading={isCustomerLoading}
                       value={selectedCustomerId}
                     />
@@ -892,6 +888,9 @@ export default function CreateInvoice() {
                         placeholder="John Doe"
                         className="text-sm bg-white/50"
                       />
+                      {!newCustomerData.name && activeCustomer?.name && (
+                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.name}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="customerPhone" className="text-sm flex items-center gap-1">
@@ -909,6 +908,9 @@ export default function CreateInvoice() {
                         placeholder="9876543210"
                         className="text-sm bg-white/50"
                       />
+                      {!newCustomerData.phone && activeCustomer?.phone && (
+                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.phone}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="customerGSTIN" className="text-sm">GSTIN (Optional)</Label>
@@ -923,6 +925,9 @@ export default function CreateInvoice() {
                         placeholder="e.g. 09AAAAA0000A1Z5"
                         className="text-sm bg-white/50"
                       />
+                      {!newCustomerData.gstin && activeCustomer?.gstin && (
+                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.gstin}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="customerEmail" className="text-sm">Email (Optional)</Label>
@@ -944,6 +949,9 @@ export default function CreateInvoice() {
                         placeholder="Street, City, Area"
                         className="text-sm bg-white/50"
                       />
+                      {!newCustomerData.address && activeCustomer?.address && (
+                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.address}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label htmlFor="customerState" className="text-sm flex items-center gap-1">
@@ -995,10 +1003,10 @@ export default function CreateInvoice() {
                 <div className="flex items-center gap-3">
                   <div className="w-full sm:w-64">
                     <SearchableSelect
-                      options={products.map(p => ({ value: p.id, label: p.name, subLabel: p.category }))}
-                      onSelect={handleSelectExistingProduct}
-                      placeholder="Quick select product..."
-                      onSearch={handleProductSearch}
+                      options={products.map(p => ({ value: p.id, label: p.name, subLabel: p.hsnCode }))}
+                      onValueChange={handleSelectExistingProduct}
+                      placeholder="Select Product"
+                      onSearchChange={handleProductSearch}
                       isLoading={isProductLoading}
                       value={selectedProductId}
                     />
@@ -1179,44 +1187,39 @@ export default function CreateInvoice() {
           </div>
 
           {/* Additional Charges */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">Additional Details</CardTitle>
+          <Card className="border-slate-200/60 shadow-sm glass-card overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
+              <CardTitle className="text-base font-semibold text-slate-800">Additional Charges</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="transport" className="text-sm">Transport Charges</Label>
+                  <Label htmlFor="transport" className="text-sm font-medium text-slate-700">Transport Charges (₹)</Label>
                   <Input
                     id="transport"
                     type="number"
                     value={transportCharges}
                     onChange={(e) => setTransportCharges(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className="text-sm"
+                    className="text-sm bg-white/50 border-slate-200"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="discount" className="text-sm">Discount</Label>
+                  <Label htmlFor="discount" className="text-sm font-medium text-slate-700">Overall Discount (₹)</Label>
                   <Input
                     id="discount"
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className="text-sm"
+                    className="text-sm bg-white/50 border-slate-200"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm">Notes</Label>
-                <Input
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes..."
-                  className="text-sm"
-                />
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <p className="text-xs text-slate-500 italic">
+                  Notes and Terms are now managed globally in <Link to="/branding" className="text-indigo-600 hover:underline font-medium">Branding Settings</Link>.
+                </p>
               </div>
             </CardContent>
           </Card>

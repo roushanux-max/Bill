@@ -111,7 +111,7 @@ export default function LandingPage() {
                 <div style={{
                     position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)',
                     width: 700, height: 500,
-                    background: 'radial-gradient(ellipse at center, var(--color-primary-light, #FFEDED) 0%, transparent 70%)',
+                    background: 'radial-gradient(ellipse at center, var(--color-primary-light, #f5f3ff) 0%, transparent 70%)',
                     pointerEvents: 'none',
                     zIndex: -1
                 }} />
@@ -120,11 +120,11 @@ export default function LandingPage() {
                     {/* Pill badge */}
                     <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: 8,
-                        background: 'var(--color-primary-light, #FFEDED)',
+                        background: 'var(--color-primary-light, #f5f3ff)',
                         opacity: 0.9,
-                        border: '1px solid var(--color-primary, #FF0000)',
+                        border: '1px solid var(--color-primary, #6366f1)',
                         borderRadius: 100, padding: '6px 16px', marginBottom: 32,
-                        fontSize: 13, fontWeight: 500, color: 'var(--color-primary, #FF0000)',
+                        fontSize: 13, fontWeight: 500, color: 'var(--color-primary, #6366f1)',
                     }}>
                         <Zap size={14} fill="currentColor" className="animate-pulse" />
                         <span>Proprietary PWA technology • 100% Free</span>
@@ -133,7 +133,7 @@ export default function LandingPage() {
                     <h1 style={{ fontSize: 'clamp(42px, 7vw, 76px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-2.5px', color: '#0f172a', margin: '0 0 24px' }}>
                         Invoicing made<br />
                         <span style={{
-                            background: 'linear-gradient(135deg, var(--color-primary, #FF0000) 0%, var(--color-primary-hover, #CC0000) 50%, var(--color-primary-light, #FFEDED) 100%)',
+                            background: 'linear-gradient(135deg, var(--color-primary, #6366f1) 0%, var(--color-primary-hover, #4f46e5) 50%, var(--color-primary-light, #f5f3ff) 100%)',
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
                             effortless.
@@ -147,14 +147,14 @@ export default function LandingPage() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 80 }}>
                         <Link to="/register" style={{
                             fontSize: 18, fontWeight: 700, color: 'white', textDecoration: 'none',
-                            background: 'linear-gradient(135deg, var(--color-primary, #FF0000), var(--color-primary-hover, #CC0000))',
+                            background: 'linear-gradient(135deg, var(--color-primary, #6366f1), var(--color-primary-hover, #4f46e5))',
                             padding: '16px 36px', borderRadius: 16,
                             display: 'flex', alignItems: 'center', gap: 8,
-                            boxShadow: '0 15px 30px -10px var(--color-primary-light, #FFEDED)',
+                            boxShadow: '0 15px 30px -10px var(--color-primary-light, #f5f3ff)',
                             transition: 'transform 0.2s, box-shadow 0.2s',
                         }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light, #FFEDED)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light, #FFEDED)'; }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light, #f5f3ff)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light, #f5f3ff)'; }}
                         >
                             Start Billing Now <ArrowRight size={20} />
                         </Link>
@@ -203,17 +203,17 @@ export default function LandingPage() {
                 </AnimatedSection>
             </section>
 
-            <section id="features" style={{ padding: '160px max(24px, calc((100vw - 1100px)/2))', position: 'relative', zIndex: 2 }}>
-                <div style={{ textAlign: 'center', marginBottom: 80 }}>
-                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1.5px', marginBottom: 20 }}>
+            <section id="features" style={{ padding: '200px max(24px, calc((100vw - 1100px)/2))', position: 'relative', zIndex: 2 }}>
+                <div style={{ textAlign: 'center', marginBottom: 100 }}>
+                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1.5px', marginBottom: 24 }}>
                         Engineered for modern business.
                     </h2>
-                    <p style={{ fontSize: 18, color: '#475569', maxWidth: 600, margin: '0 auto' }}>
+                    <p style={{ fontSize: 20, color: '#475569', maxWidth: 640, margin: '0 auto' }}>
                         Bill provides a powerful suite of tools to manage your invoicing, customers, and inventory with zero friction.
                     </p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 48 }}>
                     {[
                         {
                             icon: FileText,
@@ -237,7 +237,7 @@ export default function LandingPage() {
                             icon: Shield,
                             title: 'Privacy First',
                             desc: 'Your business data stays in your browser. We prioritize your privacy with local storage and secure cloud-based data isolation.',
-                            color: '#ef4444', bg: '#fef2f2'
+                            color: '#6366f1', bg: '#f5f3ff'
                         },
                         {
                             icon: Zap,
@@ -273,27 +273,31 @@ export default function LandingPage() {
             {/* ─── Footer ─── */}
             <footer style={{
                 borderTop: '1px solid #f1f5f9',
-                padding: '48px max(24px, calc((100vw - 1100px)/2))',
+                padding: '32px max(24px, calc((100vw - 1100px)/2))',
                 background: '#fff', position: 'relative', zIndex: 2
             }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'row', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 24
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{
-                            width: 36, height: 36, borderRadius: 10,
+                            width: 32, height: 32, borderRadius: 8,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                            <Logo className="w-6 h-6" />
+                            <Logo className="w-5 h-5" />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: 18, color: '#111' }}>Bill</span>
+                        <span style={{ fontWeight: 700, fontSize: 16, color: '#111' }}>Bill</span>
+                        <span style={{ fontSize: 13, color: '#94a3b8', marginLeft: 12 }}>© 2026 Bill. All rights reserved.</span>
                     </div>
-                    <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, maxWidth: 500, marginBottom: 40 }}>
-                        The simplest, fastest way to bill your customers. GST-compliant and proudly made for Indian small businesses.
-                    </p>
 
-                    <div style={{ borderTop: '1px solid #f1f5f9', width: '100%', paddingTop: 32 }}>
-                        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.8 }}>
-                            © 2026 Bill. All rights reserved. • Powered by LocalStorage Technology • Design and Developed by <a href="https://roushan.framer.website" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>roushan.framer.website</a>
-                        </p>
+                    <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'right' }}>
+                        Designed & Developed by 
+                        <a href="https://roushan.framer.website" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600, marginLeft: 4 }}>roushan.framer.website</a>
                     </div>
                 </div>
             </footer>

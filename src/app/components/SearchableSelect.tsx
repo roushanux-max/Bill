@@ -108,8 +108,7 @@ export function SearchableSelect({
                                     key={option.value}
                                     value={option.value}
                                     keywords={[option.label, option.subLabel || ""]}
-                                    onSelect={(currentValue: string) => {
-                                        // cmdk always passes the selected value, which we've set to option.value
+                                    onSelect={() => {
                                         onValueChange(option.value);
                                         setOpen(false);
                                     }}

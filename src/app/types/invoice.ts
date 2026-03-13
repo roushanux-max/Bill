@@ -61,7 +61,9 @@ export interface StoreInfo {
   ownerName?: string;
   gstin: string;
   address: string;
+  city?: string;
   state: string;
+  pincode?: string;
   phone: string;
   email: string;
   authDistributors?: string;

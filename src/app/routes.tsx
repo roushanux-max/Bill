@@ -1,75 +1,116 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import HomeRoute from "./pages/HomeRoute";
-import BrandingSettings from "./pages/BrandingSettings";
-import InvoicePreview from "./pages/InvoicePreview";
-import CreateInvoice from "./pages/CreateInvoice";
-import Customers from "./pages/Customers";
-import Products from "./pages/Products";
-import Invoices from "./pages/Invoices";
-import SetupShop from "./pages/SetupShop";
-import StressTest from "./pages/StressTest";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import LandingPage from "./pages/LandingPage";
+import PublicRoute from "./components/PublicRoute";
+import { Loader2 } from "lucide-react";
+
+// Lazy load pages for performance
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const HomeRoute = lazy(() => import("./pages/HomeRoute"));
+const SetupShop = lazy(() => import("./pages/SetupShop"));
+const BrandingSettings = lazy(() => import("./pages/BrandingSettings"));
+const Invoices = lazy(() => import("./pages/Invoices"));
+const CreateInvoice = lazy(() => import("./pages/CreateInvoice"));
+const InvoicePreview = lazy(() => import("./pages/InvoicePreview"));
+const Customers = lazy(() => import("./pages/Customers"));
+const Products = lazy(() => import("./pages/Products"));
+const StressTest = lazy(() => import("./pages/StressTest"));
+
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+    <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+    <p className="text-slate-600 font-medium animate-pulse">Loading your dashboard...</p>
+  </div>
+);
+
+const AppLayout = () => (
+  <Suspense fallback={<LoadingFallback />}>
+    <Outlet />
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: LandingPage,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<LoadingFallback />}>
+          <LandingPage />
+        </Suspense>
+      </PublicRoute>
+    ),
   },
   {
     path: "/login",
-    Component: Login,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<LoadingFallback />}>
+          <Login />
+        </Suspense>
+      </PublicRoute>
+    ),
   },
   {
     path: "/register",
-    Component: Register,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<LoadingFallback />}>
+          <Register />
+        </Suspense>
+      </PublicRoute>
+    ),
   },
   {
     path: "/",
-    element: <ProtectedRoute><Outlet /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "/dashboard",
-        Component: HomeRoute,
+        element: <HomeRoute />,
       },
       {
         path: "/setup-shop",
-        Component: SetupShop,
+        element: <SetupShop />,
       },
       {
         path: "/stress-test",
-        Component: StressTest,
+        element: <StressTest />,
       },
       {
         path: "/branding",
-        Component: BrandingSettings,
+        element: <BrandingSettings />,
       },
       {
         path: "/invoice-preview",
-        Component: InvoicePreview,
+        element: <InvoicePreview />,
       },
       {
         path: "/create-invoice",
-        Component: CreateInvoice,
+        element: <CreateInvoice />,
       },
       {
         path: "/edit-invoice/:id",
-        Component: CreateInvoice,
+        element: <CreateInvoice />,
       },
       {
         path: "/invoices",
-        Component: Invoices,
+        element: <Invoices />,
       },
       {
         path: "/customers",
-        Component: Customers,
+        element: <Customers />,
       },
       {
         path: "/products",
-        Component: Products,
+        element: <Products />,
       },
-    ]
-  }
+    ],
+  },
 ]);

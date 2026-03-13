@@ -24,12 +24,25 @@ export const getStoreInfo = async (): Promise<StoreInfo | null> => {
     // If no active store ID, try to get the first store for the current user
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data, error } = await supabase
+      // 1. Check user_id column
+      let { data, error } = await supabase
         .from('stores')
         .select('*')
         .eq('user_id', user.id)
         .limit(1)
         .single();
+      
+      // 2. Fallback: Check id column matching user.id (old setup pattern)
+      if (!data || error) {
+        const fallback = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', user.id)
+          .limit(1)
+          .single();
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (data && !error) {
         storeId = data.id as string;
@@ -78,8 +91,10 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
     localStorage.setItem('active_store_id', user.id);
 
     try {
+      const storeId = getActiveStoreId() || user.id;
       const payload: any = {
-        id: user.id,
+        id: storeId,
+        user_id: user.id,   // CRITICAL: ensures store is findable by user_id after re-login
         business_name: info.name,
         gstin: info.gstin,
         address: info.address,
@@ -92,11 +107,13 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
 
       if (info.ownerName) payload.owner_name = info.ownerName;
 
-      const { error } = await supabase.from('stores').upsert(payload);
+      const upsertPromise = supabase.from('stores').upsert(payload);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000));
+
+      const { error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
 
       if (error) {
-        console.warn('Supabase sync failed (likely RLS), using local storage only:', error.message);
-        // We don't throw here - local storage is the source of truth for the user
+        console.warn('Supabase store sync failed/timed out, using local storage only:', error.message);
       }
     } catch (err) {
       console.error('Failed to sync store info:', err);
@@ -275,13 +292,15 @@ export const saveCustomer = async (customer: Customer) => {
   };
 
   try {
-    if (customer.id && customer.id.length > 20) {
-      await supabase.from('customers').upsert({ id: customer.id, ...customerData });
-    } else {
-      await supabase.from('customers').insert(customerData);
-    }
+    const upsertPromise = (customer.id && customer.id.length > 20)
+      ? supabase.from('customers').upsert({ id: customer.id, ...customerData })
+      : supabase.from('customers').insert(customerData);
+
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000));
+    
+    await Promise.race([upsertPromise, timeoutPromise]);
   } catch (e) {
-    console.warn('Supabase customer sync failed:', e);
+    console.warn('Supabase customer sync failed/timed out:', e);
   }
 };
 
@@ -411,13 +430,15 @@ export const saveProduct = async (product: Product) => {
   };
 
   try {
-    if (product.id && product.id.length > 20) {
-      await supabase.from('products').update(productData).eq('id', product.id);
-    } else {
-      await supabase.from('products').insert(productData);
-    }
+    const upsertPromise = (product.id && product.id.length > 20)
+      ? supabase.from('products').upsert({ id: product.id, ...productData })
+      : supabase.from('products').insert(productData);
+
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000));
+    
+    await Promise.race([upsertPromise, timeoutPromise]);
   } catch (e) {
-    console.warn('Supabase product sync failed:', e);
+    console.warn('Supabase product sync failed/timed out:', e);
   }
 };
 

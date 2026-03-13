@@ -21,7 +21,9 @@ export default function BrandingSettingsPage() {
   const [settings, setSettings] = useState<BrandingSettings>(defaultBrandingSettings);
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('store');
+  const [fetchingPincode, setFetchingPincode] = useState(false);
 
   // Load saved settings on mount
   useEffect(() => {
@@ -43,7 +45,8 @@ export default function BrandingSettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB');
+        toast.error(`Image size cannot exceed 5MB. The selected file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        document.getElementById('logo-upload')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       const reader = new FileReader();
@@ -65,7 +68,8 @@ export default function BrandingSettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error('File size should be less than 2MB');
+        toast.error(`Signature image size cannot exceed 2MB. The selected file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+        document.getElementById('signature-upload')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       const reader = new FileReader();
@@ -98,17 +102,34 @@ export default function BrandingSettingsPage() {
   };
 
   const handleSave = async () => {
-    await saveBrandingSettings(settings);
-    updateGlobalSettings(settings);
-    if (storeInfo) {
-      await saveStoreInfo(storeInfo);
+    if (storeInfo && !storeInfo.name?.trim()) {
+      setActiveSection('store');
+      setTimeout(() => {
+        document.getElementById('business-name-input')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('business-name-input')?.focus();
+      }, 100);
+      toast.error('Business Name is required. Please fill in this field before saving.');
+      return;
     }
-    setHasChanges(false);
-    toast.success('Branding settings saved successfully!', {
-      description: 'Your changes have been applied to all invoices.',
-      icon: <CheckCircle2 className="h-5 w-5" />,
-      duration: 4000,
-    });
+
+    setIsSaving(true);
+    try {
+      await saveBrandingSettings(settings);
+      updateGlobalSettings(settings);
+      if (storeInfo) {
+        await saveStoreInfo(storeInfo);
+      }
+      setHasChanges(false);
+      toast.success('Branding settings saved successfully!', {
+        description: 'Your changes have been applied to all invoices.',
+        icon: <CheckCircle2 className="h-5 w-5" />,
+        duration: 4000,
+      });
+    } catch (error) {
+      toast.error('Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -131,31 +152,53 @@ export default function BrandingSettingsPage() {
     }
   };
 
-  const updateSettings = async (key: keyof BrandingSettings, value: any) => {
+  const updateSettings = (key: keyof BrandingSettings, value: any) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     updateGlobalSettings(newSettings);
-    await saveBrandingSettings(newSettings); // Autosave immediately
-    setHasChanges(false); // Reset changes since it's saved
+    setHasChanges(true); // Don't autosave, let user click Save for feedback
   };
 
 
-  const updateStoreDetails = async (key: keyof StoreInfo, value: any) => {
+  const updateStoreDetails = (key: keyof StoreInfo, value: any) => {
     if (!storeInfo) return;
     const newStoreInfo = { ...storeInfo, [key]: value };
     setStoreInfo(newStoreInfo);
-    await saveStoreInfo(newStoreInfo); // Autosave immediately
-    await refreshBranding(); // Trigger global refresh for Header/Dashboard
-    setHasChanges(false);
+    setHasChanges(true);
+
+    // Auto-fetch location if pincode is 6 digits
+    if (key === 'pincode' && value.length === 6 && /^\d{6}$/.test(value)) {
+      handlePincodeLookup(value);
+    }
+  };
+
+  const handlePincodeLookup = async (pincode: string) => {
+    setFetchingPincode(true);
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await response.json();
+
+      if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice[0]) {
+        const info = data[0].PostOffice[0];
+        const city = info.District;
+        const state = info.State;
+
+        if (storeInfo) {
+          setStoreInfo({ ...storeInfo, city, state });
+          setHasChanges(true);
+          toast.success(`Location identified: ${city}, ${state}`);
+        }
+      }
+    } catch (e) {
+      console.error('Pincode fetch error:', e);
+    } finally {
+      setFetchingPincode(false);
+    }
   };
 
   const sections = [
-    { id: 'store', label: 'Store Details', icon: Building2 },
-    { id: 'logo', label: 'Logo & Brand', icon: ImageIcon },
-    { id: 'colors', label: 'Colors', icon: Palette },
-    { id: 'layout', label: 'Layout', icon: LayoutGrid },
-    { id: 'typography', label: 'Typography', icon: Type },
     { id: 'footer', label: 'Footer & Sign', icon: FileSignature },
+    { id: 'terms', label: 'Terms & Notes', icon: Sparkles },
   ];
 
   return (
@@ -239,10 +282,25 @@ export default function BrandingSettingsPage() {
                 <Eye className="h-4 w-4" />
                 <span>Preview</span>
               </Button>
-              <Button onClick={handleSave} size="sm" className="gap-2" style={{ backgroundColor: settings.primaryColor, color: 'white' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
-                <Save className="h-4 w-4" />
-                <span>Save</span>
-              </Button>
+              {hasChanges && (
+                <Button 
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                  size="sm" 
+                  className="gap-2 transition-all" 
+                  style={{ 
+                    backgroundColor: settings.primaryColor, 
+                    color: 'white' 
+                  }}
+                >
+                  {isSaving ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -325,8 +383,9 @@ export default function BrandingSettingsPage() {
                   <CardContent className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <Label className="text-sm font-semibold text-slate-700">Business Name</Label>
+                        <Label htmlFor="business-name-input" className="text-sm font-semibold text-slate-700">Business Name <span className="text-red-500">*</span></Label>
                         <Input
+                          id="business-name-input"
                           value={storeInfo.name}
                           onChange={(e) => updateStoreDetails('name', e.target.value)}
                           placeholder="e.g. M/S-AASHVI ENTERPRISES"
@@ -343,13 +402,39 @@ export default function BrandingSettingsPage() {
                         />
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-sm font-semibold text-slate-700">Phone Number</Label>
+                        <label className="text-sm font-semibold text-slate-700 block mb-1">Phone Number</label>
                         <Input
                           value={storeInfo.phone}
                           onChange={(e) => updateStoreDetails('phone', e.target.value)}
                           placeholder="e.g. 8507329056"
                           className="text-sm border-slate-200"
                         />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-slate-700 block mb-1">City</label>
+                        <Input
+                          value={storeInfo.city || ''}
+                          onChange={(e) => updateStoreDetails('city', e.target.value)}
+                          placeholder="e.g. Arrah"
+                          className="text-sm border-slate-200"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-slate-700 block mb-1">PIN Code</label>
+                        <div className="relative">
+                          <Input
+                            value={storeInfo.pincode || ''}
+                            onChange={(e) => updateStoreDetails('pincode', e.target.value)}
+                            placeholder="6 digits"
+                            maxLength={6}
+                            className="text-sm border-slate-200"
+                          />
+                          {fetchingPincode && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-3">
                         <Label className="text-sm font-semibold text-slate-700">Email Address (Optional)</Label>
@@ -732,29 +817,16 @@ export default function BrandingSettingsPage() {
                         />
                       </div>
                       {settings.showFooter && (
-                        <>
-                          <div className="space-y-2 pt-4 border-t">
-                            <Label className="text-sm font-medium text-slate-700">Footer Text</Label>
-                            <Textarea
-                              value={settings.footerText}
-                              onChange={(e) => updateSettings('footerText', e.target.value)}
-                              placeholder="Thank you for your business!"
-                              rows={3}
-                              className="resize-none"
-                            />
-                          </div>
-                          <div className="space-y-2 pt-4 border-t">
-                            <Label className="text-sm font-medium text-slate-700">Default Invoice Notes</Label>
-                            <Textarea
-                              value={settings.invoiceNotes || ''}
-                              onChange={(e) => updateSettings('invoiceNotes', e.target.value)}
-                              placeholder="All Subject to Arrah Jurisdiction only. Goods once sold will not be taken back. All works transit will be entertained."
-                              rows={3}
-                              className="resize-none"
-                            />
-                            <p className="text-xs text-slate-500">These notes will appear by default on all new invoices.</p>
-                          </div>
-                        </>
+                        <div className="space-y-2 pt-4 border-t">
+                          <Label className="text-sm font-medium text-slate-700">Footer Text</Label>
+                          <Textarea
+                            value={settings.footerText}
+                            onChange={(e) => updateSettings('footerText', e.target.value)}
+                            placeholder="Thank you for your business!"
+                            rows={3}
+                            className="resize-none"
+                          />
+                        </div>
                       )}
                     </div>
 
@@ -840,22 +912,69 @@ export default function BrandingSettingsPage() {
                 </Card>
               </div>
             )}
+
+            {/* Terms & Notes Section */}
+            {activeSection === 'terms' && (
+              <div className="space-y-6">
+                <Card className="shadow-lg border-0 overflow-hidden">
+                  <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
+                    <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
+                      <Sparkles className="h-5 w-5" />
+                      Terms & Notes
+                    </CardTitle>
+                    <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
+                      Manage default notes and terms for all invoices
+                    </CardDescription>
+                  </div>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-slate-700">Default Invoice Notes</Label>
+                        <Textarea
+                          value={settings.invoiceNotes || ''}
+                          onChange={(e) => updateSettings('invoiceNotes', e.target.value)}
+                          placeholder="All Subject to Arrah Jurisdiction only. Goods once sold will not be taken back. All works transit will be entertained."
+                          rows={4}
+                          className="resize-none text-sm border-slate-200"
+                        />
+                        <p className="text-xs text-slate-500 italic">These notes will appear at the bottom-left of every new invoice.</p>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-100">
+                        <Label className="text-sm font-semibold text-slate-700 block mb-2">Terms & Conditions (Optional)</Label>
+                        <Textarea
+                          value={settings.termsAndConditions || ''}
+                          onChange={(e) => updateSettings('termsAndConditions', e.target.value)}
+                          placeholder="1. Payment is due within 15 days.
+2. Please quote invoice number in payment."
+                          rows={4}
+                          className="resize-none text-sm border-slate-200"
+                        />
+                        <p className="text-xs text-slate-500 italic">Standard terms that apply to your business transactions.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Bottom Action Bar - Mobile */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 lg:hidden shadow-lg z-40">
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel} className="flex-1 gap-2">
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="flex-1 gap-2" style={{ backgroundColor: settings.primaryColor }}>
-              <Save className="h-4 w-4" />
-              Save Changes
-            </Button>
+        {/* Bottom Action Bar - Mobile - Only shown when there are changes */}
+        {hasChanges && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 lg:hidden shadow-lg z-40">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleCancel} className="flex-1 gap-2">
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2" style={{ backgroundColor: settings.primaryColor }}>
+                {isSaving ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Save className="h-4 w-4" />}
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

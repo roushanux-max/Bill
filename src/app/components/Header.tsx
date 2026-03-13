@@ -21,10 +21,11 @@ export default function Header() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const primaryColor = user ? settings.primaryColor : '#FF0000';
+    const primaryColor = user ? settings.primaryColor : '#6366f1';
     const contrastColor = getContrastColor(primaryColor);
-    const businessName = user && storeInfo?.name ? storeInfo.name : 'Bill';
-    const displayLogo = user && settings.logo ? settings.logo : null;
+    // Only show store brand when user is fully authenticated - prevents data leak to landing page
+    const businessName = (user && storeInfo?.name) ? storeInfo.name : 'Bill';
+    const displayLogo = (user && settings.logo) ? settings.logo : null;
 
     const isLandingPage = location.pathname === '/' && !user;
     const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
