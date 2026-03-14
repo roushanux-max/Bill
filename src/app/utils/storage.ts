@@ -596,6 +596,9 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     : [invoice, ...currentInvoices];
 
   localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(updatedInvoices));
+  
+  // Also update the preview cache to ensure it's fresh
+  localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
 
   const storeId = getActiveStoreId();
   if (!storeId) return invoice.id;

@@ -274,12 +274,12 @@ export default function CreateInvoice() {
         date: formatDateForDisplay(date), 
         customerId: selectedCustomerId,
         customer: {
-          name: customer.name,
-          gstin: customer.gstin,
-          address: customer.address,
-          state: customer.state,
-          phone: customer.phone,
-          email: customer.email || '',
+          name: newCustomerData.name || 'Walk-in Customer',
+          gstin: newCustomerData.gstin,
+          address: newCustomerData.address,
+          state: newCustomerData.state,
+          phone: newCustomerData.phone,
+          email: newCustomerData.email || '',
         },
         items,
         transportCharges,
@@ -603,13 +603,17 @@ export default function CreateInvoice() {
       return null;
     }
 
-    const customer = activeCustomer || customers.find(c => c.id === selectedCustomerId);
-    if (!customer) {
-      toast.error('Customer not found');
-      return null;
-    }
-
     const { subtotal, totalTax, total } = calculateTotals();
+    
+    // Ensure we use the actual text from input fields, not stale database names
+    const customerDetails = {
+      name: newCustomerData.name || activeCustomer?.name || 'Walk-in Customer',
+      gstin: newCustomerData.gstin || activeCustomer?.gstin || '',
+      address: newCustomerData.address || activeCustomer?.address || '',
+      state: newCustomerData.state || activeCustomer?.state || 'Bihar',
+      phone: newCustomerData.phone || activeCustomer?.phone || '',
+      email: newCustomerData.email || activeCustomer?.email || '',
+    };
 
     const invoices = await getInvoices();
     const existingInvoice = editId ? invoices.find(inv => inv.id === editId) : null;
@@ -618,15 +622,8 @@ export default function CreateInvoice() {
       id: editId || Date.now().toString(),
       invoiceNumber,
       date: formatDateForDisplay(date), // Always save as DD.MM.YY for consistency
-      customerId: selectedCustomerId,
-      customer: {
-        name: customer.name,
-        gstin: customer.gstin,
-        address: customer.address,
-        state: customer.state,
-        phone: customer.phone,
-        email: (customer as any).email || '',
-      },
+      customerId: selectedCustomerId || 'temp-' + Date.now(),
+      customer: customerDetails,
       items,
       transportCharges,
       discount,
