@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Product } from '../types/invoice';
 import { getProducts, saveProduct, deleteProduct, subscribeToProducts } from '../utils/storage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { ListSkeleton } from '../components/SkeletonLoaders';
 
 const CATEGORIES = ['Furniture', 'Hardware', 'Electronics', 'Other'];
 const UNITS = ['pcs', 'box', 'kg', 'meter', 'set'];
@@ -24,6 +25,7 @@ export default function Products() {
   const [filterGstRate, setFilterGstRate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'date'>('date');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,6 +48,7 @@ export default function Products() {
   const loadProducts = async () => {
     const data = await getProducts();
     setProducts(data);
+    setIsLoading(false);
   };
 
   const resetForm = () => {
@@ -350,7 +353,9 @@ export default function Products() {
 
         {/* Product List */}
         <div className="grid grid-cols-1 gap-3 sm:gap-4">
-          {sortedProducts.length === 0 ? (
+          {isLoading ? (
+            <ListSkeleton count={5} />
+          ) : sortedProducts.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-slate-500 text-sm">

@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
-import { Loader2 } from "lucide-react";
+import LoadingScreen from "./components/LoadingScreen";
 
 // Lazy load pages for performance
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -19,12 +19,7 @@ const Customers = lazy(() => import("./pages/Customers"));
 const Products = lazy(() => import("./pages/Products"));
 const StressTest = lazy(() => import("./pages/StressTest"));
 
-const LoadingFallback = () => (
-  <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-    <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
-    <p className="text-slate-600 font-medium animate-pulse">Loading your dashboard...</p>
-  </div>
-);
+const LoadingFallback = () => <LoadingScreen />;
 
 import MobileNav from "./components/MobileNav";
 

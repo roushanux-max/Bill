@@ -8,6 +8,7 @@ import { Invoice } from '../types/invoice';
 import { useAuth } from '../contexts/AuthContext';
 import { useBranding } from '../contexts/BrandingContext';
 import { toast } from 'sonner';
+import { StatSkeleton, ListSkeleton } from '../components/SkeletonLoaders';
 import Header from '../components/Header';
 
 export default function Dashboard() {
@@ -26,6 +27,7 @@ export default function Dashboard() {
   });
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const [showRevenue, setShowRevenue] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const handleSignOut = async () => {
     try {
@@ -93,6 +95,7 @@ export default function Dashboard() {
       });
       // Keep a short list of recent invoices for dashboard quick view
       setRecentInvoices(invoices.slice(0, 6));
+      setIsInitialLoading(false);
     };
 
     fetchStats();
@@ -132,70 +135,74 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Cards - Mobile Optimized */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card className="cursor-default">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <button
-                onClick={() => setShowRevenue(!showRevenue)}
-                className="text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
-                title={showRevenue ? "Hide Revenue" : "Show Revenue"}
-              >
-                {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">
-                {showRevenue ? `₹${stats.totalRevenue.toLocaleString('en-IN')}` : '₹******'}
-              </div>
-              <p className="text-xs text-slate-600 mt-1">{stats.totalInvoices} total invoices</p>
-            </CardContent>
-          </Card>
+        {isInitialLoading ? (
+          <StatSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <Card className="cursor-default">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <button
+                  onClick={() => setShowRevenue(!showRevenue)}
+                  className="text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                  title={showRevenue ? "Hide Revenue" : "Show Revenue"}
+                >
+                  {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl sm:text-2xl font-bold">
+                  {showRevenue ? `₹${stats.totalRevenue.toLocaleString('en-IN')}` : '₹******'}
+                </div>
+                <p className="text-xs text-slate-600 mt-1">{stats.totalInvoices} total invoices</p>
+              </CardContent>
+            </Card>
 
-          <Card
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => navigate('/invoices')}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Invoices This Month</CardTitle>
-              <FileText className="h-4 w-4 text-slate-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">{stats.monthCount}</div>
-              <p className="text-xs text-slate-600 mt-1">
-                {showRevenue ? `₹${stats.monthSales.toLocaleString('en-IN')}` : '₹******'} this month
-              </p>
-            </CardContent>
-          </Card>
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/invoices')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Invoices This Month</CardTitle>
+                <FileText className="h-4 w-4 text-slate-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl sm:text-2xl font-bold">{stats.monthCount}</div>
+                <p className="text-xs text-slate-600 mt-1">
+                  {showRevenue ? `₹${stats.monthSales.toLocaleString('en-IN')}` : '₹******'} this month
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => navigate('/customers')}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="h-4 w-4 text-slate-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">{stats.totalCustomers}</div>
-              <p className="text-xs text-slate-600 mt-1">All registered customers</p>
-            </CardContent>
-          </Card>
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/customers')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+                <Users className="h-4 w-4 text-slate-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl sm:text-2xl font-bold">{stats.totalCustomers}</div>
+                <p className="text-xs text-slate-600 mt-1">All registered customers</p>
+              </CardContent>
+            </Card>
 
-          <Card
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => navigate('/products')}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-slate-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">{stats.totalProducts}</div>
-              <p className="text-xs text-slate-600 mt-1">Products in catalog</p>
-            </CardContent>
-          </Card>
-        </div >
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/products')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                <Package className="h-4 w-4 text-slate-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl sm:text-2xl font-bold">{stats.totalProducts}</div>
+                <p className="text-xs text-slate-600 mt-1">Products in catalog</p>
+              </CardContent>
+            </Card>
+          </div >
+        )}
 
         {/* Recent Invoices */}
         < div className="mt-6" >
@@ -204,7 +211,9 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>View all</Button>
           </div>
           {
-            recentInvoices.length === 0 ? (
+            isInitialLoading ? (
+              <ListSkeleton count={3} />
+            ) : recentInvoices.length === 0 ? (
               <div className="text-sm text-slate-500">No invoices yet.</div>
             ) : (
               <div className="grid grid-cols-1 gap-2">

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Customer, Invoice } from '../types/invoice';
 import { getCustomers, saveCustomer, deleteCustomer, getInvoices } from '../utils/storage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { ListSkeleton } from '../components/SkeletonLoaders';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -33,6 +34,7 @@ export default function Customers() {
   const [filterState, setFilterState] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'spending'>('date');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -60,6 +62,7 @@ export default function Customers() {
     ]);
     setCustomers(customerData);
     setInvoices(invoiceData);
+    setIsLoading(false);
   };
 
   const resetForm = () => {
@@ -451,7 +454,9 @@ export default function Customers() {
 
         {/* Customer List */}
         <div className="grid grid-cols-1 gap-3 sm:gap-4">
-          {filteredSortedCustomers.length === 0 ? (
+          {isLoading ? (
+            <ListSkeleton count={5} />
+          ) : filteredSortedCustomers.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center space-y-4">
                 <p className="text-slate-500 text-sm">

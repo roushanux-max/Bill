@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
+import LoadingScreen from './LoadingScreen';
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -16,14 +16,7 @@ export default function PublicRoute({ children }: PublicRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#6366f1] mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Stamping your session..." />;
   }
 
   if (user) {

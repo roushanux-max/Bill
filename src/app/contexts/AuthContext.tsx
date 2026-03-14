@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
 import { saveInvoice, getUserKey } from '../utils/storage';
+import LoadingScreen from '../components/LoadingScreen';
 
 interface AuthContextType {
   user: User | null;

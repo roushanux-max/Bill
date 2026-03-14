@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 import UserThemeProvider from './UserThemeProvider';
 import { supabase } from '../utils/supabase';
 
@@ -13,14 +14,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (loading || (user && hasStore === null)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#6366f1] mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Verifying security..." />;
   }
 
   if (!user) {
