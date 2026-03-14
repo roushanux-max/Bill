@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const draft = JSON.parse(draftRaw);
           if (draft && (draft.items?.length > 0 || draft.customerId)) {
             // Ensure active_store_id is present before saving
-            const storeId = localStorage.getItem('active_store_id');
+            const storeId = localStorage.getItem(getUserKey('active_store_id'));
             if (storeId) {
               // saveInvoice will use active_store_id via storage helpers
               await saveInvoice(draft);

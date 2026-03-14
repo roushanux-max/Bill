@@ -244,7 +244,9 @@ export default function SetupShop() {
           name: data.business_name || '',
           gstin: data.gstin || '',
           address: data.address || '',
+          city: data.city || '',
           state: data.state || '',
+          pincode: data.pincode || '',
           phone: data.phone || '',
           email: data.email || '',
         };
@@ -259,7 +261,9 @@ export default function SetupShop() {
           name: storeData.business_name || '',
           gstin: storeData.gstin || '',
           address: storeData.address || '',
+          city: storeData.city || '',
           state: storeData.state || '',
+          pincode: storeData.pincode || '',
           phone: storeData.phone || '',
           email: storeData.email || '',
         };
@@ -304,7 +308,9 @@ export default function SetupShop() {
       name: formData.shopName || 'My Business',
       gstin: '',
       address: '',
+      city: '',
       state: '',
+      pincode: '',
       phone: '',
       email: '',
     };

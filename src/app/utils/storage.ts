@@ -78,7 +78,9 @@ export const getStoreInfo = async (): Promise<StoreInfo | null> => {
       ownerName: data.owner_name || '',
       gstin: data.gstin || '',
       address: data.address || '',
+      city: data.city || '',
       state: data.state || '',
+      pincode: data.pincode || '',
       phone: data.phone || '',
       email: data.email || '',
       authDistributors: data.auth_distributors || [],
@@ -108,7 +110,9 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
         business_name: info.name,
         gstin: info.gstin,
         address: info.address,
+        city: info.city,
         state: info.state,
+        pincode: info.pincode,
         phone: info.phone,
         email: info.email,
         auth_distributors: info.authDistributors,
@@ -316,12 +320,12 @@ export const saveCustomer = async (customer: Customer) => {
 
 export const deleteCustomer = async (id: string) => {
   // Remove from local storage immediately (targeted — don't wipe all customers)
-  const localData = localStorage.getItem('bill_customers');
+  const localData = localStorage.getItem(getUserKey('bill_customers'));
   if (localData) {
     try {
       const customers = JSON.parse(localData) as Customer[];
       const updated = customers.filter(c => c.id !== id);
-      localStorage.setItem('bill_customers', JSON.stringify(updated));
+      localStorage.setItem(getUserKey('bill_customers'), JSON.stringify(updated));
     } catch (e) {
       console.error('Error updating local customers on delete:', e);
     }
@@ -454,12 +458,12 @@ export const saveProduct = async (product: Product) => {
 
 export const deleteProduct = async (id: string) => {
   // Remove from local storage immediately (targeted — don't wipe all products)
-  const localData = localStorage.getItem('bill_products');
+  const localData = localStorage.getItem(getUserKey('bill_products'));
   if (localData) {
     try {
       const products = JSON.parse(localData) as Product[];
       const updated = products.filter(p => p.id !== id);
-      localStorage.setItem('bill_products', JSON.stringify(updated));
+      localStorage.setItem(getUserKey('bill_products'), JSON.stringify(updated));
     } catch (e) {
       console.error('Error updating local products on delete:', e);
     }

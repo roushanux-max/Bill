@@ -5,7 +5,7 @@ import Logo from './Logo';
 import { useBranding } from '../contexts/BrandingContext';
 import { getContrastColor } from '../../utils/colorUtils';
 import { 
-    LayoutDashboard, 
+    Home, 
     FileText, 
     PlusCircle, 
     Users, 
@@ -30,7 +30,7 @@ export default function Header() {
     const location = useLocation();
 
     const navItems = [
-        { label: 'Home', icon: LayoutDashboard, path: '/dashboard' },
+        { label: 'Home', icon: Home, path: '/dashboard' },
         { label: 'Bills', icon: FileText, path: '/invoices' },
         { label: 'Create Invoice', icon: PlusCircle, path: '/create-invoice' },
         { label: 'Products', icon: Package, path: '/products' },
