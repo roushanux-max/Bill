@@ -53,7 +53,7 @@ export default function CreateInvoice() {
   // New item form state
   const [newItemData, setNewItemData] = useState({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
   const [selectedProductId, setSelectedProductId] = useState<string>('');
-  const [saveToProductList, setSaveToProductList] = useState(true);
+
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
 
@@ -91,6 +91,49 @@ export default function CreateInvoice() {
   useEffect(() => {
     if (newCustomerData.name || newCustomerData.phone || newCustomerData.address) {
       localStorage.setItem('customerFormDraft', JSON.stringify(newCustomerData));
+      
+      // Debounced auto-save to database
+      if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
+      customerSearchTimeout.current = setTimeout(async () => {
+        if (!newCustomerData.name || !newCustomerData.phone) return;
+
+        try {
+          if (selectedCustomerId) {
+            const existing = customers.find(c => c.id === selectedCustomerId);
+            if (existing) {
+              const isModified = 
+                newCustomerData.name !== existing.name ||
+                newCustomerData.phone !== existing.phone ||
+                newCustomerData.gstin !== existing.gstin ||
+                newCustomerData.address !== existing.address ||
+                newCustomerData.state !== existing.state ||
+                newCustomerData.email !== existing.email;
+
+              if (isModified) {
+                const updated = { ...existing, ...newCustomerData };
+                await saveCustomer(updated);
+                setCustomers(prev => prev.map(c => c.id === selectedCustomerId ? updated : c));
+                setActiveCustomer(updated);
+              }
+            }
+          } else {
+            // New customer
+            const newId = crypto.randomUUID();
+            const customer: Customer = {
+              id: newId,
+              ...newCustomerData,
+              createdAt: new Date().toISOString(),
+            };
+            await saveCustomer(customer);
+            setCustomers(prev => [...prev, customer]);
+            setSelectedCustomerId(newId);
+            setActiveCustomer(customer);
+            setIsNewCustomer(false);
+          }
+        } catch (e) {
+          console.error('Auto-save customer failed:', e);
+        }
+      }, 1000);
     }
   }, [newCustomerData]);
 
@@ -302,83 +345,7 @@ export default function CreateInvoice() {
     }
   };
 
-  const handleAddCustomer = async () => {
-    // If a customer is already selected and no new name is entered, we can just proceed
-    if (selectedCustomerId && !newCustomerData.name) {
-      toast.success('Using selected customer');
-      scrollToSection(itemsCardRef);
-      return;
-    }
 
-    if (!newCustomerData.name || !newCustomerData.phone) {
-      toast.error('Please fill in customer name and phone');
-      return;
-    }
-
-    // If we're updating an existing customer
-    if (!isNewCustomer && selectedCustomerId) {
-      const existingCustomer = customers.find(c => c.id === selectedCustomerId);
-      if (existingCustomer) {
-        // Detect if any field has been modified
-        const isModified = 
-          newCustomerData.name !== existingCustomer.name ||
-          newCustomerData.phone !== existingCustomer.phone ||
-          (newCustomerData.gstin || '') !== (existingCustomer.gstin || '') ||
-          (newCustomerData.address || '') !== (existingCustomer.address || '') ||
-          (newCustomerData.state || '') !== (existingCustomer.state || '');
-
-        if (isModified) {
-          // Save as a NEW customer if data changed
-          const newId = crypto.randomUUID();
-          const newCustomer: Customer = {
-            id: newId,
-            name: newCustomerData.name,
-            phone: newCustomerData.phone,
-            gstin: newCustomerData.gstin || '',
-            address: newCustomerData.address || '',
-            state: newCustomerData.state || '',
-            email: newCustomerData.email || '',
-            createdAt: new Date().toISOString()
-          };
-          await saveCustomer(newCustomer);
-          setCustomers([...customers, newCustomer]);
-          setSelectedCustomerId(newId);
-          setActiveCustomer(newCustomer);
-          toast.success('Modified details saved as a new customer!');
-          return;
-        }
-
-        const updatedCustomer = {
-          ...existingCustomer,
-          ...newCustomerData,
-        };
-        await saveCustomer(updatedCustomer);
-        setCustomers(customers.map(c => c.id === selectedCustomerId ? updatedCustomer : c));
-        setActiveCustomer(updatedCustomer);
-        toast.success('Customer details updated successfully!');
-        return;
-      }
-    }
-
-    // Creating a completely new customer
-    const customer: Customer = {
-      id: Date.now().toString(),
-      name: newCustomerData.name,
-      phone: newCustomerData.phone,
-      gstin: newCustomerData.gstin || '',
-      address: newCustomerData.address || '',
-      state: newCustomerData.state,
-      email: newCustomerData.email || '',
-      createdAt: new Date().toISOString(),
-    };
-    await saveCustomer(customer);
-    setCustomers([...customers, customer]);
-    setSelectedCustomerId(customer.id);
-    setActiveCustomer(customer);
-    setIsNewCustomer(false);
-    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
-    toast.success('Customer added successfully!');
-  };
 
   const handleSuggestionSelect = (suggestion: Customer) => {
     setSelectedCustomerId(suggestion.id);
@@ -438,24 +405,50 @@ export default function CreateInvoice() {
       return;
     }
 
-    // Save product to database if selected and it's a new product
+    // Auto-save product to catalog
     let finalProductId = selectedProductId;
 
-    if (saveToProductList && !selectedProductId) {
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        name: newItemData.name,
-        category: 'Other', // Set default category
-        hsnCode: newItemData.hsn || '',
-        sellingPrice: newItemData.rate,
-        gstRate: newItemData.taxRate,
-        unit: 'pcs',
-        createdAt: new Date().toISOString(),
-      };
-      await saveProduct(newProduct);
-      setProducts([...products, newProduct]);
-      finalProductId = newProduct.id;
-      toast.success('Product saved to catalog!');
+    try {
+      if (selectedProductId) {
+        // Check if existing product needs update
+        const existing = products.find(p => p.id === selectedProductId);
+        if (existing) {
+          const isModified = 
+            newItemData.name !== existing.name ||
+            (newItemData.hsn || '') !== (existing.hsnCode || '') ||
+            newItemData.rate !== existing.sellingPrice ||
+            newItemData.taxRate !== existing.gstRate;
+
+          if (isModified) {
+            const updated = { 
+              ...existing, 
+              name: newItemData.name,
+              hsnCode: newItemData.hsn || '',
+              sellingPrice: newItemData.rate,
+              gstRate: newItemData.taxRate
+            };
+            await saveProduct(updated);
+            setProducts(prev => prev.map(p => p.id === selectedProductId ? updated : p));
+          }
+        }
+      } else {
+        // Create new product
+        const newProduct: Product = {
+          id: Date.now().toString(),
+          name: newItemData.name,
+          category: 'Other',
+          hsnCode: newItemData.hsn || '',
+          sellingPrice: newItemData.rate,
+          gstRate: newItemData.taxRate,
+          unit: 'pcs',
+          createdAt: new Date().toISOString(),
+        };
+        await saveProduct(newProduct);
+        setProducts(prev => [...prev, newProduct]);
+        finalProductId = newProduct.id;
+      }
+    } catch (e) {
+      console.error('Failed to auto-save product:', e);
     }
 
     const amount = newItemData.rate * newItemData.quantity;
@@ -781,7 +774,7 @@ export default function CreateInvoice() {
   const { total } = calculateTotals();
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 sm:pb-8">
+    <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
         <div className="px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2 sm:gap-4">
@@ -885,12 +878,9 @@ export default function CreateInvoice() {
                         onChange={e => setNewCustomerData({ ...newCustomerData, name: e.target.value })}
                         suggestions={customers}
                         onSuggestionSelect={handleSuggestionSelect}
-                        placeholder="John Doe"
+                        placeholder={activeCustomer?.name || "John Doe"}
                         className="text-sm bg-white/50"
                       />
-                      {!newCustomerData.name && activeCustomer?.name && (
-                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.name}</p>
-                      )}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="customerPhone" className="text-sm flex items-center gap-1">
@@ -905,12 +895,9 @@ export default function CreateInvoice() {
                         onSuggestionSelect={handleSuggestionSelect}
                         labelKey="phone"
                         subLabelKey="name"
-                        placeholder="9876543210"
+                        placeholder={activeCustomer?.phone || "9876543210"}
                         className="text-sm bg-white/50"
                       />
-                      {!newCustomerData.phone && activeCustomer?.phone && (
-                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.phone}</p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="customerGSTIN" className="text-sm">GSTIN (Optional)</Label>
@@ -922,12 +909,9 @@ export default function CreateInvoice() {
                         onSuggestionSelect={handleSuggestionSelect}
                         labelKey="gstin"
                         subLabelKey="name"
-                        placeholder="e.g. 09AAAAA0000A1Z5"
+                        placeholder={activeCustomer?.gstin || "e.g. 09AAAAA0000A1Z5"}
                         className="text-sm bg-white/50"
                       />
-                      {!newCustomerData.gstin && activeCustomer?.gstin && (
-                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.gstin}</p>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="customerEmail" className="text-sm">Email (Optional)</Label>
@@ -936,7 +920,7 @@ export default function CreateInvoice() {
                         type="email"
                         value={newCustomerData.email}
                         onChange={e => setNewCustomerData({ ...newCustomerData, email: e.target.value })}
-                        placeholder="customer@example.com"
+                        placeholder={activeCustomer?.email || "customer@example.com"}
                         className="text-sm bg-white/50"
                       />
                     </div>
@@ -946,12 +930,9 @@ export default function CreateInvoice() {
                         id="customerAddress"
                         value={newCustomerData.address}
                         onChange={e => setNewCustomerData({ ...newCustomerData, address: e.target.value })}
-                        placeholder="Street, City, Area"
+                        placeholder={activeCustomer?.address || "Street, City, Area"}
                         className="text-sm bg-white/50"
                       />
-                      {!newCustomerData.address && activeCustomer?.address && (
-                        <p className="text-[10px] text-indigo-500 font-medium">Existing: {activeCustomer.address}</p>
-                      )}
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label htmlFor="customerState" className="text-sm flex items-center gap-1">
@@ -960,7 +941,7 @@ export default function CreateInvoice() {
                       <p className="text-[10px] text-slate-500 font-normal leading-tight">Determines tax type (IGST vs CGST/SGST)</p>
                       <Select value={newCustomerData.state} onValueChange={value => setNewCustomerData({ ...newCustomerData, state: value })}>
                         <SelectTrigger className="bg-white/50">
-                          <SelectValue placeholder="Select state" />
+                          <SelectValue placeholder={activeCustomer?.state || "Select state"} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto">
                           {[
@@ -975,16 +956,6 @@ export default function CreateInvoice() {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <Button
-                      type="button"
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-200 transition-all font-semibold rounded-xl h-11"
-                      onClick={handleAddCustomer}
-                    >
-                      {selectedCustomerId ? 'Update Customer Record' : 'Save & Set Customer'}
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -1062,8 +1033,10 @@ export default function CreateInvoice() {
                       <Input
                         id="itemRate"
                         type="number"
-                        value={newItemData.rate}
-                        onChange={e => setNewItemData({ ...newItemData, rate: parseFloat(e.target.value) || 0 })}
+                        value={newItemData.rate || ''}
+                        onChange={e => setNewItemData({ ...newItemData, rate: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="0"
                         className="text-sm bg-white/50"
                       />
                     </div>
@@ -1073,27 +1046,16 @@ export default function CreateInvoice() {
                       <Input
                         id="itemTaxRate"
                         type="number"
-                        value={newItemData.taxRate}
-                        onChange={e => setNewItemData({ ...newItemData, taxRate: parseFloat(e.target.value) || 0 })}
+                        value={newItemData.taxRate || ''}
+                        onChange={e => setNewItemData({ ...newItemData, taxRate: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="0"
                         className="text-sm bg-white/50"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="saveProduct"
-                        checked={saveToProductList}
-                        onChange={(e) => setSaveToProductList(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                        disabled={!!selectedProductId}
-                      />
-                      <Label htmlFor="saveProduct" className={cn("text-xs font-medium", selectedProductId ? 'text-slate-400' : 'text-slate-600')}>
-                        Add to permanent catalog
-                      </Label>
-                    </div>
+                  <div className="flex items-center justify-end pt-2">
                     <div className="text-right">
                       <span className="text-xs text-slate-500 mr-2">Line Total:</span>
                       <span className="text-lg font-bold text-slate-900">₹{(newItemData.rate * newItemData.quantity).toLocaleString('en-IN')}</span>
@@ -1223,66 +1185,44 @@ export default function CreateInvoice() {
               </div>
             </CardContent>
           </Card>
+          {/* Action Buttons - Inline */}
+          <Card className="border-slate-200/60 shadow-md glass-card overflow-hidden mt-6 pb-6">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6 mb-6">
+              <div className="flex items-center justify-between w-full">
+                <CardTitle className="text-base font-semibold text-slate-800">Invoice Actions</CardTitle>
+                <div className="text-right">
+                  <div className="text-xs text-slate-500">Total Amount</div>
+                  <div className="text-xl font-bold text-slate-900">₹{total.toLocaleString('en-IN')}</div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <Button variant="outline" size="lg" onClick={handlePreview} disabled={isGenerating} className="w-full rounded-xl">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </Button>
+                <Button variant="outline" size="lg" onClick={handlePrint} disabled={isGenerating} className="w-full rounded-xl">
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print Preview
+                </Button>
+                <Button variant="default" size="lg" onClick={handleSaveInvoice} disabled={isGenerating} className="w-full rounded-xl bg-[var(--color-primary)] hover:opacity-90">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Invoice
+                </Button>
+                <Button variant="outline" size="lg" onClick={handleDownload} disabled={isGenerating} className="w-full rounded-xl">
+                  <Download className="h-4 w-4 mr-2" />
+                  Save PDF
+                </Button>
+                <Button variant="outline" size="lg" onClick={handleShare} disabled={isGenerating} className="w-full rounded-xl">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
-
-      {/* Sticky Footer - Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 sm:hidden shadow-lg z-50 print:hidden">
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={handlePreview} disabled={isGenerating} className="flex-1 min-w-[30%]">
-            <Eye className="h-4 w-4 mr-2" />
-            Preview
-          </Button>
-          <Button variant="outline" size="sm" onClick={handlePrint} disabled={isGenerating} className="flex-1 min-w-[30%]">
-            <Printer className="h-4 w-4 mr-2" />
-            Print
-          </Button>
-          <Button variant="default" size="sm" onClick={handleSaveInvoice} disabled={isGenerating} className="flex-1 min-w-[30%]">
-            <Save className="h-4 w-4 mr-2" />
-            Save
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload} disabled={isGenerating} className="flex-1">
-            <Download className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleShare} disabled={isGenerating} className="flex-1">
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
-        </div>
-      </div>
-
-      {/* Sticky Footer - Desktop */}
-      <div className="hidden sm:block fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-lg z-50 print:hidden">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <div className="text-sm text-slate-600">Total Amount</div>
-            <div className="text-2xl font-bold text-slate-900">₹{total.toLocaleString('en-IN')}</div>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handlePreview} disabled={isGenerating}>
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
-            <Button variant="outline" onClick={handlePrint} disabled={isGenerating}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print Preview
-            </Button>
-            <Button variant="default" onClick={handleSaveInvoice} disabled={isGenerating}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Invoice
-            </Button>
-            <Button variant="outline" onClick={handleDownload} disabled={isGenerating}>
-              <Download className="h-4 w-4 mr-2" />
-              Save PDF
-            </Button>
-            <Button variant="outline" onClick={handleShare} disabled={isGenerating}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-          </div>
-        </div>
-      </div>
 
 
 

@@ -119,7 +119,7 @@ export default function Dashboard() {
             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Dashboard</h2>
             <Button
               onClick={() => navigate('/create-invoice')}
-              className="bg-[var(--color-primary)] hover:opacity-90 text-sm sm:text-base"
+              className="hidden sm:flex bg-[var(--color-primary)] hover:opacity-90 text-sm sm:text-base"
               size="sm"
             >
               <UserPlus className="h-4 w-4 mr-2" />
@@ -231,27 +231,6 @@ export default function Dashboard() {
         </div >
       </main >
 
-      {/* Mobile Bottom Navigation */}
-      < nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 sm:hidden" >
-        <div className="grid grid-cols-4 gap-1">
-          <button className="flex flex-col items-center justify-center py-3 text-[var(--color-primary)]">
-            <IndianRupee className="h-5 w-5 mb-1" />
-            <span className="text-xs">Dashboard</span>
-          </button>
-          <Link to="/invoices" className="flex flex-col items-center justify-center py-3 text-slate-600">
-            <FileText className="h-5 w-5 mb-1" />
-            <span className="text-xs">Invoices</span>
-          </Link>
-          <Link to="/products" className="flex flex-col items-center justify-center py-3 text-slate-600">
-            <Package className="h-5 w-5 mb-1" />
-            <span className="text-xs">Products</span>
-          </Link>
-          <Link to="/customers" className="flex flex-col items-center justify-center py-3 text-slate-600">
-            <Users className="h-5 w-5 mb-1" />
-            <span className="text-xs">Customers</span>
-          </Link>
-        </div>
-      </nav >
-    </div >
+    </div>
   );
 }

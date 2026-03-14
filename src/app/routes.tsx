@@ -26,10 +26,15 @@ const LoadingFallback = () => (
   </div>
 );
 
+import MobileNav from "./components/MobileNav";
+
 const AppLayout = () => (
-  <Suspense fallback={<LoadingFallback />}>
-    <Outlet />
-  </Suspense>
+  <div className="min-h-screen bg-slate-50">
+    <Suspense fallback={<LoadingFallback />}>
+      <Outlet />
+    </Suspense>
+    <MobileNav />
+  </div>
 );
 
 export const router = createBrowserRouter([

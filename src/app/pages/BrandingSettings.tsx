@@ -7,17 +7,19 @@ import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
-import { ArrowLeft, Eye, Save, Upload, ImageIcon, Palette, LayoutGrid, Type, FileSignature, Sparkles, CheckCircle2, X, Building2 } from 'lucide-react';
+import { ArrowLeft, Eye, Save, Upload, ImageIcon, Palette, LayoutGrid, Type, FileSignature, Sparkles, CheckCircle2, X, Building2, User, LogOut } from 'lucide-react';
 import { getTextColorClass, getDescriptionColorClass, getContrastColor } from '../../utils/colorUtils';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { StoreInfo } from '../types/invoice';
 import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo } from '../utils/storage';
 import { useBranding } from '../contexts/BrandingContext';
+import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function BrandingSettingsPage() {
   const navigate = useNavigate();
   const { refreshBranding, updateSettings: updateGlobalSettings } = useBranding();
+  const { user, signOut } = useAuth();
   const [settings, setSettings] = useState<BrandingSettings>(defaultBrandingSettings);
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -197,8 +199,14 @@ export default function BrandingSettingsPage() {
   };
 
   const sections = [
+    { id: 'store', label: 'Store Details', icon: Building2 },
+    { id: 'logo', label: 'Logo & Brand', icon: ImageIcon },
+    { id: 'colors', label: 'Colors', icon: Palette },
+    { id: 'layout', label: 'Layout', icon: LayoutGrid },
+    { id: 'typography', label: 'Typography', icon: Type },
     { id: 'footer', label: 'Footer & Sign', icon: FileSignature },
     { id: 'terms', label: 'Terms & Notes', icon: Sparkles },
+    { id: 'account', label: 'Account', icon: User },
   ];
 
   return (
@@ -217,9 +225,9 @@ export default function BrandingSettingsPage() {
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
                   <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: settings.primaryColor }} />
-                  Store Settings
+                  Settings
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Manage your store information and branding</p>
+                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Manage your account, store and branding</p>
               </div>
             </div>
             {/* Desktop only buttons */}
@@ -952,6 +960,48 @@ export default function BrandingSettingsPage() {
                         />
                         <p className="text-xs text-slate-500 italic">Standard terms that apply to your business transactions.</p>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Account Section */}
+            {activeSection === 'account' && (
+              <div className="space-y-6">
+                <Card className="shadow-lg border-0 overflow-hidden">
+                  <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
+                    <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
+                      <User className="h-5 w-5" />
+                      Account Settings
+                    </CardTitle>
+                    <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
+                      Manage your profile and account access
+                    </CardDescription>
+                  </div>
+                  <CardContent className="p-6 space-y-8">
+                    <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="h-16 w-16 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 shadow-sm overflow-hidden">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900">{user?.email || 'N/A'}</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Logged in via {user?.app_metadata?.provider || 'Email'}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100">
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => signOut()} 
+                        className="w-full sm:w-auto gap-2 h-11 px-8 rounded-xl font-semibold shadow-lg shadow-red-100"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </Button>
+                      <p className="text-xs text-slate-500 mt-4 italic">
+                        Signing out will securely end your current session.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

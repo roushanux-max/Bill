@@ -1,28 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
-import { User, LogOut } from 'lucide-react';
 import { useBranding } from '../contexts/BrandingContext';
 import { getContrastColor } from '../../utils/colorUtils';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from './ui/dropdown-menu';
 
 export default function Header() {
     const [scrolled, setScrolled] = useState(false);
-    const { user, displayEmail, signOut } = useAuth();
+    const { user } = useAuth();
     const { settings, storeInfo } = useBranding();
     const location = useLocation();
-    const navigate = useNavigate();
 
     const primaryColor = user ? settings.primaryColor : '#6366f1';
-    const contrastColor = getContrastColor(primaryColor);
     // Only show store brand when user is fully authenticated - prevents data leak to landing page
     const businessName = (user && storeInfo?.name) ? storeInfo.name : 'Bill';
     const displayLogo = (user && settings.logo) ? settings.logo : null;
@@ -36,10 +25,7 @@ export default function Header() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const handleSignOut = async () => {
-        await signOut();
-        window.location.href = '/';
-    };
+
 
     const navStyles: React.CSSProperties = {
         position: isLandingPage ? 'fixed' : 'sticky',
@@ -75,47 +61,7 @@ export default function Header() {
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center' }}>
-                {user ? (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger className="focus:outline-none">
-                            <div className="flex items-center gap-2 bg-white border border-slate-200 px-2 py-1.5 rounded-full hover:bg-slate-50 transition-colors cursor-pointer">
-                                <div
-                                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold overflow-hidden"
-                                    style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
-                                >
-                                    {user.user_metadata?.name ? user.user_metadata.name.charAt(0).toUpperCase() : <User size={16} />}
-                                </div>
-                                <span className="text-sm font-medium text-slate-700 hidden sm:block pr-2">
-                                    {user.user_metadata?.name?.split(' ')[0] || 'Account'}
-                                </span>
-                            </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 mt-2">
-                            <DropdownMenuLabel>
-                                <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-medium leading-none">{user.user_metadata?.name || 'User'}</p>
-                                    <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                                <Link to="/dashboard" className="cursor-pointer w-full flex items-center">
-                                    Dashboard
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                                <Link to="/branding" className="cursor-pointer w-full flex items-center">
-                                    Branding & Settings
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                <span>Log out</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                ) : (
+                {!user && (
                     <div className="hidden md:flex items-center gap-3">
                         {location.pathname !== '/login' && (
                             <Link to="/login" style={{
@@ -130,7 +76,7 @@ export default function Header() {
                             </Link>
                         )}
                         <Link to="/register" style={{
-                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', color: contrastColor, padding: '10px 24px', borderRadius: 12,
+                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', color: getContrastColor(primaryColor), padding: '10px 24px', borderRadius: 12,
                             textDecoration: 'none', fontSize: 15, fontWeight: 700,
                             boxShadow: '0 15px 30px -10px var(--color-primary-light)',
                             transition: 'transform 0.2s, box-shadow 0.2s'
