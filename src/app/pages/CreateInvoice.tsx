@@ -563,13 +563,10 @@ export default function CreateInvoice() {
   };
 
   const handlePreview = async () => {
-    const invoice = await buildInvoiceObject();
+    const invoice = await persistAndGetInvoice();
     if (!invoice) return;
 
     try {
-      // Auto-save the invoice before previewing
-      const savedId = await saveInvoice(invoice);
-
       // Also save to draft for persistence if they edit and come back
       localStorage.setItem(getUserKey('invoiceDraft'), JSON.stringify({
         ...invoice,
@@ -663,8 +660,26 @@ export default function CreateInvoice() {
     };
   };
 
+  // Unify saving logic for all actions
+  const persistAndGetInvoice = async (): Promise<Invoice | null> => {
+    const realCustomerId = await ensureCustomerIsSaved();
+    if (!realCustomerId) return null;
+
+    const invoiceObj = await buildInvoiceObject();
+    if (!invoiceObj) return null;
+
+    try {
+      await saveInvoice(invoiceObj);
+      return invoiceObj;
+    } catch (e) {
+      console.error('Persistence failed:', e);
+      toast.error('Failed to sync data. Please check your connection.');
+      return null;
+    }
+  };
+
   const handleDownload = async () => {
-    const invoice = await buildInvoiceObject();
+    const invoice = await persistAndGetInvoice();
     if (!invoice) return;
 
     setIsGenerating(true);
@@ -686,38 +701,9 @@ export default function CreateInvoice() {
     }
   };
 
-  const handleSaveInvoice = async () => {
-    // 1. Ensure customer is persisted with a real ID
-    const realCustomerId = await ensureCustomerIsSaved();
-    if (!realCustomerId) return;
-
-    // 2. Build the invoice object with the guaranteed customerId
-    const invoiceObj = await buildInvoiceObject();
-    if (!invoiceObj) return;
-
-    setIsGenerating(true);
-    const toastId = toast.loading('Saving invoice...');
-    try {
-      const savedId = await saveInvoice(invoiceObj);
-      toast.success('Invoice saved successfully!', { id: toastId });
-
-      if (savedId && !editId) {
-        navigate(`/create-invoice?edit=${savedId}`, { replace: true });
-      }
-
-      // Clean up draft
-      localStorage.removeItem(getUserKey('invoiceDraft'));
-      navigate('/invoices');
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error('Failed to save invoice', { id: toastId });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const handlePrint = async () => {
-    const invoice = await buildInvoiceObject();
+    const invoice = await persistAndGetInvoice();
     if (!invoice) return;
     setIsGenerating(true);
     const toastId = toast.loading('Preparing print preview...');
@@ -757,7 +743,7 @@ export default function CreateInvoice() {
   };
 
   const handleShare = async () => {
-    const invoice = await buildInvoiceObject();
+    const invoice = await persistAndGetInvoice();
     if (!invoice) return;
 
     setIsGenerating(true);
@@ -821,16 +807,6 @@ export default function CreateInvoice() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                             <Button
-                                onClick={handleSaveInvoice}
-                                className="bg-[var(--color-primary)] hover:opacity-90"
-                                disabled={isGenerating || isInvoiceIncomplete}
-                                size="sm"
-                            >
-                                <Save className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Save Invoice</span>
-                                <span className="sm:hidden">Save</span>
-                            </Button>
                         </div>
                     </div>
                 </div>
@@ -1247,10 +1223,6 @@ export default function CreateInvoice() {
                 <Button variant="outline" size="lg" onClick={handlePrint} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl">
                   <Printer className="h-4 w-4 mr-2" />
                   Print Preview
-                </Button>
-                <Button variant="default" size="lg" onClick={handleSaveInvoice} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl bg-[var(--color-primary)] hover:opacity-90">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Invoice
                 </Button>
                 <Button variant="outline" size="lg" onClick={handleDownload} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl">
                   <Download className="h-4 w-4 mr-2" />
