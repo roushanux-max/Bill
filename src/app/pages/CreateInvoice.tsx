@@ -591,9 +591,36 @@ export default function CreateInvoice() {
     }
   };
 
+  const ensureCustomerIsSaved = async (): Promise<string | null> => {
+    // If we have a real ID and no changes to newCustomerData that aren't synced, we're good
+    if (!newCustomerData.name) {
+      toast.error('Please enter a customer name');
+      scrollToSection(customerCardRef);
+      return null;
+    }
+
+    try {
+      const customer: Customer = {
+        id: selectedCustomerId && !selectedCustomerId.startsWith('temp-') ? selectedCustomerId : crypto.randomUUID(),
+        ...newCustomerData,
+        createdAt: activeCustomer?.createdAt || new Date().toISOString(),
+      };
+      
+      await saveCustomer(customer);
+      // Update local state so buildInvoiceObject uses the real ID
+      setSelectedCustomerId(customer.id);
+      setActiveCustomer(customer);
+      return customer.id;
+    } catch (e) {
+      console.error('Failed to ensure customer is saved:', e);
+      toast.error('Failed to save customer details');
+      return null;
+    }
+  };
+
   const buildInvoiceObject = async (): Promise<Invoice | null> => {
-    if (!selectedCustomerId) {
-      toast.error('Please select a customer');
+    if (!newCustomerData.name && !selectedCustomerId) {
+      toast.error('Please enter or select a customer');
       scrollToSection(customerCardRef);
       return null;
     }
@@ -660,6 +687,11 @@ export default function CreateInvoice() {
   };
 
   const handleSaveInvoice = async () => {
+    // 1. Ensure customer is persisted with a real ID
+    const realCustomerId = await ensureCustomerIsSaved();
+    if (!realCustomerId) return;
+
+    // 2. Build the invoice object with the guaranteed customerId
     const invoiceObj = await buildInvoiceObject();
     if (!invoiceObj) return;
 

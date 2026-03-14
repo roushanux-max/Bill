@@ -634,6 +634,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     }
     if (!error && data) return data.id;
   } catch (e) {
+    console.error('Supabase invoice save error details:', e);
     console.warn('Supabase invoice sync failed:', e);
   }
 
