@@ -57,59 +57,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthContext: Auth event:', event);
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (session?.user && !localStorage.getItem('active_store_id')) {
-        // One-time proactive store restoration on auth change
-        const { data: stores } = await supabase
-          .from('stores')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .limit(1);
-        
-        if (stores && stores.length > 0) {
-          localStorage.setItem('active_store_id', stores[0].id);
-          // Dispatch storage event so other contexts know we have a store now
-          window.dispatchEvent(new Event('storage'));
-        }
+      
+      if (session?.user) {
+        // When user appears (login or refresh), immediately try to restore store
+        setLoading(true);
+        await refreshHasStore(session.user);
       }
+      
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const refreshHasStore = async () => {
-    if (!user) {
+  const refreshHasStore = async (currUser = user) => {
+    if (!currUser) {
       setHasStore(null);
       return;
     }
 
-    // Fast path: localStorage
-    if (localStorage.getItem('hasCompletedOnboarding') === 'true' || localStorage.getItem('active_store_id')) {
+    // 1. Check local storage first (fastest)
+    const localStoreId = localStorage.getItem('active_store_id');
+    const localOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+    
+    if (localStoreId && localOnboarding) {
       setHasStore(true);
       return;
     }
 
+    // 2. Query Supabase to see if this user actually has a store
     try {
       const { data: stores, error } = await supabase
         .from('stores')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', currUser.id)
         .limit(1);
 
       if (!error && stores && stores.length > 0) {
-        localStorage.setItem('active_store_id', stores[0].id);
+        const storeId = stores[0].id;
+        console.log('AuthContext: Restored store for user:', storeId);
+        localStorage.setItem('active_store_id', storeId);
         localStorage.setItem('hasCompletedOnboarding', 'true');
+        
+        // Dispatch storage event so other contexts (Branding) update immediately
+        window.dispatchEvent(new Event('storage'));
+        
         setHasStore(true);
       } else {
+        console.log('AuthContext: No store found for user');
         setHasStore(false);
       }
     } catch (e) {
       console.warn('AuthContext: Store check failed', e);
-      // Fallback: assume they have one if offline so we don't block them
+      // Fallback: assume they have one if we're not sure, to avoid blocking them
       setHasStore(true);
     }
   };

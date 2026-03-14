@@ -8,11 +8,16 @@ interface BrandingContextType {
   storeInfo: StoreInfo | null;
   updateSettings: (settings: BrandingSettings) => void;
   refreshBranding: () => Promise<void>;
+  loading: boolean;
 }
+
+import { useAuth } from './AuthContext';
 
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
 export function BrandingProvider({ children }: { children: React.ReactNode }) {
+  const { user, hasStore } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<BrandingSettings>(() => {
     try {
       const saved = localStorage.getItem('bill_branding_settings');
@@ -42,6 +47,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshBranding = async () => {
+    setLoading(true);
     const [savedSettings, savedStoreInfo] = await Promise.all([
       getBrandingSettings(),
       getStoreInfo()
@@ -55,27 +61,37 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     }
 
     setStoreInfo(savedStoreInfo);
+    setLoading(false);
   };
 
-  // Load branding settings on mount
+  // Load branding settings on mount and when store status changes
   useEffect(() => {
-    // Already initialized synchronously, but refresh to ensure freshness
     refreshBranding();
+  }, [user, hasStore]);
 
-    // Listen for storage changes (when settings are updated in another tab/window)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'bill_branding_settings' && e.newValue) {
-        try {
-          const newSettings = JSON.parse(e.newValue) as BrandingSettings;
-          setSettings(newSettings);
-          applyBrandingStyles(newSettings);
-        } catch (e) { }
-      }
-      if (e.key === 'bill_store_info' && e.newValue) {
-        try {
-          const newStoreInfo = JSON.parse(e.newValue) as StoreInfo;
-          setStoreInfo(newStoreInfo);
-        } catch (e) { }
+  useEffect(() => {
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent | Event) => {
+      // If it's a real StorageEvent, check the key
+      if ('key' in e) {
+        const se = e as StorageEvent;
+        if (se.key === 'bill_branding_settings' && se.newValue) {
+          try {
+            const newSettings = JSON.parse(se.newValue) as BrandingSettings;
+            setSettings(newSettings);
+            applyBrandingStyles(newSettings);
+          } catch (e) { }
+        }
+        if (se.key === 'bill_store_info' && se.newValue) {
+          try {
+            const newStoreInfo = JSON.parse(se.newValue) as StoreInfo;
+            setStoreInfo(newStoreInfo);
+          } catch (e) { }
+        }
+      } else {
+        // Custom 'storage' event - full refresh
+        refreshBranding();
       }
     };
 
@@ -89,7 +105,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <BrandingContext.Provider value={{ settings, storeInfo, updateSettings, refreshBranding }}>
+    <BrandingContext.Provider value={{ settings, storeInfo, updateSettings, refreshBranding, loading }}>
       {children}
     </BrandingContext.Provider>
   );

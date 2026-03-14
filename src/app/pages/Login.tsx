@@ -41,38 +41,13 @@ export default function Login() {
     }
   }, []);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (Handled by AuthContext and ProtectedRoute)
   useEffect(() => {
     if (!authLoading && user) {
-      const checkOnboarding = async () => {
-        try {
-          const { data: stores, error } = await supabase
-            .from('stores')
-            .select('id')
-            .eq('user_id', user.id)
-            .limit(1);
-
-          if (error) throw error;
-
-          if (stores && stores.length > 0) {
-            // Returning user with a store
-            localStorage.setItem('active_store_id', stores[0].id);
-            localStorage.setItem('hasCompletedOnboarding', 'true');
-            navigate('/dashboard');
-          } else {
-            // New user or no store setup yet
-            navigate('/setup-shop');
-          }
-        } catch (err) {
-          console.error('Routing check error:', err);
-          // Fallback to onboarding if check fails
-          navigate('/setup-shop');
-        }
-      };
-
-      checkOnboarding();
+      // Just wait for AuthContext to settle store state
+      // No manual navigate() here to avoid race conditions with ProtectedRoute
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
