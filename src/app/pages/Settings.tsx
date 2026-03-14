@@ -122,7 +122,7 @@ export default function SettingsPage() {
         await saveStoreInfo(storeInfo);
       }
       setHasChanges(false);
-      toast.success('Branding settings saved successfully!', {
+      toast.success('Settings saved successfully!', {
         description: 'Your changes have been applied to all invoices.',
         icon: <CheckCircle2 className="h-5 w-5" />,
         duration: 4000,
@@ -145,12 +145,12 @@ export default function SettingsPage() {
   };
 
   const handleReset = async () => {
-    if (confirm('Are you sure you want to reset all branding settings to default?')) {
+    if (confirm('Are you sure you want to reset all settings to default?')) {
       setSettings(defaultBrandingSettings);
       updateGlobalSettings(defaultBrandingSettings);
       await saveBrandingSettings(defaultBrandingSettings);
       setHasChanges(true);
-      toast.success('Branding settings reset to default!');
+      toast.success('Settings reset to default!');
     }
   };
 
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                   <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: settings.primaryColor }} />
                   Settings
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Manage your account, store and branding</p>
+                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Manage your account, store and preferences</p>
               </div>
             </div>
             {/* Desktop only buttons */}
@@ -506,7 +506,7 @@ export default function SettingsPage() {
                     <Building2 className="mx-auto h-10 w-10 text-slate-700" />
                   </div>
                   <h3 className="text-lg font-semibold">No Store Found</h3>
-                  <p className="text-sm text-slate-500 mt-2">You haven't set up your store yet. Store details are required for invoices and branding.</p>
+                  <p className="text-sm text-slate-500 mt-2">You haven't set up your store yet. Store details are required for invoices and professional documents.</p>
                   <div className="mt-4 flex justify-center gap-2">
                     <Button onClick={() => navigate('/setup-shop')}>Setup Shop</Button>
                     <Button variant="outline" onClick={async () => {
