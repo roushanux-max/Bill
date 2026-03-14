@@ -11,7 +11,7 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const HomeRoute = lazy(() => import("./pages/HomeRoute"));
 const SetupShop = lazy(() => import("./pages/SetupShop"));
-const BrandingSettings = lazy(() => import("./pages/BrandingSettings"));
+const Settings = lazy(() => import("./pages/Settings"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const CreateInvoice = lazy(() => import("./pages/CreateInvoice"));
 const InvoicePreview = lazy(() => import("./pages/InvoicePreview"));
@@ -89,8 +89,8 @@ export const router = createBrowserRouter([
         element: <StressTest />,
       },
       {
-        path: "/branding",
-        element: <BrandingSettings />,
+        path: "/settings",
+        element: <Settings />,
       },
       {
         path: "/invoice-preview",

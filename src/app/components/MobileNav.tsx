@@ -13,7 +13,7 @@ const MobileNav: React.FC = () => {
     { label: 'Bills', icon: FileText, path: '/invoices' },
     { label: 'Create', icon: PlusCircle, path: '/create-invoice', isCenter: true },
     { label: 'Clients', icon: Users, path: '/customers' },
-    { label: 'Settings', icon: Settings, path: '/branding' },
+    { label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   // Hidden on setup-shop or other full-screen onboarding pages if needed

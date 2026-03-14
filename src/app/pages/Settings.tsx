@@ -16,7 +16,7 @@ import { useBranding } from '../contexts/BrandingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-export default function BrandingSettingsPage() {
+export default function SettingsPage() {
   const navigate = useNavigate();
   const { refreshBranding, updateSettings: updateGlobalSettings } = useBranding();
   const { user, signOut } = useAuth();
@@ -281,7 +281,7 @@ export default function BrandingSettingsPage() {
                   localStorage.setItem('previewBrandingSettings', JSON.stringify(settings));
                   if (storeInfo) localStorage.setItem('previewStoreInfo', JSON.stringify(storeInfo));
                   // Navigate to preview
-                  navigate('/invoice-preview?return=/branding');
+                  navigate('/invoice-preview?return=/settings');
                 } catch (e) {
                   console.error('Failed to prepare preview', e);
                   toast.error('Failed to prepare preview');

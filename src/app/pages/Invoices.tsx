@@ -229,9 +229,9 @@ export default function Invoices() {
               </Link>
               <h1 className="text-lg sm:text-2xl font-semibold text-slate-900">Invoices</h1>
             </div>
-            <Link to="/create-invoice">
+            <Link to="/create-invoice" className="hidden sm:flex">
               <Button size="sm">
-                <UserPlus className="h-4 w-4 sm:mr-2" />
+                <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Create Invoice</span>
               </Button>
             </Link>

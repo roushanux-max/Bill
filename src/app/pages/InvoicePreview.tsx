@@ -18,7 +18,7 @@ export default function InvoicePreview() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [returnPath, setReturnPath] = useState('/invoices');
+  const [returnPath, setReturnPath] = useState('/settings');
 
   useEffect(() => {
     const init = async () => {
@@ -97,6 +97,7 @@ export default function InvoicePreview() {
           address: 'Jayanagar, Bangalore - 560070',
           state: 'Karnataka',
           phone: '+91 98765 12345',
+          email: 'sample@example.com'
         },
         items: [
           {

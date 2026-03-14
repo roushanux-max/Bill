@@ -68,7 +68,13 @@ export function generateInvoicePDF(
     const barH = 10; // Slightly taller bar for logo
 
     // Calculate columns based on logo presence
-    const logoW = settings.logo ? 30 : 0;
+    // Calculate logo width based on settings
+    const logoSizeMap: Record<string, number> = {
+        small: 20,
+        medium: 30,
+        large: 45
+    };
+    const logoW = settings.logo ? (logoSizeMap[settings.logoSize] || 30) : 0;
     const infoColsW = (contentW - logoW) / 3;
 
     if (settings.logo) {
