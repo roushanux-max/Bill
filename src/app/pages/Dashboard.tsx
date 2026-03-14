@@ -43,9 +43,9 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       const [invoices, customers, products] = await Promise.all([
-        getInvoices(),
-        getCustomers(),
-        getProducts()
+        getInvoices(true),
+        getCustomers(true),
+        getProducts(true)
       ]);
 
       const today = new Date();

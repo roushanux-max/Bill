@@ -57,8 +57,8 @@ export default function Customers() {
 
   const loadCustomers = async () => {
     const [customerData, invoiceData] = await Promise.all([
-      getCustomers(),
-      getInvoices()
+      getCustomers(true),
+      getInvoices(true)
     ]);
     setCustomers(customerData);
     setInvoices(invoiceData);

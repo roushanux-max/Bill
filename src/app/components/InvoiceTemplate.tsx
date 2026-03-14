@@ -7,7 +7,7 @@ import { formatDateForDisplay } from '../utils/dateUtils';
 interface InvoiceTemplateProps {
   invoice: InvoiceType;
   settings: BrandingSettings;
-  storeInfo: StoreInfo;
+  storeInfo: StoreInfo | null;
 }
 
 export default function InvoiceTemplate({ invoice, settings, storeInfo }: InvoiceTemplateProps) {
@@ -45,11 +45,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
   const amountInWords = `${numberToWords(total)} Only`;
 
-  const fontFamilyMap = {
+  const fontFamilyMap: Record<string, string> = {
     inter: 'Inter, sans-serif',
     roboto: 'Roboto, sans-serif',
     lato: 'Lato, sans-serif',
     opensans: '"Open Sans", sans-serif',
+    aptos: 'Aptos, sans-serif',
   };
 
   const logoSizeMap = {
@@ -62,6 +63,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
     // Remove the hash if it exists
     const hex = hexColor.replace('#', '');
     // Parse RGB values
+    if (hex.length < 6) return '#111827';
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
@@ -77,7 +79,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
     <div
       className="bg-white"
       style={{
-        fontFamily: fontFamilyMap[settings.fontFamily],
+        fontFamily: fontFamilyMap[settings.fontFamily] || fontFamilyMap.inter,
         color: '#1e293b',
         width: '210mm',
         minHeight: '297mm',
@@ -300,6 +302,19 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   ({roundOff >= 0 ? '+' : ''}{roundOff.toFixed(2)})
                 </td>
               </tr>
+
+              {/* Overall Discount Row */}
+              {invoice.discount > 0 && (
+                <tr style={{ borderColor: '#e2e8f0' }}>
+                  <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
+                  <td className="border px-2 py-2 font-medium" colSpan={isSameState ? 7 : 6} style={{ borderColor: '#e2e8f0' }}>
+                    Overall Discount
+                  </td>
+                  <td className="border px-2 py-2 text-right text-red-600 font-semibold" style={{ borderColor: '#e2e8f0' }}>
+                    - {(invoice.discount || 0).toLocaleString('en-IN')}
+                  </td>
+                </tr>
+              )}
 
               {/* Amount in Words */}
               <tr style={{ borderColor: '#e2e8f0' }}>

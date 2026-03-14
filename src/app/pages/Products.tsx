@@ -46,7 +46,7 @@ export default function Products() {
   }, []);
 
   const loadProducts = async () => {
-    const data = await getProducts();
+    const data = await getProducts(true);
     setProducts(data);
     setIsLoading(false);
   };

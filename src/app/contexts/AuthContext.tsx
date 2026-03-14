@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
            return;
         }
         if (initialSession?.user) {
+          localStorage.setItem('bill_user_id', initialSession.user.id);
           setLoading(true);
           await refreshHasStore(initialSession.user);
         }
@@ -221,27 +222,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    // Clear all user-specific local data to prevent data leaks between sessions
     const keysToRemove = [
-      'bill_store_info',
-      'bill_branding_settings',
-      'bill_customers',
-      'bill_products',
-      'bill_invoices',
       'active_store_id',
       'hasCompletedOnboarding',
       'invoiceDraft',
       'bill_user_id'
     ];
     
-    // Also try to clear prefixed versions if we have the ID
-    const userId = localStorage.getItem('bill_user_id');
-    if (userId) {
-      keysToRemove.forEach(key => {
-        localStorage.removeItem(`${userId}_${key}`);
-      });
-    }
-
+    // Clear only global/session keys. User-prefixed keys are preserved for instant recall upon same-user re-login.
     keysToRemove.forEach(key => localStorage.removeItem(key));
     
     // Dispatch a storage event to immediately update BrandingContext to defaults

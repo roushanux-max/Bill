@@ -7,6 +7,7 @@ interface BrandingContextType {
   settings: BrandingSettings;
   storeInfo: StoreInfo | null;
   updateSettings: (settings: BrandingSettings) => void;
+  updateStoreInfo: (info: StoreInfo) => void;
   refreshBranding: () => Promise<void>;
   loading: boolean;
 }
@@ -37,20 +38,18 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Apply styles immediately on load
-  if (typeof window !== 'undefined') {
-    try {
+  // Apply styles when settings change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
       applyBrandingStyles(settings);
-    } catch (e) {
-      console.error('Failed to apply initial branding styles:', e);
     }
-  }
+  }, [settings]);
 
   const refreshBranding = async () => {
     setLoading(true);
     const [savedSettings, savedStoreInfo] = await Promise.all([
-      getBrandingSettings(),
-      getStoreInfo()
+      getBrandingSettings(true),
+      getStoreInfo(true)
     ]);
 
     if (savedSettings) {
@@ -104,8 +103,12 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     applyBrandingStyles(newSettings);
   };
 
+  const updateStoreInfo = (info: StoreInfo) => {
+    setStoreInfo(info);
+  };
+
   return (
-    <BrandingContext.Provider value={{ settings, storeInfo, updateSettings, refreshBranding, loading }}>
+    <BrandingContext.Provider value={{ settings, storeInfo, updateSettings, updateStoreInfo, refreshBranding, loading }}>
       {children}
     </BrandingContext.Provider>
   );
@@ -123,9 +126,6 @@ function applyBrandingStyles(settings: BrandingSettings) {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;
   
-  // Ensure the class is applied immediately
-  root.classList.add('user-theme');
-
   // Create dynamic stylesheet for theme colors
   let styleId = 'branding-theme-styles';
   let existingStyle = document.getElementById(styleId) as HTMLStyleElement;
@@ -140,7 +140,7 @@ function applyBrandingStyles(settings: BrandingSettings) {
   const dynamicSecondaryColor = adjustBrightness(settings.primaryColor, -40);
 
   const themeCSS = `
-    :root, .user-theme {
+    .user-theme {
       --primary: ${settings.primaryColor};
       --primary-hover: ${adjustBrightness(settings.primaryColor, -15)};
       --primary-light: ${adjustBrightness(settings.primaryColor, 85)};

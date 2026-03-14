@@ -15,15 +15,16 @@ export const getUserKey = (key: string) => {
 // Helper to get active store ID
 const getActiveStoreId = () => localStorage.getItem(getUserKey('active_store_id'));
 
-// Store Info
-export const getStoreInfo = async (): Promise<StoreInfo | null> => {
+export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => {
   // Try local first for instant recall
-  const localData = localStorage.getItem(getUserKey('bill_store_info'));
-  if (localData) {
-    try {
-      return JSON.parse(localData);
-    } catch (e) {
-      console.error('Error parsing local store info:', e);
+  if (!force) {
+    const localData = localStorage.getItem(getUserKey('bill_store_info'));
+    if (localData) {
+      try {
+        return JSON.parse(localData);
+      } catch (e) {
+        console.error('Error parsing local store info:', e);
+      }
     }
   }
 
@@ -98,12 +99,16 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
   
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    // Ensure active_store_id is set even if Supabase fails later
-    localStorage.setItem(getUserKey('active_store_id'), user.id);
-    localStorage.setItem('bill_user_id', user.id); // Ensure we have the user ID for prefixes
+    localStorage.setItem('bill_user_id', user.id); // ALWAYS ensure this is set for prefixes
 
     try {
-      const storeId = getActiveStoreId() || user.id;
+      let storeId = getActiveStoreId();
+      // If no storeId or if it's a temporary offline ID, we might want to check for an existing remote store first
+      if (!storeId || storeId.startsWith('offline-')) {
+        storeId = user.id; // Fallback to user.id
+        localStorage.setItem(getUserKey('active_store_id'), storeId);
+      }
+      
       const payload: any = {
         id: storeId,
         user_id: user.id,   // CRITICAL: ensures store is findable by user_id after re-login
@@ -137,15 +142,16 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
   return info;
 };
 
-// Branding Settings
-export const getBrandingSettings = async (): Promise<BrandingSettings> => {
+export const getBrandingSettings = async (force = false): Promise<BrandingSettings> => {
   // Try local first
-  const localData = localStorage.getItem(getUserKey('bill_branding_settings'));
-  if (localData) {
-    try {
-      return JSON.parse(localData);
-    } catch (e) {
-      console.error('Error parsing local branding settings:', e);
+  if (!force) {
+    const localData = localStorage.getItem(getUserKey('bill_branding_settings'));
+    if (localData) {
+      try {
+        return JSON.parse(localData);
+      } catch (e) {
+        console.error('Error parsing local branding settings:', e);
+      }
     }
   }
 

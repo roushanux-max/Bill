@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
 import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
@@ -27,6 +28,7 @@ const INDIAN_STATES = [
 export default function SetupShop() {
   const navigate = useNavigate();
   const { user, displayEmail, refreshHasStore } = useAuth();
+  const { refreshBranding } = useBranding();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -292,6 +294,7 @@ export default function SetupShop() {
     if (success) {
       toast.success('Shop created successfully!');
       await refreshHasStore();
+      await refreshBranding();
       navigate('/dashboard');
     }
   };
@@ -334,8 +337,9 @@ export default function SetupShop() {
     }
 
     setSavingLater(false);
-    toast.success('You can complete your profile later in Settings.');
+    toast('Reminder: You can complete your profile later in Settings.');
     await refreshHasStore();
+    await refreshBranding();
     navigate('/dashboard');
   };
 

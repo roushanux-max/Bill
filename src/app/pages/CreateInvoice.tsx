@@ -37,8 +37,8 @@ export default function CreateInvoice() {
   const [customerFilterState, setCustomerFilterState] = useState<string>('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [transportCharges, setTransportCharges] = useState(0);
-  const [discount, setDiscount] = useState(0);
+  const [transportCharges, setTransportCharges] = useState<string | number>(0);
+  const [discount, setDiscount] = useState<string | number>(0);
   const [notes, setNotes] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
@@ -51,7 +51,14 @@ export default function CreateInvoice() {
   const [isNewCustomer, setIsNewCustomer] = useState(true);
 
   // New item form state
-  const [newItemData, setNewItemData] = useState({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
+  const [newItemData, setNewItemData] = useState<{
+    name: string;
+    hsn: string;
+    quantity: string | number;
+    rate: string | number;
+    taxRate: string | number;
+    amount: number;
+  }>({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
   const [selectedProductId, setSelectedProductId] = useState<string>('');
 
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
@@ -282,8 +289,8 @@ export default function CreateInvoice() {
           email: newCustomerData.email || '',
         },
         items,
-        transportCharges,
-        discount,
+        transportCharges: Number(transportCharges) || 0,
+        discount: Number(discount) || 0,
         notes,
         subtotal,
         totalTax,
@@ -315,20 +322,26 @@ export default function CreateInvoice() {
   };
 
   const calculateTotals = () => {
-    let subtotal = 0;
+    let itemSubtotal = 0;
     let totalTax = 0;
 
     items.forEach(item => {
-      subtotal += item.rate * item.quantity;
-      totalTax += (item.rate * item.quantity * item.taxRate) / 100;
+      const rate = Number(item.rate) || 0;
+      const qty = Number(item.quantity) || 0;
+      const tax = Number(item.taxRate) || 0;
+      itemSubtotal += rate * qty;
+      totalTax += (rate * qty * tax) / 100;
     });
 
-    subtotal += transportCharges;
-    const finalSubtotal = subtotal - discount;
-    const total = finalSubtotal + totalTax;
+    const transport = Number(transportCharges) || 0;
+    const disc = Number(discount) || 0;
 
-    return { subtotal: finalSubtotal, totalTax, total };
+    const grossTotal = itemSubtotal + totalTax + transport;
+    const total = Math.round(grossTotal - disc);
+
+    return { subtotal: itemSubtotal, totalTax, total };
   };
+
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
     if (ref.current) {
@@ -392,12 +405,17 @@ export default function CreateInvoice() {
     setActiveCustomer(null);
     setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
     localStorage.removeItem(getUserKey('customerFormDraft'));
-    setIsNewCustomer(true);
   };
-
+  
   const handleAddItem = async () => {
-    if (!newItemData.name || newItemData.quantity <= 0 || newItemData.rate <= 0) {
-      toast.error('Please fill in all required item fields');
+    const qty = Number(newItemData.quantity);
+    const rate = Number(newItemData.rate);
+    const taxRate = Number(newItemData.taxRate);
+
+    if (!newItemData.name || isNaN(qty) || qty <= 0 || isNaN(rate) || rate < 0) {
+      if (!newItemData.name) toast.error('Please enter product name');
+      else if (isNaN(qty) || qty <= 0) toast.error('Quantity must be greater than 0');
+      else toast.error('Please enter a valid rate');
       return;
     }
 
@@ -416,15 +434,15 @@ export default function CreateInvoice() {
             newItemData.taxRate !== existing.gstRate;
 
           if (isModified) {
-            const updated = { 
+            const updated: Product = { 
               ...existing, 
               name: newItemData.name,
               hsnCode: newItemData.hsn || '',
-              sellingPrice: newItemData.rate,
-              gstRate: newItemData.taxRate
+              sellingPrice: Number(newItemData.rate),
+              gstRate: Number(newItemData.taxRate)
             };
             await saveProduct(updated);
-            setProducts(prev => prev.map(p => p.id === selectedProductId ? updated : p));
+            setProducts((prev: Product[]) => prev.map(p => p.id === selectedProductId ? updated : p));
           }
         }
       } else {
@@ -434,8 +452,8 @@ export default function CreateInvoice() {
           name: newItemData.name,
           category: 'Other',
           hsnCode: newItemData.hsn || '',
-          sellingPrice: newItemData.rate,
-          gstRate: newItemData.taxRate,
+          sellingPrice: Number(newItemData.rate),
+          gstRate: Number(newItemData.taxRate),
           unit: 'pcs',
           createdAt: new Date().toISOString(),
         };
@@ -447,16 +465,16 @@ export default function CreateInvoice() {
       console.error('Failed to auto-save product:', e);
     }
 
-    const amount = newItemData.rate * newItemData.quantity;
+    const amount = rate * qty;
     const item: InvoiceItem = {
       id: Date.now().toString(),
       productId: finalProductId,
       name: newItemData.name,
       hsn: newItemData.hsn,
-      quantity: newItemData.quantity,
+      quantity: qty,
       unit: 'pcs',
-      rate: newItemData.rate,
-      taxRate: newItemData.taxRate,
+      rate: rate,
+      taxRate: taxRate,
       amount,
     };
     if (editingItemIndex !== null) {
@@ -579,7 +597,7 @@ export default function CreateInvoice() {
       localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
 
       // Navigate to preview with a return path that includes the ID
-      const finalId = savedId || editId || invoice.id;
+      const finalId = editId || invoice.id;
       const returnPath = `/create-invoice?edit=${finalId}`;
       navigate(`/invoice-preview?return=${encodeURIComponent(returnPath)}`);
     } catch (error) {
@@ -649,8 +667,8 @@ export default function CreateInvoice() {
       customerId: selectedCustomerId || 'temp-' + Date.now(),
       customer: customerDetails,
       items,
-      transportCharges,
-      discount,
+      transportCharges: Number(transportCharges) || 0,
+      discount: Number(discount) || 0,
       notes: notes || settings.invoiceNotes || (settings as any).termsAndConditions || '',
       subtotal,
       totalTax,
@@ -686,10 +704,8 @@ export default function CreateInvoice() {
     const toastId = toast.loading('Preparing invoice...');
 
     try {
-      const currentStoreInfo = storeInfo || await getStoreInfo();
-      if (!currentStoreInfo) throw new Error('Store information not found');
-      
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo, settings);
+      const currentStoreInfo = await getStoreInfo();
+      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || (settings as any).globalStoreInfo!, settings);
       const filename = getInvoiceFilename(invoice);
       pdf.save(filename);
       toast.success('PDF downloaded successfully!', { id: toastId });
@@ -708,16 +724,8 @@ export default function CreateInvoice() {
     setIsGenerating(true);
     const toastId = toast.loading('Preparing print preview...');
     try {
-      let currentStoreInfo = storeInfo;
-      if (!currentStoreInfo) {
-        currentStoreInfo = await getStoreInfo();
-      }
-
-      if (!currentStoreInfo) {
-        throw new Error('Store information not found');
-      }
-
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo, settings);
+      const currentStoreInfo = await getStoreInfo();
+      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || (settings as any).globalStoreInfo!, settings);
 
       // Use autoPrint and open in a way that triggers the dialog
       pdf.autoPrint();
@@ -1037,9 +1045,19 @@ export default function CreateInvoice() {
                       <p className="text-[10px] text-slate-500 font-normal leading-tight">Number of units (Min 1)</p>
                       <Input
                         id="itemQuantity"
-                        type="number"
                         value={newItemData.quantity}
-                        onChange={e => setNewItemData({ ...newItemData, quantity: parseFloat(e.target.value) || 1 })}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '' || /^\d*$/.test(val)) {
+                            // If user types a number after 0, remove the leading 0
+                            const finalVal = (newItemData.quantity === 0 || newItemData.quantity === '0') && val.length > 1 && val.startsWith('0') 
+                              ? val.substring(1) 
+                              : val;
+                            setNewItemData({ ...newItemData, quantity: finalVal });
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="1"
                         className="text-sm bg-white/50"
                       />
                     </div>
@@ -1050,9 +1068,16 @@ export default function CreateInvoice() {
                       <p className="text-[10px] text-slate-500 font-normal leading-tight">Unit price excluding GST</p>
                       <Input
                         id="itemRate"
-                        type="number"
-                        value={newItemData.rate || ''}
-                        onChange={e => setNewItemData({ ...newItemData, rate: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                        value={newItemData.rate}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                            const finalVal = (newItemData.rate === 0 || newItemData.rate === '0') && val.length > 1 && val.startsWith('0') && !val.startsWith('0.')
+                              ? val.substring(1) 
+                              : val;
+                            setNewItemData({ ...newItemData, rate: finalVal });
+                          }
+                        }}
                         onFocus={(e) => e.target.select()}
                         placeholder="0"
                         className="text-sm bg-white/50"
@@ -1063,9 +1088,16 @@ export default function CreateInvoice() {
                       <p className="text-[10px] text-slate-500 font-normal leading-tight">Applicable tax rate</p>
                       <Input
                         id="itemTaxRate"
-                        type="number"
-                        value={newItemData.taxRate || ''}
-                        onChange={e => setNewItemData({ ...newItemData, taxRate: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                        value={newItemData.taxRate}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '' || /^\d*$/.test(val)) {
+                            const finalVal = (newItemData.taxRate === 0 || newItemData.taxRate === '0') && val.length > 1 && val.startsWith('0')
+                              ? val.substring(1) 
+                              : val;
+                            setNewItemData({ ...newItemData, taxRate: finalVal });
+                          }
+                        }}
                         onFocus={(e) => e.target.select()}
                         placeholder="0"
                         className="text-sm bg-white/50"
@@ -1076,7 +1108,7 @@ export default function CreateInvoice() {
                   <div className="flex items-center justify-end pt-2">
                     <div className="text-right">
                       <span className="text-xs text-slate-500 mr-2">Line Total:</span>
-                      <span className="text-lg font-bold text-slate-900">₹{(newItemData.rate * newItemData.quantity).toLocaleString('en-IN')}</span>
+                      <span className="text-lg font-bold text-slate-900">₹{((Number(newItemData.rate) || 0) * (Number(newItemData.quantity) || 0)).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -1179,7 +1211,8 @@ export default function CreateInvoice() {
                     id="transport"
                     type="number"
                     value={transportCharges}
-                    onChange={(e) => setTransportCharges(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setTransportCharges(e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder="0"
                     className="text-sm bg-white/50 border-slate-200"
                   />
@@ -1190,7 +1223,8 @@ export default function CreateInvoice() {
                     id="discount"
                     type="number"
                     value={discount}
-                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setDiscount(e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder="0"
                     className="text-sm bg-white/50 border-slate-200"
                   />

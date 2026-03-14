@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { refreshBranding, updateSettings: updateGlobalSettings } = useBranding();
+  const { refreshBranding, updateSettings: updateGlobalSettings, updateStoreInfo: updateGlobalStoreInfo } = useBranding();
   const { user, signOut } = useAuth();
   const [settings, setSettings] = useState<BrandingSettings>(defaultBrandingSettings);
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
@@ -120,6 +120,7 @@ export default function SettingsPage() {
       updateGlobalSettings(settings);
       if (storeInfo) {
         await saveStoreInfo(storeInfo);
+        refreshBranding(); // Full sync
       }
       setHasChanges(false);
       toast.success('Settings saved successfully!', {
@@ -166,6 +167,7 @@ export default function SettingsPage() {
     if (!storeInfo) return;
     const newStoreInfo = { ...storeInfo, [key]: value };
     setStoreInfo(newStoreInfo);
+    updateGlobalStoreInfo(newStoreInfo);
     setHasChanges(true);
 
     // Auto-fetch location if pincode is 6 digits
@@ -186,7 +188,9 @@ export default function SettingsPage() {
         const state = info.State;
 
         if (storeInfo) {
-          setStoreInfo({ ...storeInfo, city, state });
+          const updated = { ...storeInfo, city, state };
+          setStoreInfo(updated);
+          updateGlobalStoreInfo(updated);
           setHasChanges(true);
           toast.success(`Location identified: ${city}, ${state}`);
         }
@@ -510,6 +514,7 @@ export default function SettingsPage() {
                       // Try reloading store info from backend
                       const si = await getStoreInfo();
                       setStoreInfo(si);
+                      if (si) updateGlobalStoreInfo(si);
                       if (!si) toast('No store found. Please complete setup.');
                     }}>Reload</Button>
                   </div>

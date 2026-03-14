@@ -24,7 +24,7 @@ const LoadingFallback = () => <LoadingScreen />;
 import MobileNav from "./components/MobileNav";
 
 const AppLayout = () => (
-  <div className="min-h-screen flex flex-col bg-slate-50">
+  <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
     <Suspense fallback={<LoadingFallback />}>
       <div className="flex-1 pb-24 md:pb-0">
         <Outlet />

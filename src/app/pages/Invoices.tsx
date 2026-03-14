@@ -28,8 +28,8 @@ export default function Invoices() {
     loadInvoices();
   }, []);
 
-  const loadInvoices = async () => {
-    const data = await getInvoices();
+  const loadInvoices = async (force = true) => {
+    const data = await getInvoices(force);
     setInvoices(data);
   };
 

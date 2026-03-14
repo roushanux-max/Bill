@@ -24,15 +24,9 @@ export default function InvoicePreview() {
   useEffect(() => {
     const init = async () => {
       // Load settings and store info (prefer preview overrides saved in localStorage)
+      // Load settings and store info from context
       setSettings(globalSettings);
-      setStoreInfo(globalStoreInfo || {
-        name: 'My Business',
-        gstin: '',
-        address: 'Setup Pending',
-        state: '',
-        phone: '',
-        email: ''
-      });
+      setStoreInfo(globalStoreInfo);
 
       // Preview overrides (from Branding Settings preview button)
       const previewSettingsRaw = localStorage.getItem(getUserKey('previewBrandingSettings'));
@@ -154,12 +148,8 @@ export default function InvoicePreview() {
         getBrandingSettings()
       ]);
 
-      if (!currentStoreInfo) {
-        throw new Error('Store information not found');
-      }
-
-      const brandSettings = currentSettings || settings;
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo, brandSettings);
+      const brandSettings = currentSettings || settings || globalSettings;
+      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || globalStoreInfo!, brandSettings);
       const filename = getInvoiceFilename(invoice);
       pdf.save(filename);
       toast.success('PDF downloaded successfully!', { id: toastId });
@@ -181,14 +171,10 @@ export default function InvoicePreview() {
         currentStoreInfo = await getStoreInfo();
       }
 
-      if (!currentStoreInfo) {
-        throw new Error('Store information not found');
-      }
-
       const currentSettings = await getBrandingSettings();
-      const brandSettings = currentSettings || settings;
+      const brandSettings = currentSettings || settings || globalSettings;
 
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo, brandSettings);
+      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || globalStoreInfo!, brandSettings);
 
       // Use autoPrint and open in a way that triggers the dialog
       pdf.autoPrint();
@@ -223,12 +209,8 @@ export default function InvoicePreview() {
         getBrandingSettings()
       ]);
 
-      if (!currentStoreInfo) {
-        throw new Error('Store information not found');
-      }
-
-      const brandSettings = currentSettings || settings;
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo, brandSettings);
+      const brandSettings = currentSettings || settings || globalSettings;
+      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || globalStoreInfo!, brandSettings);
       const filename = getInvoiceFilename(invoice);
       const pdfBlob = pdf.output('blob');
       const file = new File([pdfBlob], filename, { type: 'application/pdf' });
@@ -256,8 +238,8 @@ export default function InvoicePreview() {
     }
   };
 
-  if (!invoice || !storeInfo) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (!invoice) {
+    return <div className="flex items-center justify-center min-h-screen">Loading invoice...</div>;
   }
 
   return (
