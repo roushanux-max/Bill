@@ -3,13 +3,22 @@ import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { supabase } from './supabase';
 import { parseDateFromDisplay } from './dateUtils';
 
+// Helper to get user-specific storage key
+export const getUserKey = (key: string) => {
+  const authData = localStorage.getItem('sb-whmmhfldrigyyqqlqygo-auth-token'); // Check if this is the right key or if we should use a more stable one
+  // Actually, let's try to get user ID from supabase directly if possible, 
+  // but for synchronous localStorage access, we might need a stored user ID.
+  const storedUser = localStorage.getItem('bill_user_id');
+  return storedUser ? `${storedUser}_${key}` : key;
+};
+
 // Helper to get active store ID
-const getActiveStoreId = () => localStorage.getItem('active_store_id');
+const getActiveStoreId = () => localStorage.getItem(getUserKey('active_store_id'));
 
 // Store Info
 export const getStoreInfo = async (): Promise<StoreInfo | null> => {
   // Try local first for instant recall
-  const localData = localStorage.getItem('bill_store_info');
+  const localData = localStorage.getItem(getUserKey('bill_store_info'));
   if (localData) {
     try {
       return JSON.parse(localData);
@@ -46,7 +55,7 @@ export const getStoreInfo = async (): Promise<StoreInfo | null> => {
 
       if (data && !error) {
         storeId = data.id as string;
-        localStorage.setItem('active_store_id', storeId);
+        localStorage.setItem(getUserKey('active_store_id'), storeId);
         // Continue to fetch with this storeId
       } else {
         return null;
@@ -74,7 +83,7 @@ export const getStoreInfo = async (): Promise<StoreInfo | null> => {
       email: data.email || '',
       authDistributors: data.auth_distributors || [],
     };
-    localStorage.setItem('bill_store_info', JSON.stringify(info));
+    localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(info));
     return info;
   }
 
@@ -83,12 +92,13 @@ export const getStoreInfo = async (): Promise<StoreInfo | null> => {
 
 export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
   // Update local storage first for immediate UI response
-  localStorage.setItem('bill_store_info', JSON.stringify(info));
-
+  localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(info));
+  
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     // Ensure active_store_id is set even if Supabase fails later
-    localStorage.setItem('active_store_id', user.id);
+    localStorage.setItem(getUserKey('active_store_id'), user.id);
+    localStorage.setItem('bill_user_id', user.id); // Ensure we have the user ID for prefixes
 
     try {
       const storeId = getActiveStoreId() || user.id;
@@ -126,7 +136,7 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
 // Branding Settings
 export const getBrandingSettings = async (): Promise<BrandingSettings> => {
   // Try local first
-  const localData = localStorage.getItem('bill_branding_settings');
+  const localData = localStorage.getItem(getUserKey('bill_branding_settings'));
   if (localData) {
     try {
       return JSON.parse(localData);
@@ -149,7 +159,7 @@ export const getBrandingSettings = async (): Promise<BrandingSettings> => {
 
       if (stores && stores.length > 0) {
         storeId = stores[0].id;
-        localStorage.setItem('active_store_id', storeId as string);
+        localStorage.setItem(getUserKey('active_store_id'), storeId as string);
       }
     }
   }
@@ -167,7 +177,7 @@ export const getBrandingSettings = async (): Promise<BrandingSettings> => {
   }
 
   const settings = data.branding_settings as BrandingSettings;
-  localStorage.setItem('bill_branding_settings', JSON.stringify(settings));
+  localStorage.setItem(getUserKey('bill_branding_settings'), JSON.stringify(settings));
   return settings;
 };
 
@@ -175,7 +185,7 @@ export const saveBrandingSettings = async (brandingSettings: BrandingSettings) =
   const storeId = getActiveStoreId();
 
   // Save local first
-  localStorage.setItem('bill_branding_settings', JSON.stringify(brandingSettings));
+  localStorage.setItem(getUserKey('bill_branding_settings'), JSON.stringify(brandingSettings));
 
   if (!storeId) return;
 
@@ -190,7 +200,7 @@ export const saveBrandingSettings = async (brandingSettings: BrandingSettings) =
 // Customers
 export const getCustomers = async (force = false, limit = 50): Promise<Customer[]> => {
   // Try local first for performance and offline resilience
-  const localData = localStorage.getItem('bill_customers');
+  const localData = localStorage.getItem(getUserKey('bill_customers'));
   if (localData && !force) {
     try {
       return JSON.parse(localData);
@@ -229,7 +239,7 @@ export const getCustomers = async (force = false, limit = 50): Promise<Customer[
     createdAt: c.created_at,
   }));
 
-  localStorage.setItem('bill_customers', JSON.stringify(customers));
+  localStorage.setItem(getUserKey('bill_customers'), JSON.stringify(customers));
   return customers;
 };
 
@@ -277,7 +287,7 @@ export const saveCustomer = async (customer: Customer) => {
     ? currentCustomers.map((c, i) => i === index ? customer : c)
     : [...currentCustomers, customer];
 
-  localStorage.setItem('bill_customers', JSON.stringify(updatedCustomers));
+  localStorage.setItem(getUserKey('bill_customers'), JSON.stringify(updatedCustomers));
 
   const storeId = getActiveStoreId();
   if (!storeId) return;
@@ -328,7 +338,7 @@ export const deleteCustomer = async (id: string) => {
 // Products
 export const getProducts = async (force = false, limit = 50): Promise<Product[]> => {
   // Try local first
-  const localData = localStorage.getItem('bill_products');
+  const localData = localStorage.getItem(getUserKey('bill_products'));
   if (localData && !force) {
     try {
       return JSON.parse(localData);
@@ -367,7 +377,7 @@ export const getProducts = async (force = false, limit = 50): Promise<Product[]>
     createdAt: p.created_at,
   }));
 
-  localStorage.setItem('bill_products', JSON.stringify(products));
+  localStorage.setItem(getUserKey('bill_products'), JSON.stringify(products));
   return products;
 };
 
@@ -414,7 +424,7 @@ export const saveProduct = async (product: Product) => {
     ? currentProducts.map((p, i) => i === index ? product : p)
     : [...currentProducts, product];
 
-  localStorage.setItem('bill_products', JSON.stringify(updatedProducts));
+  localStorage.setItem(getUserKey('bill_products'), JSON.stringify(updatedProducts));
 
   const storeId = getActiveStoreId();
   if (!storeId) return;
@@ -466,7 +476,7 @@ export const deleteProduct = async (id: string) => {
 // Invoices
 export const getInvoices = async (force = false): Promise<Invoice[]> => {
   // Try local first
-  const localData = localStorage.getItem('bill_invoices');
+  const localData = localStorage.getItem(getUserKey('bill_invoices'));
   if (localData && !force) {
     try {
       const parsed = JSON.parse(localData);
@@ -487,7 +497,7 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
       const { data: store } = await supabase.from('stores').select('id').eq('user_id', user.id).limit(1).single();
       if (store) {
         storeId = store.id;
-        localStorage.setItem('active_store_id', storeId!);
+        localStorage.setItem(getUserKey('active_store_id'), storeId!);
       }
     }
   }
@@ -549,7 +559,7 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
 
   // Merge with existing local invoices to prevent wiping unsynced offline invoices
   try {
-    const localRaw = localStorage.getItem('bill_invoices');
+    const localRaw = localStorage.getItem(getUserKey('bill_invoices'));
     if (localRaw) {
       const localInvoices = JSON.parse(localRaw) as Invoice[];
       if (Array.isArray(localInvoices)) {
@@ -560,7 +570,7 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
         );
 
         const mergedInvoices = [...unsyncedLocal, ...invoices];
-        localStorage.setItem('bill_invoices', JSON.stringify(mergedInvoices));
+        localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(mergedInvoices));
         return mergedInvoices;
       }
     }
@@ -568,7 +578,7 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
     console.error('Error merging local invoices:', e);
   }
 
-  localStorage.setItem('bill_invoices', JSON.stringify(invoices));
+  localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(invoices));
   return invoices;
 };
 
@@ -581,7 +591,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     ? currentInvoices.map((inv, i) => i === index ? invoice : inv)
     : [invoice, ...currentInvoices];
 
-  localStorage.setItem('bill_invoices', JSON.stringify(updatedInvoices));
+  localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(updatedInvoices));
 
   const storeId = getActiveStoreId();
   if (!storeId) return invoice.id;
@@ -605,12 +615,12 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     const { data, error } = await supabase.from('invoices').upsert(upsertPayload).select('id').single();
     if (!error && data && data.id && data.id !== invoice.id) {
       // DB assigned a new UUID — update localStorage so the invoice is findable by its real ID
-      const localRaw = localStorage.getItem('bill_invoices');
+      const localRaw = localStorage.getItem(getUserKey('bill_invoices'));
       if (localRaw) {
         try {
           const local = JSON.parse(localRaw) as Invoice[];
           const updated = local.map(inv => inv.id === invoice.id ? { ...inv, id: data.id } : inv);
-          localStorage.setItem('bill_invoices', JSON.stringify(updated));
+          localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(updated));
         } catch (_) { }
       }
       return data.id;
@@ -625,12 +635,12 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
 
 export const deleteInvoice = async (id: string) => {
   // Remove from localStorage first (targeted, don't wipe all invoices)
-  const localRaw = localStorage.getItem('bill_invoices');
+  const localRaw = localStorage.getItem(getUserKey('bill_invoices'));
   if (localRaw) {
     try {
       const local = JSON.parse(localRaw) as Invoice[];
       const updated = local.filter(inv => inv.id !== id);
-      localStorage.setItem('bill_invoices', JSON.stringify(updated));
+      localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(updated));
     } catch (_) { }
   }
   // Best-effort Supabase delete
@@ -692,7 +702,7 @@ export const subscribeToInvoices = (callback: (payload: any) => void) => {
 export const subscribeToProducts = (callback: (payload: any) => void) => {
   const channel = supabase.channel('products-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-      localStorage.removeItem('bill_products');
+      localStorage.removeItem(getUserKey('bill_products'));
       callback(payload);
     });
 
@@ -710,7 +720,7 @@ export const subscribeToProducts = (callback: (payload: any) => void) => {
 export const subscribeToCustomers = (callback: (payload: any) => void) => {
   const channel = supabase.channel('customers-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, (payload) => {
-      localStorage.removeItem('bill_customers');
+      localStorage.removeItem(getUserKey('bill_customers'));
       callback(payload);
     });
 

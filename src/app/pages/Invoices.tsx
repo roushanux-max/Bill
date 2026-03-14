@@ -262,6 +262,7 @@ export default function Invoices() {
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
               className={hasActiveFilters ? "bg-[var(--color-primary)] hover:opacity-90" : ""}
+              disabled={invoices.length === 0}
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters {hasActiveFilters && `(${[filterStatus !== 'all', filterDateFrom, filterDateTo, sortBy !== 'date'].filter(Boolean).length})`}

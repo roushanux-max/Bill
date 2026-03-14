@@ -11,7 +11,7 @@ import { ArrowLeft, Eye, Save, Upload, ImageIcon, Palette, LayoutGrid, Type, Fil
 import { getTextColorClass, getDescriptionColorClass, getContrastColor } from '../../utils/colorUtils';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { StoreInfo } from '../types/invoice';
-import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo } from '../utils/storage';
+import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo, getUserKey } from '../utils/storage';
 import { useBranding } from '../contexts/BrandingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -273,10 +273,10 @@ export default function SettingsPage() {
                     updatedAt: new Date().toISOString(),
                   };
 
-                  localStorage.setItem('previewInvoice', JSON.stringify(previewInvoice));
+                  localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(previewInvoice));
                   // Also store preview settings so invoice preview can render unsaved changes
-                  localStorage.setItem('previewBrandingSettings', JSON.stringify(settings));
-                  if (storeInfo) localStorage.setItem('previewStoreInfo', JSON.stringify(storeInfo));
+                  localStorage.setItem(getUserKey('previewBrandingSettings'), JSON.stringify(settings));
+                  if (storeInfo) localStorage.setItem(getUserKey('previewStoreInfo'), JSON.stringify(storeInfo));
                   // Navigate to preview
                   navigate('/invoice-preview?return=/settings');
                 } catch (e) {

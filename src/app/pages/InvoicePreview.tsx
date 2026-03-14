@@ -9,6 +9,7 @@ import { getInvoices, getStoreInfo, getBrandingSettings } from '../utils/storage
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { useBranding } from '../contexts/BrandingContext';
 import { toast } from 'sonner';
+import { getUserKey } from '../utils/storage';
 
 export default function InvoicePreview() {
   const { settings: globalSettings, storeInfo: globalStoreInfo } = useBranding();
@@ -34,8 +35,8 @@ export default function InvoicePreview() {
       });
 
       // Preview overrides (from Branding Settings preview button)
-      const previewSettingsRaw = localStorage.getItem('previewBrandingSettings');
-      const previewStoreRaw = localStorage.getItem('previewStoreInfo');
+      const previewSettingsRaw = localStorage.getItem(getUserKey('previewBrandingSettings'));
+      const previewStoreRaw = localStorage.getItem(getUserKey('previewStoreInfo'));
 
       if (previewSettingsRaw) {
         try {
@@ -62,7 +63,7 @@ export default function InvoicePreview() {
       }
 
       // First try to load from localStorage previewInvoice (from create page)
-      const previewData = localStorage.getItem('previewInvoice');
+      const previewData = localStorage.getItem(getUserKey('previewInvoice'));
       if (previewData) {
         try {
           const parsedInvoice = JSON.parse(previewData);

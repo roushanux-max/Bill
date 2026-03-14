@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
-import { saveInvoice } from '../utils/storage';
+import { saveInvoice, getUserKey } from '../utils/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -67,9 +67,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        localStorage.setItem('bill_user_id', session.user.id);
         // When user appears (login or refresh), immediately try to restore store
         setLoading(true);
         await refreshHasStore(session.user);
+      } else {
+        localStorage.removeItem('bill_user_id');
       }
       
       setLoading(false);
@@ -85,8 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 1. Check local storage first (fastest)
-    const localStoreId = localStorage.getItem('active_store_id');
-    const localOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
+    const localStoreId = localStorage.getItem(getUserKey('active_store_id'));
+    const localOnboarding = localStorage.getItem(getUserKey('hasCompletedOnboarding')) === 'true';
     
     if (localStoreId && localOnboarding) {
       setHasStore(true);
@@ -104,8 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!error && stores && stores.length > 0) {
         const storeId = stores[0].id;
         console.log('AuthContext: Restored store for user:', storeId);
-        localStorage.setItem('active_store_id', storeId);
-        localStorage.setItem('hasCompletedOnboarding', 'true');
+        localStorage.setItem(getUserKey('active_store_id'), storeId);
+        localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
         
         // Dispatch storage event so other contexts (Branding) update immediately
         window.dispatchEvent(new Event('storage'));
@@ -136,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!u) return;
 
       // If no active_store_id in localStorage, try to pick the user's first store
-      const activeStoreId = localStorage.getItem('active_store_id');
+      const activeStoreId = localStorage.getItem(getUserKey('active_store_id'));
       if (!activeStoreId) {
         try {
           const { data: stores, error } = await supabase
@@ -146,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .limit(1);
 
           if (!error && stores && stores.length > 0) {
-            localStorage.setItem('active_store_id', stores[0].id);
+            localStorage.setItem(getUserKey('active_store_id'), stores[0].id);
           }
         } catch (e) {
           // ignore
@@ -155,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If there's a local invoice draft, migrate it to Supabase (once)
       try {
-        const draftRaw = localStorage.getItem('invoiceDraft');
+        const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
         if (draftRaw) {
           const draft = JSON.parse(draftRaw);
           if (draft && (draft.items?.length > 0 || draft.customerId)) {
@@ -164,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (storeId) {
               // saveInvoice will use active_store_id via storage helpers
               await saveInvoice(draft);
-              localStorage.removeItem('invoiceDraft');
+              localStorage.removeItem(getUserKey('invoiceDraft'));
             }
           }
         }
@@ -226,9 +229,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       'bill_invoices',
       'active_store_id',
       'hasCompletedOnboarding',
-      'invoiceDraft'
+      'invoiceDraft',
+      'bill_user_id'
     ];
     
+    // Also try to clear prefixed versions if we have the ID
+    const userId = localStorage.getItem('bill_user_id');
+    if (userId) {
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(`${userId}_${key}`);
+      });
+    }
+
     keysToRemove.forEach(key => localStorage.removeItem(key));
     
     // Dispatch a storage event to immediately update BrandingContext to defaults

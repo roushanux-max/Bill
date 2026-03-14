@@ -272,11 +272,12 @@ export default function Products() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {showAnyFilter && (
-                  <Button
+                <Button
                     variant={showFilters ? "default" : "outline"}
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                     className="h-9"
+                    disabled={products.length === 0}
                   >
                     <Filter className="h-4 w-4 mr-2" />
                     Filters
@@ -304,26 +305,6 @@ export default function Products() {
             {/* Filter Controls */}
             {showFilters && showAnyFilter && (
               <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                {showGstFilter && (
-                  <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">GST Rate</Label>
-                    <Select
-                      value={filterGstRate}
-                      onValueChange={(e) => setFilterGstRate(e)}
-                    >
-                      <SelectTrigger className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
-                        <SelectValue>{filterGstRate === 'all' ? 'All GST Rates' : `${filterGstRate}%`}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All GST Rates</SelectItem>
-                        {uniqueGstRates.sort((a, b) => a - b).map(rate => (
-                          <SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
                 {showGstFilter && (
                   <div className="flex-1 space-y-1.5">
                     <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">GST Rate</Label>

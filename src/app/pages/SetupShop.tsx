@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
+import { getUserKey } from '../utils/storage';
 
 // Helper to determine active step
 const steps = [
@@ -90,7 +91,7 @@ export default function SetupShop() {
         if (data && data.length > 0) {
           setHasExistingStore(true);
           const s = data[0];
-          localStorage.setItem('active_store_id', s.id);
+          localStorage.setItem(getUserKey('active_store_id'), s.id);
           setFormData(prev => ({
             ...prev,
             shopName: s.business_name || prev.shopName,
@@ -113,7 +114,7 @@ export default function SetupShop() {
 
   // Restore draft on mount
   useEffect(() => {
-    const draft = localStorage.getItem('shopSetupDraft');
+    const draft = localStorage.getItem(getUserKey('shopSetupDraft'));
     if (draft) {
       try {
         const parsedDraft = JSON.parse(draft);
@@ -128,7 +129,7 @@ export default function SetupShop() {
     const { name, value } = e.target;
     const newFormData = { ...formData, [name]: value };
     setFormData(newFormData);
-    localStorage.setItem('shopSetupDraft', JSON.stringify(newFormData));
+    localStorage.setItem(getUserKey('shopSetupDraft'), JSON.stringify(newFormData));
 
     // Auto-fetch location if pincode is 6 digits
     if (name === 'pincode' && value.length === 6 && /^\d{6}$/.test(value)) {
@@ -149,7 +150,7 @@ export default function SetupShop() {
 
         setFormData(prev => {
           const updated = { ...prev, city, state };
-          localStorage.setItem('shopSetupDraft', JSON.stringify(updated));
+          localStorage.setItem(getUserKey('shopSetupDraft'), JSON.stringify(updated));
           return updated;
         });
         toast.success(`Location identified: ${city}, ${state}`);
@@ -199,7 +200,7 @@ export default function SetupShop() {
     }
 
     try {
-      const existingId = localStorage.getItem('active_store_id') || `offline-${Date.now()}`;
+      const existingId = localStorage.getItem(getUserKey('active_store_id')) || `offline-${Date.now()}`;
 
       const storeData: any = {
         user_id: user.id,
@@ -236,7 +237,7 @@ export default function SetupShop() {
         if (error) throw error;
 
         // Persist locally
-        localStorage.setItem('active_store_id', data.id);
+        localStorage.setItem(getUserKey('active_store_id'), data.id);
 
         // Update cached store info so Dashboard/Header reflect new name immediately
         const storeInfo = {
@@ -247,12 +248,12 @@ export default function SetupShop() {
           phone: data.phone || '',
           email: data.email || '',
         };
-        localStorage.setItem('bill_store_info', JSON.stringify(storeInfo));
+        localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(storeInfo));
 
       } catch (err: any) {
         console.warn('Supabase sync failed, saving locally instead:', err);
         // Fallback: save locally
-        localStorage.setItem('active_store_id', existingId);
+        localStorage.setItem(getUserKey('active_store_id'), existingId);
 
         const storeInfo = {
           name: storeData.business_name || '',
@@ -262,12 +263,12 @@ export default function SetupShop() {
           phone: storeData.phone || '',
           email: storeData.email || '',
         };
-        localStorage.setItem('bill_store_info', JSON.stringify(storeInfo));
+        localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(storeInfo));
       }
 
       // Mark onboarding complete and remove draft
-      localStorage.setItem('hasCompletedOnboarding', 'true');
-      localStorage.removeItem('shopSetupDraft');
+      localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
+      localStorage.removeItem(getUserKey('shopSetupDraft'));
 
       return true;
 
@@ -294,8 +295,8 @@ export default function SetupShop() {
     setSavingLater(true);
 
     // Create a barebones local store to allow user to bypass
-    const existingId = localStorage.getItem('active_store_id') || `offline-${Date.now()}`;
-    localStorage.setItem('active_store_id', existingId);
+    const existingId = localStorage.getItem(getUserKey('active_store_id')) || `offline-${Date.now()}`;
+    localStorage.setItem(getUserKey('active_store_id'), existingId);
 
     // Just save enough locally to make the app work
     const storeInfo = {
@@ -306,9 +307,9 @@ export default function SetupShop() {
       phone: '',
       email: '',
     };
-    localStorage.setItem('bill_store_info', JSON.stringify(storeInfo));
-    localStorage.setItem('hasCompletedOnboarding', 'true');
-    localStorage.removeItem('shopSetupDraft');
+    localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(storeInfo));
+    localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
+    localStorage.removeItem(getUserKey('shopSetupDraft'));
 
     // Optionally try to tell Supabase in the background, but never block on it
     if (user) {

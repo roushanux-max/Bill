@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { StoreInfo } from '../types/invoice';
-import { getBrandingSettings, getStoreInfo } from '../utils/storage';
+import { getBrandingSettings, getStoreInfo, getUserKey } from '../utils/storage';
 
 interface BrandingContextType {
   settings: BrandingSettings;
@@ -20,7 +20,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<BrandingSettings>(() => {
     try {
-      const saved = localStorage.getItem('bill_branding_settings');
+      const saved = localStorage.getItem(getUserKey('bill_branding_settings'));
       return saved ? JSON.parse(saved) : defaultBrandingSettings;
     } catch (e) {
       console.error('Error loading initial branding settings:', e);
@@ -29,7 +29,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   });
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(() => {
     try {
-      const saved = localStorage.getItem('bill_store_info');
+      const saved = localStorage.getItem(getUserKey('bill_store_info'));
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       console.error('Error loading initial store info:', e);
@@ -76,14 +76,14 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
       // If it's a real StorageEvent, check the key
       if ('key' in e) {
         const se = e as StorageEvent;
-        if (se.key === 'bill_branding_settings' && se.newValue) {
+        if (se.key === getUserKey('bill_branding_settings') && se.newValue) {
           try {
             const newSettings = JSON.parse(se.newValue) as BrandingSettings;
             setSettings(newSettings);
             applyBrandingStyles(newSettings);
           } catch (e) { }
         }
-        if (se.key === 'bill_store_info' && se.newValue) {
+        if (se.key === getUserKey('bill_store_info') && se.newValue) {
           try {
             const newStoreInfo = JSON.parse(se.newValue) as StoreInfo;
             setStoreInfo(newStoreInfo);

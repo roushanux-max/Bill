@@ -378,6 +378,7 @@ export default function Customers() {
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                     className="h-9"
+                    disabled={customers.length === 0}
                   >
                     <Filter className="h-4 w-4 mr-2" />
                     Filters

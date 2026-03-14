@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, PlusCircle, Users, Settings, Package } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, Users, Settings, Package } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useBranding } from '../contexts/BrandingContext';
 
@@ -11,7 +11,6 @@ const MobileNav: React.FC = () => {
   const navItems = [
     { label: 'Home', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Bills', icon: FileText, path: '/invoices' },
-    { label: 'Create', icon: PlusCircle, path: '/create-invoice', isCenter: true },
     { label: 'Products', icon: Package, path: '/products' },
     { label: 'Clients', icon: Users, path: '/customers' },
     { label: 'Settings', icon: Settings, path: '/settings' },
@@ -32,31 +31,6 @@ const MobileNav: React.FC = () => {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
-
-          if (item.isCenter) {
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) => cn(
-                  "relative -top-5 flex flex-col items-center justify-center transition-transform active:scale-95",
-                  isActive ? "scale-110" : "hover:scale-105"
-                )}
-              >
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl shadow-primary/20"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${settings.primaryColor}, ${settings.primaryColor}dd)`,
-                  }}
-                >
-                  <Icon className="w-8 h-8 text-white" />
-                </div>
-                <span className="text-[10px] font-bold mt-2 text-slate-900 uppercase tracking-widest">
-                  {item.label}
-                </span>
-              </NavLink>
-            );
-          }
 
           return (
             <NavLink
@@ -86,6 +60,22 @@ const MobileNav: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Gmail-style Floating Action Button for Create Invoice */}
+      <NavLink
+        to="/create-invoice"
+        className={({ isActive }) => cn(
+          "fixed bottom-28 right-5 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all active:scale-95 z-[110] md:hidden",
+          isActive ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
+        )}
+        style={{ 
+          backgroundColor: '#fff',
+          color: settings.primaryColor,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1)'
+        }}
+      >
+        <Plus className="w-8 h-8" style={{ color: settings.primaryColor }} strokeWidth={3} />
+      </NavLink>
     </nav>
   );
 };

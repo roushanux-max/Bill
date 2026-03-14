@@ -9,7 +9,7 @@ import { ArrowLeft, Eye, Download, Printer, Share2, Trash2, Save, Pencil, Filter
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Invoice, InvoiceItem, Customer, Product, StoreInfo } from '../types/invoice';
-import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts } from '../utils/storage';
+import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts, getUserKey } from '../utils/storage';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
 import { useBranding } from '../contexts/BrandingContext';
@@ -47,7 +47,7 @@ export default function CreateInvoice() {
   const { settings, storeInfo } = useBranding();
 
   // New customer form state
-  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
+  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
   const [isNewCustomer, setIsNewCustomer] = useState(true);
 
   // New item form state
@@ -71,7 +71,7 @@ export default function CreateInvoice() {
     
     // We'll keep the itemFormDraft restoration if it's not confusing, 
     // but customer draft should definitely be clean.
-    const savedItem = localStorage.getItem('itemFormDraft');
+    const savedItem = localStorage.getItem(getUserKey('itemFormDraft'));
     if (savedItem && newItemData.name === '') {
       try { setNewItemData(JSON.parse(savedItem)); } catch (e) { }
     }
@@ -80,13 +80,13 @@ export default function CreateInvoice() {
 
   useEffect(() => {
     if (newItemData.name || newItemData.rate) {
-      localStorage.setItem('itemFormDraft', JSON.stringify(newItemData));
+      localStorage.setItem(getUserKey('itemFormDraft'), JSON.stringify(newItemData));
     }
   }, [newItemData]);
 
   useEffect(() => {
     if (newCustomerData.name || newCustomerData.phone || newCustomerData.address) {
-      localStorage.setItem('customerFormDraft', JSON.stringify(newCustomerData));
+      localStorage.setItem(getUserKey('customerFormDraft'), JSON.stringify(newCustomerData));
       
       // Debounced auto-save to database
       if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
@@ -147,7 +147,7 @@ export default function CreateInvoice() {
         // This is crucial for returning from preview without a full backend round-trip
         if (!existing) {
           try {
-            const draftRaw = localStorage.getItem('invoiceDraft');
+            const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
             if (draftRaw) {
               const draft = JSON.parse(draftRaw);
               if (draft && (draft.id === editId || draft.id === 'sample')) existing = draft;
@@ -156,7 +156,7 @@ export default function CreateInvoice() {
         }
         if (!existing) {
           try {
-            const previewRaw = localStorage.getItem('previewInvoice');
+            const previewRaw = localStorage.getItem(getUserKey('previewInvoice'));
             if (previewRaw) {
               const preview = JSON.parse(previewRaw);
               if (preview && (preview.id === editId || preview.invoiceNumber === editId)) existing = preview;
@@ -194,7 +194,7 @@ export default function CreateInvoice() {
         }
       } else {
         // Not editing, check for draft
-        const draft = localStorage.getItem('invoiceDraft');
+        const draft = localStorage.getItem(getUserKey('invoiceDraft'));
         if (draft) {
           try {
             const parsedDraft = JSON.parse(draft);
@@ -214,7 +214,7 @@ export default function CreateInvoice() {
                 }
                 toast.success('Draft restored!');
               } else {
-                localStorage.removeItem('invoiceDraft');
+                localStorage.removeItem(getUserKey('invoiceDraft'));
                 setInvoiceNumber(await getNextInvoiceNumber());
               }
             } else {
@@ -255,7 +255,7 @@ export default function CreateInvoice() {
         isNewCustomer,
         updatedAt: new Date().toISOString()
       };
-      localStorage.setItem('invoiceDraft', JSON.stringify(currentDraft));
+      localStorage.setItem(getUserKey('invoiceDraft'), JSON.stringify(currentDraft));
 
       // 2. Try to auto-save to Supabase if mandatory fields are present
       if (!selectedCustomerId || items.length === 0) return;
@@ -390,8 +390,8 @@ export default function CreateInvoice() {
   const clearCustomerForm = () => {
     setSelectedCustomerId('');
     setActiveCustomer(null);
-    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
-    localStorage.removeItem('customerFormDraft');
+    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
+    localStorage.removeItem(getUserKey('customerFormDraft'));
     setIsNewCustomer(true);
   };
 
@@ -472,7 +472,7 @@ export default function CreateInvoice() {
 
     setNewItemData({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
     setSelectedProductId('');
-    localStorage.removeItem('itemFormDraft');
+    localStorage.removeItem(getUserKey('itemFormDraft'));
     
     // Scroll to items list on mobile to show it was added
     if (window.innerWidth < 768) {
@@ -571,7 +571,7 @@ export default function CreateInvoice() {
       const savedId = await saveInvoice(invoice);
 
       // Also save to draft for persistence if they edit and come back
-      localStorage.setItem('invoiceDraft', JSON.stringify({
+      localStorage.setItem(getUserKey('invoiceDraft'), JSON.stringify({
         ...invoice,
         // Store raw items/customer for form restoration
         items: items,
@@ -579,7 +579,7 @@ export default function CreateInvoice() {
         date: date,
       }));
 
-      localStorage.setItem('previewInvoice', JSON.stringify(invoice));
+      localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
 
       // Navigate to preview with a return path that includes the ID
       const finalId = savedId || editId || invoice.id;
@@ -677,7 +677,7 @@ export default function CreateInvoice() {
       }
 
       // Clean up draft
-      localStorage.removeItem('invoiceDraft');
+      localStorage.removeItem(getUserKey('invoiceDraft'));
       navigate('/invoices');
     } catch (error) {
       console.error('Save error:', error);
@@ -769,26 +769,43 @@ export default function CreateInvoice() {
 
   const { total } = calculateTotals();
 
-  return (
-    <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
-        <div className="px-4 py-3 sm:py-4">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => handleNavigateAway(() => navigate('/invoices'))}
-              className="inline-flex items-center gap-2 sm:gap-3"
-            >
-              <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
-                <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-            </button>
-            <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">
-              {editId ? 'Edit Invoice' : 'Create Invoice'}
-            </h1>
-          </div>
-        </div>
-      </header>
+    const isInvoiceIncomplete = !selectedCustomerId || items.length === 0;
+
+    return (
+        <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
+            <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
+                <div className="px-4 py-3 sm:py-4">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                            <button
+                                onClick={() => handleNavigateAway(() => navigate('/invoices'))}
+                                className="inline-flex items-center gap-2 sm:gap-3"
+                            >
+                                <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                                    <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                                    <span className="hidden sm:inline">Back</span>
+                                </Button>
+                            </button>
+                            <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">
+                                {editId ? 'Edit Invoice' : 'Create Invoice'}
+                            </h1>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                             <Button
+                                onClick={handleSaveInvoice}
+                                className="bg-[var(--color-primary)] hover:opacity-90"
+                                disabled={isGenerating || isInvoiceIncomplete}
+                                size="sm"
+                            >
+                                <Save className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Save Invoice</span>
+                                <span className="sm:hidden">Save</span>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
       <main className="px-4 py-4 sm:py-8 max-w-6xl mx-auto print:hidden">
         <div className="space-y-4 sm:space-y-6">
@@ -1198,19 +1215,19 @@ export default function CreateInvoice() {
                   <Eye className="h-4 w-4 mr-2" />
                   Preview
                 </Button>
-                <Button variant="outline" size="lg" onClick={handlePrint} disabled={isGenerating} className="w-full rounded-xl">
+                <Button variant="outline" size="lg" onClick={handlePrint} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl">
                   <Printer className="h-4 w-4 mr-2" />
                   Print Preview
                 </Button>
-                <Button variant="default" size="lg" onClick={handleSaveInvoice} disabled={isGenerating} className="w-full rounded-xl bg-[var(--color-primary)] hover:opacity-90">
+                <Button variant="default" size="lg" onClick={handleSaveInvoice} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl bg-[var(--color-primary)] hover:opacity-90">
                   <Save className="h-4 w-4 mr-2" />
                   Save Invoice
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleDownload} disabled={isGenerating} className="w-full rounded-xl">
+                <Button variant="outline" size="lg" onClick={handleDownload} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl">
                   <Download className="h-4 w-4 mr-2" />
                   Save PDF
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleShare} disabled={isGenerating} className="w-full rounded-xl">
+                <Button variant="outline" size="lg" onClick={handleShare} disabled={isGenerating || isInvoiceIncomplete} className="w-full rounded-xl">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
