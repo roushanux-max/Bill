@@ -201,9 +201,6 @@ export default function SettingsPage() {
   const sections = [
     { id: 'store', label: 'Store Details', icon: Building2 },
     { id: 'logo', label: 'Logo & Brand', icon: ImageIcon },
-    { id: 'colors', label: 'Colors', icon: Palette },
-    { id: 'layout', label: 'Layout', icon: LayoutGrid },
-    { id: 'typography', label: 'Typography', icon: Type },
     { id: 'footer', label: 'Footer & Sign', icon: FileSignature },
     { id: 'terms', label: 'Terms & Notes', icon: Sparkles },
     { id: 'account', label: 'Account', icon: User },
@@ -520,7 +517,7 @@ export default function SettingsPage() {
               )
             )}
 
-            {/* Logo & Brand Section */}
+            {/* Logo, Brand & Colors Section */}
             {activeSection === 'logo' && (
               <div className="space-y-6">
                 <Card className="shadow-lg border-0 overflow-hidden">
@@ -530,21 +527,18 @@ export default function SettingsPage() {
                       Logo & Brand Identity
                     </CardTitle>
                     <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
-                      Upload and customize your business logo
+                      Upload your logo and choose your brand color
                     </CardDescription>
                   </div>
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-6 space-y-8">
                     {/* Logo Upload Area */}
                     <div className="space-y-3">
                       <Label className="text-sm font-semibold text-slate-700">Business Logo</Label>
-                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all">
+                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all outline-none">
                         {settings.logo ? (
                           <div className="flex flex-col items-center gap-4">
                             <div className="relative group">
-                              <div className={`border-2 border-slate-200 rounded-lg flex items-center justify-center overflow-hidden bg-white shadow-md ${settings.logoSize === 'small' ? 'w-24 h-24' :
-                                settings.logoSize === 'medium' ? 'w-40 h-40' :
-                                  'w-56 h-56'
-                                } transition-all duration-300`}>
+                              <div className="border-2 border-slate-200 rounded-lg flex items-center justify-center overflow-hidden bg-white shadow-md w-40 h-40">
                                 <img src={settings.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
                               </div>
                               <button
@@ -554,29 +548,16 @@ export default function SettingsPage() {
                                 <X className="h-4 w-4" />
                               </button>
                             </div>
-                            <p className="text-xs text-slate-500">
-                              Current size: <span className="font-semibold capitalize">{settings.logoSize}</span>
-                            </p>
-                            <div className="flex gap-2">
-                              <label htmlFor="logo-upload" className="cursor-pointer">
-                                <div
-                                  className="px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-                                  style={{ backgroundColor: settings.primaryColor }}
-                                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                                >
-                                  <Upload className="h-4 w-4" />
-                                  Change Logo
-                                </div>
-                                <input
-                                  id="logo-upload"
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={handleLogoUpload}
-                                  className="hidden"
-                                />
-                              </label>
-                            </div>
+                            <label htmlFor="logo-upload" className="cursor-pointer">
+                              <div
+                                className="px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+                                style={{ backgroundColor: settings.primaryColor }}
+                              >
+                                <Upload className="h-4 w-4" />
+                                Change Logo
+                              </div>
+                              <input id="logo-upload" type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                            </label>
                           </div>
                         ) : (
                           <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center gap-3">
@@ -587,214 +568,40 @@ export default function SettingsPage() {
                               <p className="font-medium text-slate-700">Click to upload logo</p>
                               <p className="text-xs text-slate-500 mt-1">PNG, JPG, SVG up to 5MB</p>
                             </div>
-                            <input
-                              id="logo-upload"
-                              type="file"
-                              accept="image/*"
-                              onChange={handleLogoUpload}
-                              className="hidden"
-                            />
+                            <input id="logo-upload" type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                           </label>
                         )}
                       </div>
                     </div>
 
-                    {/* Logo Size */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-slate-700">Logo Size</Label>
-                      <p className="text-xs text-slate-500 mb-2">Select size to see how your logo will appear on invoices</p>
-                      <div className="grid grid-cols-3 gap-3">
-                        {(['small', 'medium', 'large'] as const).map((size) => (
-                          <button
-                            key={size}
-                            onClick={() => updateSettings('logoSize', size)}
-                            className={`p-4 rounded-lg border-2 transition-all ${settings.logoSize === size
-                              ? 'shadow-md ring-2'
-                              : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm'
-                              }`}
-                            style={{
-                              borderColor: settings.logoSize === size ? settings.primaryColor : '',
-                              backgroundColor: settings.logoSize === size ? `${settings.primaryColor}10` : '',
-                              '--ring-color': settings.logoSize === size ? `${settings.primaryColor}40` : '',
-                            } as any}
-                          >
-                            <div className="text-center">
-                              <div className="flex items-center justify-center mb-2">
-                                <div className={`rounded bg-gradient-to-br from-blue-400 to-indigo-400 ${size === 'small' ? 'w-6 h-6' : size === 'medium' ? 'w-10 h-10' : 'w-14 h-14'
-                                  } transition-all duration-300`} />
-                              </div>
-                              <p className="text-xs font-medium text-slate-700 capitalize">{size}</p>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {size === 'small' ? '96px' : size === 'medium' ? '160px' : '224px'}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                    <hr className="border-slate-100" />
 
-            {/* Colors Section */}
-            {activeSection === 'colors' && (
-              <Card className="shadow-lg border-0 overflow-hidden">
-                <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
-                  <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
-                    <Palette className="h-5 w-5" />
-                    Color Palette
-                  </CardTitle>
-                  <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
-                    Define your brand colors for invoices
-                  </CardDescription>
-                </div>
-                <CardContent className="p-6 space-y-5">
-                  {[
-                    { key: 'primaryColor', label: 'Primary Color', description: 'Headers and important elements' }
-                  ].map((color) => (
-                    <div key={color.key} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">{color.label}</Label>
-                      <div className="flex gap-3 items-center">
+                    {/* Colors - Moved here */}
+                    <div className="space-y-4">
+                      <Label className="text-sm font-semibold text-slate-700">Brand Primary Color</Label>
+                      <div className="flex gap-4 items-center">
                         <div className="relative">
                           <input
                             type="color"
-                            value={settings[color.key as keyof BrandingSettings] as string}
-                            onChange={(e) => updateSettings(color.key as keyof BrandingSettings, e.target.value)}
-                            className="w-14 h-14 rounded-lg cursor-pointer border-2 border-white shadow-md"
+                            value={settings.primaryColor}
+                            onChange={(e) => updateSettings('primaryColor', e.target.value)}
+                            className="w-16 h-16 rounded-xl cursor-pointer border-2 border-white shadow-lg"
                           />
                         </div>
                         <div className="flex-1">
                           <Input
                             type="text"
-                            value={settings[color.key as keyof BrandingSettings] as string}
-                            onChange={(e) => updateSettings(color.key as keyof BrandingSettings, e.target.value)}
-                            placeholder="#000000"
-                            className="font-mono text-sm"
+                            value={settings.primaryColor}
+                            onChange={(e) => updateSettings('primaryColor', e.target.value)}
+                            className="font-mono text-sm border-slate-200"
                           />
-                          <p className="text-xs text-slate-500 mt-1">{color.description}</p>
+                          <p className="text-xs text-slate-500 mt-2">This color will be used for buttons, headers, and accents across your invoices and dashboard.</p>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Layout Section */}
-            {activeSection === 'layout' && (
-              <Card className="shadow-lg border-0 overflow-hidden">
-                <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
-                  <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
-                    <LayoutGrid className="h-5 w-5" />
-                    Invoice Layout
-                  </CardTitle>
-                  <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
-                    Customize the structure and style
-                  </CardDescription>
-                </div>
-                <CardContent className="p-6 space-y-6">
-                  {/* Header Style */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700">Header Style</Label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['classic', 'modern', 'minimal'] as const).map((style) => (
-                        <button
-                          key={style}
-                          onClick={() => updateSettings('headerStyle', style)}
-                          className={`p-4 rounded-lg border-2 transition-all ${settings.headerStyle === style
-                            ? 'border-green-600 bg-green-50 shadow-md'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
-                            }`}
-                        >
-                          <div className="text-center">
-                            <div className="mb-2 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded flex items-center justify-center">
-                              <div className={`w-full h-2 ${style === 'classic' ? 'bg-slate-400' : style === 'modern' ? 'bg-gradient-to-r from-blue-400 to-purple-400' : 'bg-slate-300'
-                                }`} />
-                            </div>
-                            <p className="text-xs font-medium text-slate-700 capitalize">{style}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Show Borders */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
-                    <div className="flex-1">
-                      <Label className="text-sm font-semibold text-slate-700">Show Borders</Label>
-                      <p className="text-xs text-slate-500 mt-1">Display borders around invoice sections</p>
-                    </div>
-                    <Switch
-                      checked={settings.showBorder}
-                      onCheckedChange={(checked) => updateSettings('showBorder', checked)}
-                      className="data-[state=checked]:bg-green-600"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Typography Section */}
-            {activeSection === 'typography' && (
-              <Card className="shadow-lg border-0 overflow-hidden">
-                <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
-                  <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
-                    <Type className="h-5 w-5" />
-                    Typography
-                  </CardTitle>
-                  <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
-                    Choose fonts that match your brand
-                  </CardDescription>
-                </div>
-                <CardContent className="p-6 space-y-6">
-                  {/* Font Family */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700">Font Family</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {(['aptos', 'inter', 'roboto', 'lato', 'opensans'] as const).map((font) => (
-                        <button
-                          key={font}
-                          onClick={() => updateSettings('fontFamily', font)}
-                          className={`p-4 rounded-lg border-2 transition-all ${settings.fontFamily === font
-                            ? 'border-orange-600 bg-orange-50 shadow-md'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
-                            }`}
-                        >
-                          <p className="text-sm font-medium capitalize" style={{ fontFamily: font === 'aptos' ? "'Aptos', 'Segoe UI', system-ui, sans-serif" : font }}>
-                            {font}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1" style={{ fontFamily: font === 'aptos' ? "'Aptos', 'Segoe UI', system-ui, sans-serif" : font }}>
-                            The quick brown fox
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Font Size */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700">Font Size</Label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['small', 'medium', 'large'] as const).map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => updateSettings('fontSize', size)}
-                          className={`p-4 rounded-lg border-2 transition-all ${settings.fontSize === size
-                            ? 'border-orange-600 bg-orange-50 shadow-md'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
-                            }`}
-                        >
-                          <p className={`font-medium capitalize ${size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
-                            }`}>
-                            {size}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Footer & Signature Section */}

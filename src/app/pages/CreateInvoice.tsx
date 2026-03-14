@@ -63,19 +63,15 @@ export default function CreateInvoice() {
   const customerSearchTimeout = useRef<any>(null);
   const productSearchTimeout = useRef<any>(null);
 
-  // Restore form progress
+  // Restore form progress - Reduced auto-restoration to ensure clean start
   useEffect(() => {
-    const savedItem = localStorage.getItem('itemFormDraft');
-    const savedCustomer = localStorage.getItem('customerFormDraft');
+    // Only restore if user hasn't started typing and there's a draft
+    // But per user request "No customer should be selected on default", 
+    // we should let the user start fresh or restore via the main "Draft Restored" dialog.
     
-    if (savedCustomer) {
-      try {
-        const parsed = JSON.parse(savedCustomer);
-        setNewCustomerData(parsed);
-        setIsNewCustomer(true);
-      } catch (e) { }
-    }
-
+    // We'll keep the itemFormDraft restoration if it's not confusing, 
+    // but customer draft should definitely be clean.
+    const savedItem = localStorage.getItem('itemFormDraft');
     if (savedItem && newItemData.name === '') {
       try { setNewItemData(JSON.parse(savedItem)); } catch (e) { }
     }

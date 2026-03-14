@@ -482,19 +482,28 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
   let storeId = getActiveStoreId();
 
   if (!storeId) {
-    // Return local data even if storeId is missing
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: store } = await supabase.from('stores').select('id').eq('user_id', user.id).limit(1).single();
+      if (store) {
+        storeId = store.id;
+        localStorage.setItem('active_store_id', storeId!);
+      }
+    }
+  }
+
+  if (!storeId) {
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        if (Array.isArray(parsed)) {
-          return parsed.filter(inv => inv && inv.customer && inv.id);
-        }
+        if (Array.isArray(parsed)) return parsed.filter(inv => inv && inv.customer && inv.id);
         return parsed;
       } catch (e) { }
     }
     return [];
   }
 
+  // If we are forcing fetch or have no local data, get from Supabase
   const { data, error } = await supabase
     .from('invoices')
     .select('*, customers(*)')

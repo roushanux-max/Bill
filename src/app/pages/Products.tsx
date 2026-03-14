@@ -27,11 +27,11 @@ export default function Products() {
 
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Furniture',
+    category: '',
     hsnCode: '',
     sellingPrice: 0,
     gstRate: 18,
-    unit: 'pcs',
+    unit: '',
   });
 
   useEffect(() => {
@@ -51,11 +51,11 @@ export default function Products() {
   const resetForm = () => {
     setFormData({
       name: '',
-      category: 'Furniture',
+      category: '',
       hsnCode: '',
       sellingPrice: 0,
       gstRate: 18,
-      unit: 'pcs',
+      unit: '',
     });
     setEditingProduct(null);
   };
@@ -112,25 +112,18 @@ export default function Products() {
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.hsnCode.includes(searchTerm) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    product.hsnCode.includes(searchTerm)
   );
 
-  // Check which filters are needed (only show if there are 2+ unique values)
-  const uniqueCategories = [...new Set(filteredProducts.map(p => p.category))];
+  // Check which filters are needed
   const uniqueGstRates = [...new Set(filteredProducts.map(p => p.gstRate))];
-  const showCategoryFilter = uniqueCategories.length > 1;
-  const showGstFilter = uniqueGstRates.length > 1;
-  const showAnyFilter = showCategoryFilter || showGstFilter;
+  const showGstFilter = true; // Always show GST filter for clarity
+  const showAnyFilter = filteredProducts.length > 0;
 
-  // Apply category and GST filters
-  const filteredByCategory = filterCategory === 'all'
-    ? filteredProducts
-    : filteredProducts.filter(product => product.category === filterCategory);
-
+  // Apply GST filters directly to search results
   const filteredByGst = filterGstRate === 'all'
-    ? filteredByCategory
-    : filteredByCategory.filter(product => product.gstRate === parseInt(filterGstRate));
+    ? filteredProducts
+    : filteredProducts.filter(product => product.gstRate === parseInt(filterGstRate));
 
   // Apply sorting
   const sortedProducts = filteredByGst.sort((a, b) => {
@@ -196,22 +189,6 @@ export default function Products() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="category" className="text-sm">Category</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(e) => setFormData({ ...formData, category: e })}
-                    >
-                      <SelectTrigger className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm">
-                        <SelectValue>{formData.category}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="hsnCode" className="text-sm">HSN Code *</Label>
                     <Input
                       id="hsnCode"
@@ -250,22 +227,6 @@ export default function Products() {
                         <option value="28">28%</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unit" className="text-sm">Unit</Label>
-                    <Select
-                      value={formData.unit}
-                      onValueChange={(e) => setFormData({ ...formData, unit: e })}
-                    >
-                      <SelectTrigger className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm">
-                        <SelectValue>{formData.unit}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {UNITS.map(unit => (
-                          <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                   <div className="flex gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
@@ -321,7 +282,7 @@ export default function Products() {
                     Filters
                     {hasActiveFilters && (
                       <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-xs">
-                        {(filterCategory !== 'all' ? 1 : 0) + (filterGstRate !== 'all' ? 1 : 0) + (sortBy !== 'date' ? 1 : 0)}
+                        {(filterGstRate !== 'all' ? 1 : 0) + (sortBy !== 'date' ? 1 : 0)}
                       </span>
                     )}
                   </Button>
@@ -343,20 +304,20 @@ export default function Products() {
             {/* Filter Controls */}
             {showFilters && showAnyFilter && (
               <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                {showCategoryFilter && (
+                {showGstFilter && (
                   <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="filter-category" className="text-xs font-medium text-slate-700">Category</Label>
+                    <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">GST Rate</Label>
                     <Select
-                      value={filterCategory}
-                      onValueChange={(e) => setFilterCategory(e)}
+                      value={filterGstRate}
+                      onValueChange={(e) => setFilterGstRate(e)}
                     >
-                      <SelectTrigger className={`w-full h-9 ${filterCategory !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
-                        <SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue>
+                      <SelectTrigger className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
+                        <SelectValue>{filterGstRate === 'all' ? 'All GST Rates' : `${filterGstRate}%`}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {uniqueCategories.sort().map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        <SelectItem value="all">All GST Rates</SelectItem>
+                        {uniqueGstRates.sort((a, b) => a - b).map(rate => (
+                          <SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -424,7 +385,6 @@ export default function Products() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-slate-900 truncate">{product.name}</h3>
                       <div className="mt-1 flex flex-wrap gap-2 text-xs sm:text-sm text-slate-600">
-                        <span className="px-2 py-0.5 bg-slate-100 rounded text-xs">{product.category}</span>
                         <span className="font-mono text-xs">HSN: {product.hsnCode}</span>
                       </div>
                       <div className="mt-2 flex gap-4 text-sm">
@@ -435,10 +395,6 @@ export default function Products() {
                         <div>
                           <span className="text-slate-600">GST: </span>
                           <span className="font-semibold">{product.gstRate}%</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-600">Unit: </span>
-                          <span className="font-semibold">{product.unit}</span>
                         </div>
                       </div>
                     </div>

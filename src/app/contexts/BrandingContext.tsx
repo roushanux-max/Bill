@@ -104,15 +104,11 @@ export function useBranding() {
 }
 
 function applyBrandingStyles(settings: BrandingSettings) {
+  if (typeof window === 'undefined') return;
   const root = document.documentElement;
-
-  // Generate visually cohesive AAA contrast colors from the primary color
-  const dynamicSecondaryColor = adjustBrightness(settings.primaryColor, -40); // Darker shade for secondary accents
-  const dynamicTextColor = adjustBrightness(settings.primaryColor, -60);      // Very dark shade for text on light backgrounds
-  const dynamicBorderColor = adjustBrightness(settings.primaryColor, 80);     // Very light shade for borders
-
-  // We only set CSS variables via the dynamic stylesheet inside .user-theme, NOT on the root element.
-  // This isolates branding exclusively to authenticated dashboard areas.
+  
+  // Ensure the class is applied immediately
+  root.classList.add('user-theme');
 
   // Create dynamic stylesheet for theme colors
   let styleId = 'branding-theme-styles';
@@ -124,15 +120,21 @@ function applyBrandingStyles(settings: BrandingSettings) {
     document.head.appendChild(existingStyle);
   }
 
-    // Generate CSS for dynamic theme
+  const dynamicTextColor = adjustBrightness(settings.primaryColor, -60);
+  const dynamicSecondaryColor = adjustBrightness(settings.primaryColor, -40);
+
   const themeCSS = `
-    .user-theme {
+    :root, .user-theme {
       --primary: ${settings.primaryColor};
       --primary-hover: ${adjustBrightness(settings.primaryColor, -15)};
       --primary-light: ${adjustBrightness(settings.primaryColor, 85)};
       --primary-foreground: ${getContrastColor(settings.primaryColor)};
+      --font-family: ${getFontFamilyString(settings.fontFamily)};
+    }
+
+    .user-theme {
       color: ${dynamicTextColor};
-      font-family: ${getFontFamilyString(settings.fontFamily)};
+      font-family: var(--font-family);
     }
 
     /* Input focus states */
@@ -153,29 +155,6 @@ function applyBrandingStyles(settings: BrandingSettings) {
     /* Ensure consistent heading colors */
     .user-theme h1, .user-theme h2, .user-theme h3, .user-theme h4, .user-theme h5, .user-theme h6 {
       color: ${dynamicTextColor};
-    }
-
-    @media print {
-      .user-theme {
-        background: white !important;
-        color: ${dynamicTextColor} !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      
-      /* Force visibility of the capture area and hide everything else */
-      [class*="fixed left-[-9999px]"].print\:fixed,
-      [class*="fixed -left-[9999px]"].print\:fixed {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        z-index: 99999 !important;
-        background: white !important;
-        visibility: visible !important;
-        display: block !important;
-      }
     }
   `;
 

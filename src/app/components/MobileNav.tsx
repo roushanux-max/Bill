@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, PlusCircle, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, FileText, PlusCircle, Users, Settings, Package } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useBranding } from '../contexts/BrandingContext';
 
@@ -12,6 +12,7 @@ const MobileNav: React.FC = () => {
     { label: 'Home', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Bills', icon: FileText, path: '/invoices' },
     { label: 'Create', icon: PlusCircle, path: '/create-invoice', isCenter: true },
+    { label: 'Products', icon: Package, path: '/products' },
     { label: 'Clients', icon: Users, path: '/customers' },
     { label: 'Settings', icon: Settings, path: '/settings' },
   ];
