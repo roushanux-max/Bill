@@ -26,7 +26,7 @@ const INDIAN_STATES = [
 
 export default function SetupShop() {
   const navigate = useNavigate();
-  const { user, displayEmail } = useAuth();
+  const { user, displayEmail, refreshHasStore } = useAuth();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -287,6 +287,7 @@ export default function SetupShop() {
 
     if (success) {
       toast.success('Shop created successfully!');
+      await refreshHasStore();
       navigate('/dashboard');
     }
   };
@@ -328,6 +329,7 @@ export default function SetupShop() {
 
     setSavingLater(false);
     toast.success('You can complete your profile later in Settings.');
+    await refreshHasStore();
     navigate('/dashboard');
   };
 
