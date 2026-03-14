@@ -35,8 +35,8 @@ export default function SetupShop() {
 
   const [formData, setFormData] = useState({
     shopName: '',
-    ownerName: user?.user_metadata?.name || '',
-    email: displayEmail || user?.email || '',
+    ownerName: '',
+    email: '',
     phone: '',
     address: '',
     city: '',
@@ -44,6 +44,26 @@ export default function SetupShop() {
     pincode: '',
     gstin: '',
   });
+
+  // Sync basic user info when auth completes
+  useEffect(() => {
+    if (user && !formData.email) {
+      setFormData(prev => ({
+        ...prev,
+        ownerName: prev.ownerName || user.user_metadata?.name || '',
+        email: prev.email || displayEmail || user.email || '',
+      }));
+    }
+  }, [user, displayEmail]);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#6366f1] animate-spin mb-4" />
+        <p className="text-slate-600 font-medium">Verifying account...</p>
+      </div>
+    );
+  }
 
   // Load existing store as a draft so the user can edit
   useEffect(() => {
