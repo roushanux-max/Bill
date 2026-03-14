@@ -4,12 +4,39 @@ import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
 import { useBranding } from '../contexts/BrandingContext';
 import { getContrastColor } from '../../utils/colorUtils';
+import { 
+    LayoutDashboard, 
+    FileText, 
+    PlusCircle, 
+    Users, 
+    Settings as SettingsIcon, 
+    Package, 
+    LogOut,
+    Menu
+} from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 export default function Header() {
     const [scrolled, setScrolled] = useState(false);
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
     const { settings, storeInfo } = useBranding();
     const location = useLocation();
+
+    const navItems = [
+        { label: 'Home', icon: LayoutDashboard, path: '/dashboard' },
+        { label: 'Bills', icon: FileText, path: '/invoices' },
+        { label: 'Create Invoice', icon: PlusCircle, path: '/create-invoice' },
+        { label: 'Products', icon: Package, path: '/products' },
+        { label: 'Clients', icon: Users, path: '/customers' },
+        { label: 'Settings', icon: SettingsIcon, path: '/settings' },
+    ];
 
     const primaryColor = user ? settings.primaryColor : '#6366f1';
     // Only show store brand when user is fully authenticated - prevents data leak to landing page
@@ -61,7 +88,47 @@ export default function Header() {
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center' }}>
-                {!user && (
+                {user ? (
+                    <div className="hidden md:flex items-center gap-4">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    padding: '8px 16px', borderRadius: '12px',
+                                    background: 'var(--color-primary-light)',
+                                    color: 'var(--color-primary)',
+                                    border: 'none', cursor: 'pointer',
+                                    fontWeight: 600, fontSize: 14,
+                                    transition: 'all 0.2s'
+                                }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                                    <Menu className="w-5 h-5" />
+                                    <span>Menu</span>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 mt-2">
+                                <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {navItems.map((item) => (
+                                    <Link key={item.path} to={item.path} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                        <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
+                                            <item.icon className="w-4 h-4 text-slate-500" />
+                                            <span>{item.label}</span>
+                                        </DropdownMenuItem>
+                                    </Link>
+                                ))}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                    className="cursor-pointer gap-2 py-2.5 text-red-600 focus:text-red-600 focus:bg-red-50"
+                                    onClick={() => signOut()}
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Sign Out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                ) : (
                     <div className="hidden md:flex items-center gap-3">
                         {location.pathname !== '/login' && (
                             <Link to="/login" style={{
