@@ -45,6 +45,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
            }, 2000);
            return;
         }
+        if (initialSession?.user) {
+          setLoading(true);
+          await refreshHasStore(initialSession.user);
+        }
       } catch (e) {
         console.error('Error checking initial session:', e);
       } finally {
