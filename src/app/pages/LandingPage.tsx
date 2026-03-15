@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown } from 'lucide-react';
 import Logo from '../components/Logo';
-import Header from '../components/Header';
 import { useBranding } from '../contexts/BrandingContext';
 
 // --- Utility: Intersection Observer Hook for scroll animations ---
@@ -100,8 +99,6 @@ export default function LandingPage() {
         <div style={{ fontFamily: `var(--font-family, ${settings.fontFamily}), 'Google Sans', 'Inter', system-ui, sans-serif`, background: '#fff', color: '#1a1a2e', minHeight: '100vh', position: 'relative' }}>
 
 
-            {/* ─── Navbar ─── */}
-            <Header />
 
             {/* ─── Hero ─── */}
             <header style={{

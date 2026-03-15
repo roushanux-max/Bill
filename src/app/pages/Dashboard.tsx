@@ -114,7 +114,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header />
 
       <main className="px-4 py-4 sm:py-8 max-w-6xl mx-auto pb-20 sm:pb-8">
         <div className="mb-6 sm:mb-8">

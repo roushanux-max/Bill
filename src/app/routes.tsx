@@ -22,9 +22,11 @@ const StressTest = lazy(() => import("./pages/StressTest"));
 const LoadingFallback = () => <LoadingScreen />;
 
 import MobileNav from "./components/MobileNav";
+import Header from "./components/Header";
 
-const AppLayout = () => (
+const RootLayout = () => (
   <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
+    <Header />
     <Suspense fallback={<LoadingFallback />}>
       <div className="flex-1 pb-24 md:pb-0">
         <Outlet />
@@ -37,81 +39,81 @@ const AppLayout = () => (
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <PublicRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <LandingPage />
-        </Suspense>
-      </PublicRoute>
-    ),
-  },
-  {
-    path: "/login",
-    element: (
-      <PublicRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <Login />
-        </Suspense>
-      </PublicRoute>
-    ),
-  },
-  {
-    path: "/register",
-    element: (
-      <PublicRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <Register />
-        </Suspense>
-      </PublicRoute>
-    ),
-  },
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <AppLayout />
-      </ProtectedRoute>
-    ),
+    element: <RootLayout />,
     children: [
       {
-        path: "/dashboard",
-        element: <HomeRoute />,
+        path: "/",
+        element: (
+          <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        ),
       },
       {
-        path: "/setup-shop",
-        element: <SetupShop />,
+        path: "/login",
+        element: (
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        ),
       },
       {
-        path: "/stress-test",
-        element: <StressTest />,
+        path: "/register",
+        element: (
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        ),
       },
       {
-        path: "/settings",
-        element: <Settings />,
-      },
-      {
-        path: "/invoice-preview",
-        element: <InvoicePreview />,
-      },
-      {
-        path: "/create-invoice",
-        element: <CreateInvoice />,
-      },
-      {
-        path: "/edit-invoice/:id",
-        element: <CreateInvoice />,
-      },
-      {
-        path: "/invoices",
-        element: <Invoices />,
-      },
-      {
-        path: "/customers",
-        element: <Customers />,
-      },
-      {
-        path: "/products",
-        element: <Products />,
+        path: "/",
+        element: (
+          <ProtectedRoute>
+            <Outlet />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            path: "/dashboard",
+            element: <HomeRoute />,
+          },
+          {
+            path: "/setup-shop",
+            element: <SetupShop />,
+          },
+          {
+            path: "/stress-test",
+            element: <StressTest />,
+          },
+          {
+            path: "/settings",
+            element: <Settings />,
+          },
+          {
+            path: "/invoice-preview",
+            element: <InvoicePreview />,
+          },
+          {
+            path: "/create-invoice",
+            element: <CreateInvoice />,
+          },
+          {
+            path: "/edit-invoice/:id",
+            element: <CreateInvoice />,
+          },
+          {
+            path: "/invoices",
+            element: <Invoices />,
+          },
+          {
+            path: "/customers",
+            element: <Customers />,
+          },
+          {
+            path: "/products",
+            element: <Products />,
+          },
+        ],
       },
     ],
   },

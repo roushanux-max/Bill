@@ -610,22 +610,30 @@ export default function CreateInvoice() {
   };
 
   const ensureCustomerIsSaved = async (): Promise<string | null> => {
-    // If we have a real ID and no changes to newCustomerData that aren't synced, we're good
-    if (!newCustomerData.name) {
-      toast.error('Please enter a customer name');
+    // 1. If we have a selection and NO manual name input, it's an existing customer use as-is.
+    if (selectedCustomerId && !newCustomerData.name) {
+      const existing = customers.find(c => c.id === selectedCustomerId);
+      if (existing) return existing.id;
+    }
+
+    // 2. If no name and no selection, we can't proceed.
+    if (!newCustomerData.name && !selectedCustomerId) {
+      toast.error('Please enter or select a customer');
       scrollToSection(customerCardRef);
       return null;
     }
 
+    // 3. Fallback: if name is entered (new or modification), save/update.
     try {
       const customer: Customer = {
         id: selectedCustomerId && !selectedCustomerId.startsWith('temp-') ? selectedCustomerId : crypto.randomUUID(),
         ...newCustomerData,
+        // Ensure name is present, fallback to activeCustomer if user cleared it but we have one
+        name: newCustomerData.name || activeCustomer?.name || 'Walk-in Customer',
         createdAt: activeCustomer?.createdAt || new Date().toISOString(),
       };
       
       await saveCustomer(customer);
-      // Update local state so buildInvoiceObject uses the real ID
       setSelectedCustomerId(customer.id);
       setActiveCustomer(customer);
       return customer.id;

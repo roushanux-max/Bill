@@ -5,7 +5,6 @@ import Logo from '../components/Logo';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
-import Header from '../components/Header';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -76,7 +75,6 @@ export default function Register() {
 
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden bg-white">
-      <Header />
       <div className="flex-1 flex overflow-hidden">
         {/* Left Side: Illustration */}
         <div className="hidden lg:flex lg:w-1/2 bg-slate-50 items-center justify-center p-12 relative overflow-hidden">

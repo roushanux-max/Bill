@@ -93,17 +93,22 @@ export default function Header() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button style={{
-                                    display: 'flex', alignItems: 'center', gap: 8,
-                                    padding: '8px 16px', borderRadius: '12px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    width: '40px', height: '40px', borderRadius: '12px',
                                     background: 'var(--color-primary-light)',
                                     color: 'var(--color-primary)',
                                     border: 'none', cursor: 'pointer',
-                                    fontWeight: 600, fontSize: 14,
-                                    transition: 'all 0.2s'
-                                }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                                    <Menu className="w-5 h-5" />
-                                    <span>Menu</span>
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)'
+                                }} onMouseEnter={e => {
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                    e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                                }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 2px 4px -1px rgba(0,0,0,0.06)';
+                                    }}>
+                                    <Menu className="w-5 h-5" strokeWidth={2.5} />
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 mt-2">
