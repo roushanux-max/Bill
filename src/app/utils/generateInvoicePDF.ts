@@ -340,23 +340,18 @@ export function generateInvoicePDF(
         setTextDark();
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(7.5);
-        cx = margin;
-        const tcVals = isSameState
-            ? ['', 'Transportation Charges', '', '', '', invoice.transportCharges.toFixed(2), '', '', invoice.transportCharges.toFixed(2)]
-            : ['', 'Transportation Charges', '', '', '', invoice.transportCharges.toFixed(2), '', invoice.transportCharges.toFixed(2)];
-        for (let ci = 0; ci < cols.length; ci++) {
-            const col = cols[ci];
-            const val = tcVals[ci];
-            if (ci === 1) pdf.text(val, cx + 2, y + 5);
-            else if (ci === 6 || ci === 7 || (ci === 8 && !isSameState)) pdf.text(val, cx + col.w - 2, y + 5, { align: 'right' });
-            else if (ci === cols.length - 1) pdf.text(val, cx + col.w - 2, y + 5, { align: 'right' });
-            else if (ci === 5) pdf.text(val, cx + col.w - 2, y + 5, { align: 'right' });
-
-            setBorderColor();
-            pdf.line(cx + col.w, y, cx + col.w, y + tcH);
-            cx += col.w;
-        }
+        
+        const tcLabelW = cols.slice(0, cols.length - 1).reduce((a, col) => a + col.w, 0);
+        
+        pdf.text('Transportation Charges', margin + cols[0].w + 2, y + 5);
+        
+        const lastCol = cols[cols.length - 1];
+        pdf.text(invoice.transportCharges.toFixed(2), margin + tcLabelW + lastCol.w - 2, y + 5, { align: 'right' });
+        
+        setBorderColor();
         pdf.rect(margin, y, contentW, tcH);
+        pdf.line(margin + tcLabelW, y, margin + tcLabelW, y + tcH);
+        
         y += tcH;
     }
 
@@ -365,24 +360,17 @@ export function generateInvoicePDF(
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(8);
     setTextDark();
-    cx = margin;
-    const totalLabelW = cols.slice(0, 5).reduce((a, col) => a + col.w, 0);
-    pdf.text('Amount', margin + totalLabelW / 2, y + 5, { align: 'center' });
-    let tcx = margin + totalLabelW;
-
-    const summaryVals = isSameState
-        ? [amountTotal.toFixed(2), '', '', (grandTotal + invoice.transportCharges).toFixed(2)]
-        : [amountTotal.toFixed(2), '', (grandTotal + invoice.transportCharges).toFixed(2)];
-
-    const summaryStartIdx = 5;
-    for (let ci = 0; ci < summaryVals.length; ci++) {
-        const col = cols[summaryStartIdx + ci];
-        pdf.text(summaryVals[ci], tcx + col.w - 2, y + 5, { align: 'right' });
-        setBorderColor();
-        pdf.line(tcx + col.w, y, tcx + col.w, y + totalH);
-        tcx += col.w;
-    }
+    
+    const totalLabelW = cols.slice(0, cols.length - 1).reduce((a, col) => a + col.w, 0);
+    pdf.text('Amount', margin + totalLabelW - 4, y + 5, { align: 'right' });
+    
+    const finalCol = cols[cols.length - 1];
+    pdf.text((grandTotal + invoice.transportCharges).toFixed(2), margin + totalLabelW + finalCol.w - 2, y + 5, { align: 'right' });
+    
+    setBorderColor();
     pdf.rect(margin, y, contentW, totalH);
+    pdf.line(margin + totalLabelW, y, margin + totalLabelW, y + totalH);
+    
     y += totalH;
 
     // ── Final total ───────────────────────────────────────────────

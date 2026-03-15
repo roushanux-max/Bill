@@ -248,19 +248,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
               {/* Transport Charges Row */}
               <tr style={{ borderColor: '#e2e8f0' }}>
-                <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                <td className="border px-2 py-2 font-medium text-left" colSpan={5} style={{ borderColor: '#e2e8f0' }}>
-                  Transportation Charges
+                <td className="border px-2 py-2 font-medium text-left" colSpan={isSameState ? 8 : 7} style={{ borderColor: '#e2e8f0' }}>
+                  <div style={{ paddingLeft: '2rem' }}>Transportation Charges</div>
                 </td>
-                {!isSameState && (
-                  <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                )}
-                {isSameState && (
-                  <>
-                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                  </>
-                )}
                 <td className="border px-2 py-2 text-right font-semibold" style={{ borderColor: '#e2e8f0' }}>
                   {(invoice.transportCharges || 0).toLocaleString('en-IN')}
                 </td>
@@ -268,19 +258,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
               {/* Total Row */}
               <tr style={{ borderColor: '#e2e8f0', backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                <td className="border px-2 py-2 font-bold" colSpan={5} style={{ borderColor: '#e2e8f0' }}>
+                <td className="border px-4 py-2 font-bold text-right pr-6" colSpan={isSameState ? 8 : 7} style={{ borderColor: '#e2e8f0' }}>
                   Amount
                 </td>
-                {!isSameState && (
-                  <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                )}
-                {isSameState && (
-                  <>
-                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                  </>
-                )}
                 <td className="border px-2 py-2 text-right font-bold" style={{ borderColor: '#e2e8f0' }}>
                   {(subtotal + totalTax + (invoice.transportCharges || 0)).toLocaleString('en-IN')}
                 </td>
