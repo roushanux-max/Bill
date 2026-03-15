@@ -94,7 +94,7 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
       pincode: data.pincode || '',
       phone: data.phone || '',
       email: data.email || '',
-      authDistributors: data.auth_distributors || [],
+      authDistributors: data.auth_distributors || '',
     };
     localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(info));
     return info;

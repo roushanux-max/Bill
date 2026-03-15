@@ -6,7 +6,8 @@ import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin,
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
 import { getUserKey, saveStoreInfo, saveBrandingSettings } from '../utils/storage';
-
+import { StoreInfo } from '../types/invoice';
+import { defaultBrandingSettings } from '../types/branding';
 // Helper to determine active step
 const steps = [
   { id: 'welcome', title: 'Welcome' },
@@ -212,7 +213,7 @@ export default function SetupShop() {
         state: formData.state,
         pincode: formData.pincode,
         gstin: formData.gstin ? formData.gstin.toUpperCase() : '',
-        authDistributors: [],
+        authDistributors: '',
       };
 
       // Use unified helper which handles:
