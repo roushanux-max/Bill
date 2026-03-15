@@ -41,13 +41,16 @@ export default function CreateInvoice() {
   const [discount, setDiscount] = useState<string | number>(0);
   const [notes, setNotes] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Stable local ID to prevent creating duplicates before URL updates
+  const [localInvoiceId] = useState<string>(() => crypto.randomUUID());
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const { settings, storeInfo } = useBranding();
 
   // New customer form state
-  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
+  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
   const [isNewCustomer, setIsNewCustomer] = useState(true);
 
   // New item form state
@@ -403,7 +406,7 @@ export default function CreateInvoice() {
   const clearCustomerForm = () => {
     setSelectedCustomerId('');
     setActiveCustomer(null);
-    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
+    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
     localStorage.removeItem(getUserKey('customerFormDraft'));
   };
   
@@ -633,8 +636,8 @@ export default function CreateInvoice() {
     }
   };
 
-  const buildInvoiceObject = async (): Promise<Invoice | null> => {
-    if (!newCustomerData.name && !selectedCustomerId) {
+  const buildInvoiceObject = async (resolvedCustomerId: string): Promise<Invoice | null> => {
+    if (!newCustomerData.name && !resolvedCustomerId) {
       toast.error('Please enter or select a customer');
       scrollToSection(customerCardRef);
       return null;
@@ -661,10 +664,10 @@ export default function CreateInvoice() {
     const existingInvoice = editId ? invoices.find(inv => inv.id === editId) : null;
 
     return {
-      id: editId || Date.now().toString(),
+      id: editId || localInvoiceId,
       invoiceNumber,
       date: formatDateForDisplay(date), // Always save as DD.MM.YY for consistency
-      customerId: selectedCustomerId || 'temp-' + Date.now(),
+      customerId: resolvedCustomerId,
       customer: customerDetails,
       items,
       transportCharges: Number(transportCharges) || 0,
@@ -683,7 +686,7 @@ export default function CreateInvoice() {
     const realCustomerId = await ensureCustomerIsSaved();
     if (!realCustomerId) return null;
 
-    const invoiceObj = await buildInvoiceObject();
+    const invoiceObj = await buildInvoiceObject(realCustomerId);
     if (!invoiceObj) return null;
 
     try {

@@ -342,8 +342,8 @@ export function generateInvoicePDF(
         pdf.setFontSize(7.5);
         cx = margin;
         const tcVals = isSameState
-            ? ['', 'Transportation Charges', '', '', '', invoice.transportCharges.toFixed(2), '0.00', '0.00', invoice.transportCharges.toFixed(2)]
-            : ['', 'Transportation Charges', '', '', '', invoice.transportCharges.toFixed(2), '0.00', invoice.transportCharges.toFixed(2)];
+            ? ['', 'Transportation Charges', '', '', '', invoice.transportCharges.toFixed(2), '', '', invoice.transportCharges.toFixed(2)]
+            : ['', 'Transportation Charges', '', '', '', invoice.transportCharges.toFixed(2), '', invoice.transportCharges.toFixed(2)];
         for (let ci = 0; ci < cols.length; ci++) {
             const col = cols[ci];
             const val = tcVals[ci];
@@ -371,8 +371,8 @@ export function generateInvoicePDF(
     let tcx = margin + totalLabelW;
 
     const summaryVals = isSameState
-        ? [amountTotal.toFixed(2), cgstTotal.toFixed(2), sgstTotal.toFixed(2), (grandTotal + invoice.transportCharges).toFixed(2)]
-        : [amountTotal.toFixed(2), igstTotal.toFixed(2), (grandTotal + invoice.transportCharges).toFixed(2)];
+        ? [amountTotal.toFixed(2), '', '', (grandTotal + invoice.transportCharges).toFixed(2)]
+        : [amountTotal.toFixed(2), '', (grandTotal + invoice.transportCharges).toFixed(2)];
 
     const summaryStartIdx = 5;
     for (let ci = 0; ci < summaryVals.length; ci++) {

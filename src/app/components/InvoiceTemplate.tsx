@@ -253,12 +253,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   Transportation Charges
                 </td>
                 {!isSameState && (
-                  <td className="border px-2 py-2 text-right" style={{ borderColor: '#e2e8f0' }}>0</td>
+                  <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
                 )}
                 {isSameState && (
                   <>
-                    <td className="border px-2 py-2 text-right" style={{ borderColor: '#e2e8f0' }}>0</td>
-                    <td className="border px-2 py-2 text-right" style={{ borderColor: '#e2e8f0' }}>0</td>
+                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
+                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
                   </>
                 )}
                 <td className="border px-2 py-2 text-right font-semibold" style={{ borderColor: '#e2e8f0' }}>
@@ -273,18 +273,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   Total Amount
                 </td>
                 {!isSameState && (
-                  <td className="border px-2 py-2 text-right font-semibold" style={{ borderColor: '#e2e8f0' }}>
-                    {Math.round(Object.values(taxByRate).reduce((a, b) => a + b, 0)).toLocaleString('en-IN')}
-                  </td>
+                  <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
                 )}
                 {isSameState && (
                   <>
-                    <td className="border px-2 py-2 text-right font-semibold" style={{ borderColor: '#e2e8f0' }}>
-                      {Math.round(Object.values(taxByRate).reduce((a, b) => a + b, 0) / 2).toLocaleString('en-IN')}
-                    </td>
-                    <td className="border px-2 py-2 text-right font-semibold" style={{ borderColor: '#e2e8f0' }}>
-                      {Math.round(Object.values(taxByRate).reduce((a, b) => a + b, 0) / 2).toLocaleString('en-IN')}
-                    </td>
+                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
+                    <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
                   </>
                 )}
                 <td className="border px-2 py-2 text-right font-bold" style={{ borderColor: '#e2e8f0' }}>
