@@ -5,10 +5,35 @@ import { parseDateFromDisplay } from './dateUtils';
 
 // Helper to get user-specific storage key
 export const getUserKey = (key: string) => {
-  const authData = localStorage.getItem('sb-whmmhfldrigyyqqlqygo-auth-token'); // Check if this is the right key or if we should use a more stable one
-  // Actually, let's try to get user ID from supabase directly if possible, 
-  // but for synchronous localStorage access, we might need a stored user ID.
-  const storedUser = localStorage.getItem('bill_user_id');
+  if (typeof window === 'undefined') return key;
+
+  // 1. Try immediate recall from our manual cache
+  let storedUser = localStorage.getItem('bill_user_id');
+
+  // 2. If missing (e.g. first render after refresh), try to extract from Supabase's own storage
+  if (!storedUser) {
+    try {
+      // Find the auth token key. It follows the pattern: sb-[project-ref]-auth-token
+      // We can find it by looking for the one that looks like an auth token if we don't want to hardcode the ref
+      const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      
+      if (authKey) {
+        const tokenData = localStorage.getItem(authKey);
+        if (tokenData) {
+          const parsed = JSON.parse(tokenData);
+          const userId = parsed?.user?.id;
+          if (userId) {
+            storedUser = userId;
+            // Cache it for subsequent calls to this helper
+            localStorage.setItem('bill_user_id', userId);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error extracting user ID from storage:', e);
+    }
+  }
+
   return storedUser ? `${storedUser}_${key}` : key;
 };
 
