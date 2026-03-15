@@ -12,8 +12,6 @@ import {
     Settings as SettingsIcon, 
     Package, 
     LogOut,
-    Menu,
-    X
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -29,7 +27,6 @@ export default function Header() {
     const { user, signOut } = useAuth();
     const { settings, storeInfo } = useBranding();
     const location = useLocation();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const navItems = [
         { label: 'Home', icon: Home, path: '/dashboard' },
@@ -41,7 +38,6 @@ export default function Header() {
     ];
 
     const primaryColor = user ? settings.primaryColor : '#6366f1';
-    // Only show store brand when user is fully authenticated - prevents data leak to landing page
     const businessName = (user && storeInfo?.name) ? storeInfo.name : 'Bill';
     const displayLogo = (user && settings.logo) ? settings.logo : null;
 
@@ -54,26 +50,23 @@ export default function Header() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-
-
     const navStyles: React.CSSProperties = {
         position: isLandingPage ? 'fixed' : 'sticky',
         top: 0, left: 0, right: 0, zIndex: 1000,
-        background: (isLandingPage && !scrolled && !isMenuOpen) ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
+        background: (isLandingPage && !scrolled) ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',
-        borderBottom: isMenuOpen ? 'none' : 'none',
-        boxShadow: 'none',
+        borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : 'none',
+        boxShadow: scrolled ? '0 2px 20px -5px rgba(0,0,0,0.08)' : 'none',
         transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
     };
 
     return (
         <nav style={navStyles}>
-            <div className="max-w-6xl mx-auto w-full px-4 h-20 flex items-center justify-between relative z-[1001]">
+            <div className="max-w-6xl mx-auto w-full px-4 h-20 flex items-center justify-between">
                 <Link 
                     to={user ? "/dashboard" : "/"} 
                     style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }} 
                     className="group"
-                    onClick={() => setIsMenuOpen(false)}
                 >
                     <div style={{
                         width: 40, height: 40, borderRadius: 12,
@@ -94,31 +87,60 @@ export default function Header() {
                 </Link>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {!(isLandingPage || isAuthPage) && (
-                        <button 
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            style={{
-                                position: 'relative',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                                width: '44px', height: '44px', borderRadius: '12px',
-                                background: isMenuOpen ? 'var(--color-primary)' : 'var(--color-primary-light)',
-                                color: isMenuOpen ? 'white' : 'var(--color-primary)',
-                                border: 'none', cursor: 'pointer',
-                                transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                                boxShadow: isMenuOpen ? '0 10px 15px -3px rgba(0,0,0,0.1)' : '0 2px 4px -1px rgba(0,0,0,0.06)',
-                                zIndex: 1002
-                            }}
-                        >
-                            {isMenuOpen ? (
-                                <X className="w-6 h-6 animate-in fade-in zoom-in duration-300" />
-                            ) : (
-                                <div className="flex flex-col gap-[4px] animate-in fade-in zoom-in duration-300">
-                                    <div style={{ width: '22px', height: '2.5px', background: 'currentColor', borderRadius: '10px' }} />
-                                    <div style={{ width: '22px', height: '2.5px', background: 'currentColor', borderRadius: '10px' }} />
-                                    <div style={{ width: '22px', height: '2.5px', background: 'currentColor', borderRadius: '10px' }} />
-                                </div>
-                            )}
-                        </button>
+                    {!(isLandingPage || isAuthPage) && user && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                                        width: '44px', height: '44px', borderRadius: '12px',
+                                        background: 'var(--color-primary-light)',
+                                        color: 'var(--color-primary)',
+                                        border: 'none', cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)',
+                                    }}
+                                    onMouseEnter={e => {
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--color-primary)';
+                                        (e.currentTarget as HTMLElement).style.color = 'white';
+                                    }}
+                                    onMouseLeave={e => {
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-light)';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-primary)';
+                                    }}
+                                >
+                                    <div style={{ width: '20px', height: '2px', background: 'currentColor', borderRadius: '10px' }} />
+                                    <div style={{ width: '14px', height: '2px', background: 'currentColor', borderRadius: '10px' }} />
+                                    <div style={{ width: '20px', height: '2px', background: 'currentColor', borderRadius: '10px' }} />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 mt-2">
+                                <DropdownMenuLabel>
+                                    <span className="font-semibold text-slate-800">{businessName}</span>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {navItems.map(item => (
+                                    <DropdownMenuItem key={item.path} asChild>
+                                        <Link
+                                            to={item.path}
+                                            style={{ textDecoration: 'none', color: 'inherit' }}
+                                            className={`flex items-center gap-3 cursor-pointer ${location.pathname === item.path ? 'font-semibold' : ''}`}
+                                        >
+                                            <item.icon className="w-4 h-4 text-slate-500" />
+                                            {item.label}
+                                        </Link>
+                                    </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={signOut}
+                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                                >
+                                    <LogOut className="w-4 h-4 mr-3" />
+                                    Sign Out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
 
                     {!user && (
@@ -139,73 +161,6 @@ export default function Header() {
                             </Link>
                         </div>
                     )}
-                </div>
-            </div>
-
-            {/* Full-Page Overlay Menu */}
-            <div 
-                className={`fixed inset-0 bg-white/98 backdrop-blur-xl z-[1000] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.16, 1, 0.3, 1)] ${
-                    isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
-                }`}
-            >
-                <div className="flex-1 overflow-y-auto pt-24 pb-12 flex flex-col items-center">
-                    <div className="flex flex-col items-center gap-6 w-full max-w-lg px-6">
-                        <div className="w-full space-y-1.5">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-4">Navigation</p>
-                            {navItems.map((item, idx) => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className={`flex items-center gap-4 p-4 rounded-2xl w-full transition-all duration-300 hover:bg-slate-50 group ${
-                                        location.pathname === item.path ? 'bg-slate-50' : ''
-                                    }`}
-                                    style={{
-                                    transitionDelay: `${idx * 40}ms`,
-                                    transform: isMenuOpen ? 'translateY(0)' : 'translateY(20px)',
-                                    opacity: isMenuOpen ? 1 : 0,
-                                    textDecoration: 'none',
-                                    color: 'inherit'
-                                }}
-                                >
-                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ${
-                                        location.pathname === item.path 
-                                            ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-primary/20' 
-                                            : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-md'
-                                    }`}>
-                                        <item.icon className="w-5 h-5" />
-                                    </div>
-                                    <span className={`text-lg font-bold transition-colors ${
-                                        location.pathname === item.path ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'
-                                    }`}>
-                                        {item.label}
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
-
-                        <div 
-                            className="w-full pt-6 mt-2 border-t border-slate-100"
-                            style={{
-                                transitionDelay: `${navItems.length * 40}ms`,
-                                transform: isMenuOpen ? 'translateY(0)' : 'translateY(20px)',
-                                opacity: isMenuOpen ? 1 : 0
-                            }}
-                        >
-                            {user && (
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        signOut();
-                                    }}
-                                    className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl bg-red-50 text-red-600 font-bold text-lg transition-all hover:bg-red-600 hover:text-white group"
-                                >
-                                    <LogOut className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                                    Sign Out
-                                </button>
-                            )}
-                        </div>
-                    </div>
                 </div>
             </div>
         </nav>
