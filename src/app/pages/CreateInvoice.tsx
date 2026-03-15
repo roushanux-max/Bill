@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import Logo from '../components/Logo';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -48,6 +50,7 @@ export default function CreateInvoice() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const { settings, storeInfo } = useBranding();
+  const { user } = useAuth();
 
   // New customer form state
   const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
@@ -374,10 +377,18 @@ export default function CreateInvoice() {
     console.log("CreateInvoice: Selecting customer", value);
     setSelectedCustomerId(value);
 
-    // Set as active but don't auto-fill input fields (user wants supportive text instead)
+    // Set as active and populate input fields
     const customer = customers.find(c => c.id === value);
     if (customer) {
       setActiveCustomer(customer);
+      setNewCustomerData({
+        name: customer.name || '',
+        phone: customer.phone || '',
+        email: customer.email || '',
+        gstin: customer.gstin || '',
+        address: customer.address || '',
+        state: customer.state || 'Bihar'
+      });
       setIsNewCustomer(false);
       toast.success(`Selected customer: ${customer.name}`);
     }
@@ -825,25 +836,34 @@ export default function CreateInvoice() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
-                <div className="px-4 py-3 sm:py-4">
-                    <div className="flex items-center justify-between gap-2 sm:gap-4">
-                        <div className="flex items-center gap-2 sm:gap-4">
-                            <button
-                                onClick={() => handleNavigateAway(() => navigate('/invoices'))}
-                                className="inline-flex items-center gap-2 sm:gap-3"
-                            >
-                                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                                    <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Back</span>
+            <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 print:hidden transition-all duration-300">
+                <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 sm:gap-6">
+                            <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 group shrink-0">
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 overflow-hidden shadow-sm transition-transform group-hover:scale-105">
+                                    {settings.logo ? (
+                                        <img src={settings.logo} alt="Logo" className="w-full h-full object-contain" />
+                                    ) : (
+                                        <Logo className="w-6 h-6 sm:w-7 sm:h-7" />
+                                    )}
+                                </div>
+                            </Link>
+                            
+                            <div className="flex items-center gap-2 sm:gap-4 border-l border-slate-200 pl-3 sm:pl-6">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleNavigateAway(() => navigate('/invoices'))}
+                                    className="h-9 px-2 sm:px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg group"
+                                >
+                                    <ArrowLeft className="h-4 w-4 sm:mr-2 transition-transform group-hover:-translate-x-0.5" />
+                                    <span className="hidden sm:inline font-medium">Back</span>
                                 </Button>
-                            </button>
-                            <h1 className="text-2xl font-bold text-slate-900 truncate">
-                                {editId ? 'Edit Invoice' : 'Create Invoice'}
-                            </h1>
-                        </div>
-
-                        <div className="flex items-center gap-2">
+                                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+                                    {editId ? 'Edit Invoice' : 'Create Invoice'}
+                                </h1>
+                            </div>
                         </div>
                     </div>
                 </div>
