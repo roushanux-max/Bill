@@ -385,18 +385,9 @@ export function generateInvoicePDF(
     pdf.rect(margin, y, contentW, totalH);
     y += totalH;
 
-    // ── Round off & final total ───────────────────────────────────
+    // ── Final total ───────────────────────────────────────────────
     const baseTotal = amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + invoice.transportCharges - invoice.discount;
-    const roundOff = Math.round(baseTotal) - baseTotal;
     const finalTotal = Math.round(baseTotal);
-
-    const roundH = 8;
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Round Off', margin + contentW * 0.6 + 2, y + 5);
-    pdf.text(`(${roundOff >= 0 ? '+' : ''}${roundOff.toFixed(2)})`, margin + contentW - 2, y + 5, { align: 'right' });
-    pdf.rect(margin, y, contentW, roundH);
-    y += roundH;
 
     const amtInWords = `${numberToWords(finalTotal)} Only`;
     const amtRowH = 10;

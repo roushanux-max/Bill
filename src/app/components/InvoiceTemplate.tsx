@@ -249,7 +249,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               {/* Transport Charges Row */}
               <tr style={{ borderColor: '#e2e8f0' }}>
                 <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                <td className="border px-2 py-2 font-medium text-center" colSpan={5} style={{ borderColor: '#e2e8f0' }}>
+                <td className="border px-2 py-2 font-medium text-left" colSpan={5} style={{ borderColor: '#e2e8f0' }}>
                   Transportation Charges
                 </td>
                 {!isSameState && (
@@ -286,16 +286,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 </td>
               </tr>
 
-              {/* Round Off Row */}
-              <tr style={{ borderColor: '#e2e8f0' }}>
-                <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                <td className="border px-2 py-2" colSpan={isSameState ? 7 : 6} style={{ borderColor: '#e2e8f0' }}>
-                  Round Off
-                </td>
-                <td className="border px-2 py-2 text-right" style={{ borderColor: '#e2e8f0' }}>
-                  ({roundOff >= 0 ? '+' : ''}{roundOff.toFixed(2)})
-                </td>
-              </tr>
+
 
               {/* Overall Discount Row */}
               {invoice.discount > 0 && (
