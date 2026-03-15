@@ -1,4 +1,4 @@
-import { Customer, Product, Invoice, StoreInfo, InvoiceItem } from '../types/invoice';
+import { Customer, Product, Invoice, StoreInfo, InvoiceItem, Payment, ActivityLog } from '../types/invoice';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { supabase } from './supabase';
 import { parseDateFromDisplay } from './dateUtils';
@@ -10,13 +10,10 @@ export const getUserKey = (key: string) => {
   // 1. Try immediate recall from our manual cache
   let storedUser = localStorage.getItem('bill_user_id');
 
-  // 2. If missing (e.g. first render after refresh), try to extract from Supabase's own storage
+  // 2. If missing, try to extract from Supabase's own storage patterns
   if (!storedUser) {
     try {
-      // Find the auth token key. It follows the pattern: sb-[project-ref]-auth-token
-      // We can find it by looking for the one that looks like an auth token if we don't want to hardcode the ref
       const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-      
       if (authKey) {
         const tokenData = localStorage.getItem(authKey);
         if (tokenData) {
@@ -24,16 +21,17 @@ export const getUserKey = (key: string) => {
           const userId = parsed?.user?.id;
           if (userId) {
             storedUser = userId;
-            // Cache it for subsequent calls to this helper
             localStorage.setItem('bill_user_id', userId);
           }
         }
       }
     } catch (e) {
-      console.error('Error extracting user ID from storage:', e);
+      console.error('Error extracting user ID for storage key:', e);
     }
   }
 
+  // If we still don't have a user ID, we return the base key to avoid "undefined_" prefixes
+  // which would cause data to be lost once the user ID finally arrives.
   return storedUser ? `${storedUser}_${key}` : key;
 };
 
@@ -55,34 +53,21 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
 
   let storeId = getActiveStoreId();
 
-  if (!storeId) {
-    // If no active store ID, try to get the first store for the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // 1. Check user_id column
-      let { data, error } = await supabase
+  // If no storeId, we MUST try to fetch by user_id to restore persistence
+  if (!storeId || storeId.startsWith('offline-')) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (user && !authError) {
+      // Aggressive lookup by user_id
+      const { data, error } = await supabase
         .from('stores')
         .select('*')
         .eq('user_id', user.id)
-        .limit(1)
-        .single();
+        .maybeSingle();
       
-      // 2. Fallback: Check id column matching user.id (old setup pattern)
-      if (!data || error) {
-        const fallback = await supabase
-          .from('stores')
-          .select('*')
-          .eq('id', user.id)
-          .limit(1)
-          .single();
-        data = fallback.data;
-        error = fallback.error;
-      }
-
       if (data && !error) {
-        storeId = data.id as string;
-        localStorage.setItem(getUserKey('active_store_id'), storeId);
-        // Continue to fetch with this storeId
+        storeId = data.id;
+        localStorage.setItem(getUserKey('active_store_id'), storeId!);
+        // Fall through to finalize the StoreInfo object below
       } else {
         return null;
       }
@@ -91,7 +76,7 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
     }
   }
 
-  // Fetch with storeId
+  // Fetch/Refresh with known storeId
   const { data, error } = await supabase
     .from('stores')
     .select('*')
@@ -124,13 +109,15 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
   
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    localStorage.setItem('bill_user_id', user.id); // ALWAYS ensure this is set for prefixes
+    // ALWAYS ensure this is set for prefixes immediately
+    localStorage.setItem('bill_user_id', user.id); 
 
     try {
       let storeId = getActiveStoreId();
-      // If no storeId or if it's a temporary offline ID, we might want to check for an existing remote store first
+      
+      // If no storeId or if it's a temporary offline ID, use user.id as a pivot
       if (!storeId || storeId.startsWith('offline-')) {
-        storeId = user.id; // Fallback to user.id
+        storeId = user.id; 
         localStorage.setItem(getUserKey('active_store_id'), storeId);
       }
       
@@ -151,13 +138,18 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
 
       if (info.ownerName) payload.owner_name = info.ownerName;
 
-      const upsertPromise = supabase.from('stores').upsert(payload);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000));
+      // Use a standard upsert - if id matches it updates, if not it inserts
+      // The policy should allow based on user_id
+      const upsertPromise = supabase.from('stores').upsert(payload, {
+        onConflict: 'id'
+      });
+      
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000));
 
       const { error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
 
       if (error) {
-        console.warn('Supabase store sync failed/timed out, using local storage only:', error.message);
+        console.warn('Supabase store sync failed/timed out:', error.message);
       }
     } catch (err) {
       console.error('Failed to sync store info:', err);
@@ -208,6 +200,7 @@ export const getBrandingSettings = async (force = false): Promise<BrandingSettin
     .single();
 
   if (error || !data || !data.branding_settings) {
+    if (force) return defaultBrandingSettings;
     return defaultBrandingSettings;
   }
 
@@ -516,7 +509,7 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
     try {
       const parsed = JSON.parse(localData);
       if (Array.isArray(parsed)) {
-        return parsed.filter(inv => inv && inv.customer && inv.id);
+        return parsed.filter(inv => inv && inv.id);
       }
       return parsed;
     } catch (e) {
@@ -537,34 +530,17 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
     }
   }
 
-  if (!storeId) {
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData);
-        if (Array.isArray(parsed)) return parsed.filter(inv => inv && inv.customer && inv.id);
-        return parsed;
-      } catch (e) { }
-    }
-    return [];
-  }
+  if (!storeId) return [];
 
-  // If we are forcing fetch or have no local data, get from Supabase
+  // Fetch metadata only for the list
   const { data, error } = await supabase
     .from('invoices')
-    .select('*, customers(*)')
+    .select('*, customers(*), items:invoice_items(count)')
     .eq('store_id', storeId)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.warn('Supabase fetch failed, returning local cache:', error);
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData);
-        if (Array.isArray(parsed)) {
-          return parsed.filter(inv => inv && inv.customer && inv.id);
-        }
-      } catch (e) { }
-    }
+    console.warn('Supabase fetch failed:', error);
     return [];
   }
 
@@ -574,102 +550,157 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
     date: inv.date,
     customerId: inv.customer_id,
     customer: {
+      id: inv.customers?.id,
       name: inv.customers?.name || 'Deleted Customer',
       gstin: inv.customers?.gstin || '',
       address: inv.customers?.address || '',
       state: inv.customers?.state || '',
       phone: inv.customers?.phone || '',
       email: inv.customers?.email || '',
+      createdAt: inv.customers?.created_at,
     },
-    items: inv.items as InvoiceItem[],
-    transportCharges: Number(inv.transport_charges) || 0,
-    discount: Number(inv.discount) || 0,
-    notes: inv.notes || '',
+    // For listing, we just need the count, but we'll mock an empty array or length-only for UI compatibility
+    items: new Array(inv.items?.[0]?.count || 0).fill({}) as any[],
     subtotal: Number(inv.subtotal),
-    totalTax: Number(inv.tax_amount),
-    total: Number(inv.total),
+    taxTotal: Number(inv.tax_total),
+    discountTotal: Number(inv.discount_total),
+    grandTotal: Number(inv.grand_total),
+    transportCharges: Number(inv.transport_charges) || 0,
+    notes: inv.notes || '',
+    status: inv.status || 'unpaid',
     createdAt: inv.created_at,
     updatedAt: inv.updated_at || inv.created_at,
-  })).filter(inv => inv && inv.customer && inv.id);
-
-  // Merge with existing local invoices to prevent wiping unsynced offline invoices
-  try {
-    const localRaw = localStorage.getItem(getUserKey('bill_invoices'));
-    if (localRaw) {
-      const localInvoices = JSON.parse(localRaw) as Invoice[];
-      if (Array.isArray(localInvoices)) {
-        // Add any local invoices that don't exist in the remote fetched list (offline ones)
-        const remoteIds = new Set(invoices.map(inv => inv.id));
-        const unsyncedLocal = localInvoices.filter(localInv =>
-          localInv && localInv.id && !remoteIds.has(localInv.id)
-        );
-
-        const mergedInvoices = [...unsyncedLocal, ...invoices];
-        localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(mergedInvoices));
-        return mergedInvoices;
-      }
-    }
-  } catch (e) {
-    console.error('Error merging local invoices:', e);
-  }
+    store_id: storeId,
+  }));
 
   localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(invoices));
   return invoices;
 };
 
+export const getInvoice = async (id: string): Promise<Invoice | null> => {
+  const { data: inv, error } = await supabase
+    .from('invoices')
+    .select('*, customers(*)')
+    .eq('id', id)
+    .single();
+
+  if (error || !inv) return null;
+
+  // Fetch Items separately
+  const { data: items, error: itemsError } = await supabase
+    .from('invoice_items')
+    .select('*')
+    .eq('invoice_id', id);
+
+  return {
+    id: inv.id,
+    invoiceNumber: inv.invoice_number,
+    date: inv.date,
+    customerId: inv.customer_id,
+    customer: {
+      id: inv.customers?.id,
+      name: inv.customers?.name || 'Deleted Customer',
+      gstin: inv.customers?.gstin || '',
+      address: inv.customers?.address || '',
+      state: inv.customers?.state || '',
+      phone: inv.customers?.phone || '',
+      email: inv.customers?.email || '',
+      createdAt: inv.customers?.created_at,
+    },
+    items: (items || []).map(item => ({
+      id: item.id,
+      invoice_id: item.invoice_id,
+      product_id: item.product_id,
+      productName: item.product_name,
+      unitPrice: Number(item.unit_price),
+      quantity: Number(item.quantity),
+      hsn: item.hsn,
+      unit: item.unit,
+      taxRate: Number(item.tax_rate),
+      taxAmount: Number(item.tax_amount),
+      discountAmount: Number(item.discount_amount),
+      totalAmount: Number(item.total_amount),
+    })),
+    subtotal: Number(inv.subtotal),
+    taxTotal: Number(inv.tax_total),
+    discountTotal: Number(inv.discount_total),
+    grandTotal: Number(inv.grand_total),
+    transportCharges: Number(inv.transport_charges) || 0,
+    notes: inv.notes || '',
+    status: inv.status || 'unpaid',
+    createdAt: inv.created_at,
+    updatedAt: inv.updated_at || inv.created_at,
+    store_id: inv.store_id,
+  };
+};
+
 export const saveInvoice = async (invoice: Invoice): Promise<string | undefined> => {
-  // Update local storage first
-  const currentInvoices = await getInvoices() || [];
-
-  const index = currentInvoices.findIndex(inv => inv.id === invoice.id);
-  const updatedInvoices = index >= 0
-    ? currentInvoices.map((inv, i) => i === index ? invoice : inv)
-    : [invoice, ...currentInvoices];
-
-  localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(updatedInvoices));
-  
-  // Also update the preview cache to ensure it's fresh
-  localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
-
   const storeId = getActiveStoreId();
   if (!storeId) return invoice.id;
 
-  const payload = {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return invoice.id;
+
+  const metadata = {
+    user_id: user.id,
     store_id: storeId,
     customer_id: invoice.customerId,
     invoice_number: invoice.invoiceNumber,
     date: parseDateFromDisplay(invoice.date),
     subtotal: invoice.subtotal,
-    tax_amount: invoice.totalTax,
-    total: invoice.total,
-    items: invoice.items,
+    tax_total: invoice.taxTotal,
+    discount_total: invoice.discountTotal,
+    grand_total: invoice.grandTotal,
     transport_charges: invoice.transportCharges || 0,
-    discount: invoice.discount || 0,
     notes: invoice.notes || '',
+    status: invoice.status || 'unpaid',
   };
 
   try {
-    const upsertPayload = { ...payload, id: invoice.id };
-    const { data, error } = await supabase.from('invoices').upsert(upsertPayload).select('id').single();
-    if (!error && data && data.id && data.id !== invoice.id) {
-      // DB assigned a new UUID — update localStorage so the invoice is findable by its real ID
-      const localRaw = localStorage.getItem(getUserKey('bill_invoices'));
-      if (localRaw) {
-        try {
-          const local = JSON.parse(localRaw) as Invoice[];
-          const updated = local.map(inv => inv.id === invoice.id ? { ...inv, id: data.id } : inv);
-          localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(updated));
-        } catch (_) { }
-      }
-      return data.id;
-    }
-    if (!error && data) return data.id;
-  } catch (e) {
-    console.error('Supabase invoice save error details:', e);
-    console.warn('Supabase invoice sync failed:', e);
-  }
+    // 1. Upsert Invoice Metadata
+    const { data: invData, error: invError } = await supabase
+      .from('invoices')
+      .upsert({ id: invoice.id, ...metadata })
+      .select('id')
+      .single();
 
-  return invoice.id;
+    if (invError || !invData) throw invError;
+    const invId = invData.id;
+
+    // 2. Upsert Invoice Items
+    if (invoice.items && invoice.items.length > 0) {
+      const itemsPayload = invoice.items.map(item => ({
+        user_id: user.id,
+        invoice_id: invId,
+        product_id: item.product_id,
+        product_name: item.productName || (item as any).name, // Fallback for old types
+        unit_price: item.unitPrice || (item as any).rate,
+        quantity: item.quantity,
+        hsn: item.hsn,
+        unit: item.unit,
+        tax_rate: item.taxRate,
+        tax_amount: item.taxAmount || ((item as any).amount * (item.taxRate / 100)),
+        discount_amount: item.discountAmount || 0,
+        total_amount: item.totalAmount || (item as any).amount,
+      }));
+
+      // Delete old items first to handle removals
+      await supabase.from('invoice_items').delete().eq('invoice_id', invId);
+      
+      const { error: itemsError } = await supabase
+        .from('invoice_items')
+        .insert(itemsPayload);
+
+      if (itemsError) throw itemsError;
+    }
+
+    // Update local cache
+    localStorage.removeItem(getUserKey('bill_invoices'));
+    return invId;
+  } catch (e) {
+    console.error('Relational invoice save error:', e);
+    throw e;
+  }
 };
 
 export const deleteInvoice = async (id: string) => {
@@ -697,10 +728,8 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
 
     let maxNum = 1000;
 
-    // Find the highest numeric value in the existing invoice numbers
     for (const inv of invoices) {
       if (inv.invoiceNumber) {
-        // Extract all digits from the string
         const numStr = inv.invoiceNumber.replace(/\D/g, '');
         if (numStr) {
           const num = parseInt(numStr, 10);
@@ -716,6 +745,52 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
     console.error('Error calculating next invoice number:', e);
     return '1001';
   }
+};
+
+export const getPayments = async (invoiceId?: string): Promise<Payment[]> => {
+  let query = supabase.from('payments').select('*');
+  if (invoiceId) query = query.eq('invoice_id', invoiceId);
+  
+  const { data, error } = await query.order('payment_date', { ascending: false });
+  if (error) return [];
+  
+  return (data || []).map(p => ({
+    id: p.id,
+    user_id: p.user_id,
+    invoice_id: p.invoice_id,
+    amount: Number(p.amount),
+    payment_date: p.payment_date,
+    payment_method: p.payment_method,
+    notes: p.notes,
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  }));
+};
+
+export const savePayment = async (payment: Partial<Payment>) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const payload = {
+    ...payment,
+    user_id: user.id,
+  };
+
+  const { error } = await supabase.from('payments').upsert(payload);
+  if (error) throw error;
+};
+
+export const logActivity = async (action: string, entityType: string, entityId?: string, metadata?: any) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.from('activity_logs').insert({
+    user_id: user.id,
+    action,
+    entity_type: entityType,
+    entity_id: entityId,
+    metadata
+  });
 };
 
 // Realtime subscriptions helpers
@@ -760,6 +835,25 @@ export const subscribeToCustomers = (callback: (payload: any) => void) => {
   const channel = supabase.channel('customers-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, (payload) => {
       localStorage.removeItem(getUserKey('bill_customers'));
+      callback(payload);
+    });
+
+  channel.subscribe();
+
+  return async () => {
+    try {
+      await channel.unsubscribe();
+    } catch (e) {
+      // ignore
+    }
+  };
+};
+
+export const subscribeToStores = (callback: (payload: any) => void) => {
+  const channel = supabase.channel('stores-channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'stores' }, (payload) => {
+      localStorage.removeItem(getUserKey('bill_store_info'));
+      localStorage.removeItem(getUserKey('bill_branding_settings'));
       callback(payload);
     });
 

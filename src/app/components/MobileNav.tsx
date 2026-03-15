@@ -45,7 +45,7 @@ const MobileNav: React.FC = () => {
                 className={cn("w-6 h-6 mb-1 transition-transform", isActive ? "scale-110" : "")} 
                 style={isActive ? { color: settings.primaryColor } : {}}
               />
-              <span className={cn("text-[10px] font-medium transition-opacity", isActive ? "opacity-100" : "opacity-70")}>
+              <span className={cn("text-xs font-medium transition-opacity", isActive ? "opacity-100" : "opacity-70")}>
                 {item.label}
               </span>
               

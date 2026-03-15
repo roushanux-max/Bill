@@ -10,32 +10,29 @@
   --card-foreground: #252525;
   --popover: #ffffff;
   --popover-foreground: #252525;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
   --primary-light: #f5f3ff;
   --primary-foreground: #ffffff;
-  --secondary: #f3f3f5;
-  --secondary-foreground: #111111;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
+  --secondary: #f8fafc;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --input-background: #ffffff;
+  --switch-background: #cbd5e1;
+  --font-weight-medium: 600;
   --font-weight-normal: 400;
-  --ring: #b5b5b5;
-  --chart-1: #ff8c42;
-  --chart-2: #4ecdc4;
-  --chart-3: #3d5a80;
-  --chart-4: #f4d35e;
-  --chart-5: #ee6c4d;
-  --radius: 0.625rem;
-  --sidebar: #fafafa;
+  --ring: #4f46e5;
+  --radius: 0.5rem; /* 8px - User request */
+  --radius-card: 0.75rem; /* 12px - User request */
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.06); /* User request */
+  --sidebar: #f8fafc;
   --sidebar-foreground: #252525;
   --sidebar-primary: #030213;
   --sidebar-primary-foreground: #fafafa;
@@ -113,8 +110,9 @@
   --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: var(--radius-card);
+  --radius-xl: calc(var(--radius-card) + 4px);
+  --shadow-card: var(--shadow-card);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -150,27 +148,24 @@
   }
 
   h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
+    font-size: 1.125rem; /* 18px - User request */
+    font-weight: 600;
     line-height: 1.5;
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
   }
 
   h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
     line-height: 1.5;
   }
 
   label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-size: 0.8125rem; /* 13px - User request */
+    font-weight: 500;
     line-height: 1.5;
+    color: var(--muted-foreground);
   }
 
   button {

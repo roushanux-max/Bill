@@ -154,21 +154,21 @@ export function generateInvoicePDF(
     y += 5;
 
     setFont('bold', 12, textDark);
-    const custNameLines = pdf.splitTextToSize(invoice.customer.name || 'Walk-in Customer', contentW * 0.6);
+    const custNameLines = pdf.splitTextToSize(invoice.customer?.name || 'Walk-in Customer', contentW * 0.6);
     pdf.text(custNameLines, margin, y);
     y += custNameLines.length * 5;
 
     setFont('normal', 9, textMid);
-    if (invoice.customer.address) {
+    if (invoice.customer?.address) {
         const custAddrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
         pdf.text(custAddrLines, margin, y);
         y += custAddrLines.length * 4;
     }
-    if (invoice.customer.phone) {
+    if (invoice.customer?.phone) {
         pdf.text(`Phone: ${invoice.customer.phone}`, margin, y);
         y += 4;
     }
-    if (invoice.customer.gstin) {
+    if (invoice.customer?.gstin) {
         setFont('bold', 9, textDark);
         pdf.text(`GSTIN: ${invoice.customer.gstin}`, margin, y + 1);
         y += 5;
@@ -177,7 +177,7 @@ export function generateInvoicePDF(
     y += 5;
 
     // ── Items Table Header ────────────────────────────────────────
-    const isSameState = storeInfo.state === invoice.customer.state;
+    const isSameState = storeInfo.state === invoice.customer?.state;
     const cols = isSameState
         ? [
             { label: '#', w: 8, align: 'center' },
@@ -234,21 +234,22 @@ export function generateInvoicePDF(
     let amountTotal = 0;
     let grandTotal = 0;
 
-    for (let i = 0; i < invoice.items.length; i++) {
-        const item = invoice.items[i];
-        const taxAmount = (item.amount * item.taxRate) / 100;
+    for (let i = 0; i < (invoice.items || []).length; i++) {
+        const item = invoice.items![i];
+        const amount = item.totalAmount || (item as any).amount || 0;
+        const taxAmount = (amount * item.taxRate) / 100;
         const cgst = isSameState ? taxAmount / 2 : 0;
         const sgst = isSameState ? taxAmount / 2 : 0;
         const igst = !isSameState ? taxAmount : 0;
-        const rowTotal = item.amount + taxAmount;
+        const rowTotal = amount + taxAmount;
 
         cgstTotal += cgst;
         sgstTotal += sgst;
         igstTotal += igst;
-        amountTotal += item.amount;
+        amountTotal += amount;
         grandTotal += rowTotal;
 
-        const nameLines = pdf.splitTextToSize(item.name, cols[1].w - 4);
+        const nameLines = pdf.splitTextToSize(item.productName || (item as any).name, cols[1].w - 4);
         const rowH = Math.max(8, nameLines.length * 4.5);
 
         // Page break if near bottom
@@ -292,7 +293,7 @@ export function generateInvoicePDF(
                 nameLines,
                 item.hsn || '-',
                 String(item.quantity),
-                item.rate.toLocaleString('en-IN'),
+                (item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'),
                 Math.round(cgst).toLocaleString('en-IN'),
                 Math.round(sgst).toLocaleString('en-IN'),
                 Math.round(rowTotal).toLocaleString('en-IN'),
@@ -301,7 +302,7 @@ export function generateInvoicePDF(
                 nameLines,
                 item.hsn || '-',
                 String(item.quantity),
-                item.rate.toLocaleString('en-IN'),
+                (item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'),
                 Math.round(igst).toLocaleString('en-IN'),
                 Math.round(rowTotal).toLocaleString('en-IN'),
             ];
@@ -371,13 +372,12 @@ export function generateInvoicePDF(
     if (invoice.transportCharges > 0) {
         drawSummaryRow('Transportation Charges', invoice.transportCharges.toLocaleString('en-IN'));
     }
-    if (invoice.discount > 0) {
-        drawSummaryRow('Discount', `- ${invoice.discount.toLocaleString('en-IN')}`, true);
+    if (invoice.discountTotal > 0) {
+        drawSummaryRow('Discount', `- ${invoice.discountTotal.toLocaleString('en-IN')}`, true);
     }
 
     // Grand total
-    const baseTotal = amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + invoice.transportCharges - invoice.discount;
-    const finalTotal = Math.round(baseTotal);
+    const finalTotal = invoice.grandTotal || Math.round(amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
 
     y += 2;
     pdf.setDrawColor(...borderLight);

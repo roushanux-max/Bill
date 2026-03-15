@@ -28,6 +28,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check initial session
     const checkInitialSession = async () => {
+      // PROACTIVE: Try to extract user ID from Supabase token immediately
+      // This stabilizes getUserKey prefixes before getSession() even returns
+      try {
+        const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        if (authKey) {
+          const tokenData = localStorage.getItem(authKey);
+          if (tokenData) {
+            const parsed = JSON.parse(tokenData);
+            const userId = parsed?.user?.id;
+            if (userId && !localStorage.getItem('bill_user_id')) {
+              localStorage.setItem('bill_user_id', userId);
+            }
+          }
+        }
+      } catch (e) {}
+
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         setSession(initialSession);

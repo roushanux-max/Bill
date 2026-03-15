@@ -57,115 +57,120 @@ export default function Header() {
     const navStyles: React.CSSProperties = {
         position: isLandingPage ? 'fixed' : 'sticky',
         top: 0, left: 0, right: 0, zIndex: 1000,
-        padding: '16px max(24px, calc((100vw - 1200px)/2))',
         background: (isLandingPage && !scrolled) ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',
         borderBottom: 'none',
         boxShadow: 'none',
         transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
     };
 
     return (
         <nav style={navStyles}>
-            <Link to={user ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }} className="group">
-                <div style={{
-                    width: 40, height: 40, borderRadius: 12,
-                    background: 'white',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '1px solid var(--color-primary-light)',
-                    overflow: 'hidden'
-                }} className="transition-transform group-hover:scale-105 shadow-sm">
-                    {displayLogo ? (
-                        <img src={displayLogo} alt={businessName} className="w-full h-full object-contain" />
-                    ) : (
-                        <Logo className="w-7 h-7" />
-                    )}
-                </div>
-                <span style={{ fontWeight: 800, fontSize: 24, letterSpacing: '-0.5px', color: 'var(--color-text, #111)' }}>
-                    {businessName}
-                </span>
-            </Link>
+            <div className="max-w-6xl mx-auto w-full px-4 h-20 flex items-center justify-between">
+                <Link to={user ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }} className="group">
+                    <div style={{
+                        width: 40, height: 40, borderRadius: 12,
+                        background: 'white',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: '1px solid var(--color-primary-light)',
+                        overflow: 'hidden'
+                    }} className="transition-transform group-hover:scale-105 shadow-sm">
+                        {displayLogo ? (
+                            <img src={displayLogo} alt={businessName} className="w-full h-full object-contain" />
+                        ) : (
+                            <Logo className="w-7 h-7" />
+                        )}
+                    </div>
+                    <span style={{ fontWeight: 800, fontSize: 24, letterSpacing: '-0.5px', color: 'var(--color-text, #111)' }}>
+                        {businessName}
+                    </span>
+                </Link>
 
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                {user ? (
-                    <div className="hidden md:flex items-center gap-4">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    width: '40px', height: '40px', borderRadius: '12px',
-                                    background: 'var(--color-primary-light)',
-                                    color: 'var(--color-primary)',
-                                    border: 'none', cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)'
-                                }} onMouseEnter={e => {
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                    e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
-                                }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.transform = 'scale(1)';
-                                        e.currentTarget.style.boxShadow = '0 2px 4px -1px rgba(0,0,0,0.06)';
-                                    }}>
-                                    <Menu className="w-5 h-5" strokeWidth={2.5} />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 mt-2">
-                                <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {navItems.map((item) => (
-                                    <Link key={item.path} to={item.path} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: 'var(--color-primary-light)',
+                                color: 'var(--color-primary)',
+                                border: 'none', cursor: 'pointer',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)'
+                            }} onMouseEnter={e => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                            }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.boxShadow = '0 2px 4px -1px rgba(0,0,0,0.06)';
+                                }}>
+                                <div style={{ width: '20px', height: '2.5px', background: 'currentColor', borderRadius: '10px' }} />
+                                <div style={{ width: '12px', height: '2.5px', background: 'currentColor', borderRadius: '10px', marginLeft: 'auto' }} />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 mt-2">
+                            {user ? (
+                                <>
+                                    <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    {navItems.map((item) => (
+                                        <Link key={item.path} to={item.path} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
+                                                <item.icon className="w-4 h-4 text-slate-500" />
+                                                <span>{item.label}</span>
+                                            </DropdownMenuItem>
+                                        </Link>
+                                    ))}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                        className="cursor-pointer gap-2 py-2.5 text-red-600 focus:text-red-600 focus:bg-red-50"
+                                        onClick={() => signOut()}
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span>Sign Out</span>
+                                    </DropdownMenuItem>
+                                </>
+                            ) : (
+                                <>
+                                    <DropdownMenuLabel>Account</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <Link to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
                                         <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
-                                            <item.icon className="w-4 h-4 text-slate-500" />
-                                            <span>{item.label}</span>
+                                            <LogOut className="w-4 h-4 text-slate-500 rotate-180" />
+                                            <span>Sign In</span>
                                         </DropdownMenuItem>
                                     </Link>
-                                ))}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                    className="cursor-pointer gap-2 py-2.5 text-red-600 focus:text-red-600 focus:bg-red-50"
-                                    onClick={() => signOut()}
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    <span>Sign Out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                ) : (
-                    <div className="hidden md:flex items-center gap-3">
-                        {location.pathname !== '/login' && (
-                            <Link to="/login" style={{
-                                color: '#475569', fontSize: 15, fontWeight: 600,
-                                textDecoration: 'none', padding: '8px 16px',
-                                borderRadius: 10, transition: 'color 0.2s'
+                                    <Link to="/register" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                        <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
+                                            <PlusCircle className="w-4 h-4 text-slate-500" />
+                                            <span>Get Started</span>
+                                        </DropdownMenuItem>
+                                    </Link>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {!user && (
+                        <div className="hidden md:flex items-center gap-3">
+                            <Link to="/register" style={{
+                                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', 
+                                color: getContrastColor(primaryColor), 
+                                padding: '10px 24px', 
+                                borderRadius: 12,
+                                textDecoration: 'none', fontSize: 15, fontWeight: 700,
+                                boxShadow: '0 10px 20px -5px var(--color-primary-light)',
+                                transition: 'all 0.2s'
                             }}
-                                onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-primary)')}
-                                onMouseLeave={e => (e.currentTarget.style.color = '#475569')}
+                                onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                                onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
                             >
-                                Sign in
+                                Get Started
                             </Link>
-                        )}
-                        <Link to="/register" style={{
-                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', color: getContrastColor(primaryColor), padding: '10px 24px', borderRadius: 12,
-                            textDecoration: 'none', fontSize: 15, fontWeight: 700,
-                            boxShadow: '0 15px 30px -10px var(--color-primary-light)',
-                            transition: 'transform 0.2s, box-shadow 0.2s'
-                        }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                                e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light)';
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light)';
-                            }}
-                        >
-                            Get Started
-                        </Link>
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
             </div>
         </nav>
     );

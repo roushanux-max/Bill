@@ -5,7 +5,7 @@ import { useBranding } from '../contexts/BrandingContext';
 import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
-import { getUserKey } from '../utils/storage';
+import { getUserKey, saveStoreInfo, saveBrandingSettings } from '../utils/storage';
 
 // Helper to determine active step
 const steps = [
@@ -202,75 +202,27 @@ export default function SetupShop() {
     }
 
     try {
-      const existingId = localStorage.getItem(getUserKey('active_store_id')) || `offline-${Date.now()}`;
-
-      const storeData: any = {
-        user_id: user.id,
-        business_name: isSkipped ? (formData.shopName || 'My Business') : formData.shopName,
+      const storeData: StoreInfo = {
+        name: isSkipped ? (formData.shopName || 'My Business') : formData.shopName,
+        ownerName: formData.ownerName || '',
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
-        gstin: formData.gstin ? formData.gstin.toUpperCase() : null,
+        gstin: formData.gstin ? formData.gstin.toUpperCase() : '',
+        authDistributors: [],
       };
 
-      if (existingId && !existingId.startsWith('offline-')) {
-        storeData.id = existingId;
-      } else if (existingId.startsWith('offline-')) {
-        storeData.id = existingId; // Some local ID
-      }
+      // Use unified helper which handles:
+      // 1. Local storage prefixing
+      // 2. User-ID pivot if no storeId exists
+      // 3. Supabase upsert with proper user_id linking
+      await saveStoreInfo(storeData);
 
-      try {
-        // Add a timeout to prevents infinite hanging on slow/blocked connections
-        const upsertPromise = supabase
-          .from('stores')
-          .upsert([storeData])
-          .select()
-          .single();
-        
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('TIMEOUT')), 5000)
-        );
-
-        const { data, error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
-
-        if (error) throw error;
-
-        // Persist locally
-        localStorage.setItem(getUserKey('active_store_id'), data.id);
-
-        // Update cached store info so Dashboard/Header reflect new name immediately
-        const storeInfo = {
-          name: data.business_name || '',
-          gstin: data.gstin || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          pincode: data.pincode || '',
-          phone: data.phone || '',
-          email: data.email || '',
-        };
-        localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(storeInfo));
-
-      } catch (err: any) {
-        console.warn('Supabase sync failed, saving locally instead:', err);
-        // Fallback: save locally
-        localStorage.setItem(getUserKey('active_store_id'), existingId);
-
-        const storeInfo = {
-          name: storeData.business_name || '',
-          gstin: storeData.gstin || '',
-          address: storeData.address || '',
-          city: storeData.city || '',
-          state: storeData.state || '',
-          pincode: storeData.pincode || '',
-          phone: storeData.phone || '',
-          email: storeData.email || '',
-        };
-        localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(storeInfo));
-      }
+      // Also save default branding if it's a new setup
+      await saveBrandingSettings(defaultBrandingSettings);
 
       // Mark onboarding complete and remove draft
       localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
@@ -279,8 +231,7 @@ export default function SetupShop() {
       return true;
 
     } catch (error: any) {
-      console.error('Error in store wizard:', error);
-      // We only reach this outer catch if something structurally failed outside the fetch
+      console.error('Error in store setup:', error);
       toast.error('Failed to finish setup. Please try again.');
       return false;
     }

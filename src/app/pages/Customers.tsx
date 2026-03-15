@@ -129,7 +129,7 @@ export default function Customers() {
   // Calculate total spending for a customer
   const getCustomerSpending = (customerId: string) => {
     const customerInvoices = invoices.filter(invoice => invoice.customerId === customerId);
-    return customerInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+    return customerInvoices.reduce((sum, invoice) => sum + (invoice.grandTotal || 0), 0);
   };
 
   // Calculate number of invoices for a customer
@@ -144,7 +144,7 @@ export default function Customers() {
     // Calculate spending data for each customer
     const customerData = filteredSortedCustomers.map(customer => {
       const customerInvoices = invoices.filter(inv => inv.customerId === customer.id);
-      const totalSpent = customerInvoices.reduce((sum, inv) => sum + inv.total, 0);
+      const totalSpent = customerInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
       const invoiceCount = customerInvoices.length;
       const lastInvoiceDate = customerInvoices.length > 0
         ? new Date(Math.max(...customerInvoices.map(inv => new Date(inv.createdAt).getTime())))
@@ -237,12 +237,12 @@ export default function Customers() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <ArrowLeft className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Back</span>
                 </Button>
               </Link>
-              <h1 className="text-lg sm:text-2xl font-semibold text-slate-900">Customers</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -321,10 +321,10 @@ export default function Customers() {
                         value={formData.state}
                         onValueChange={(e) => setFormData({ ...formData, state: e })}
                       >
-                        <SelectTrigger className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm">
+                        <SelectTrigger className="w-full rounded-lg border border-slate-200">
                           <SelectValue>{formData.state}</SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="w-full max-h-60 overflow-y-auto px-3 rounded-md border border-slate-200 text-sm">
+                        <SelectContent className="w-full max-h-60 overflow-y-auto px-3 rounded-lg border border-slate-200">
                           {INDIAN_STATES.map(state => (
                             <SelectItem key={state} value={state}>{state}</SelectItem>
                           ))}

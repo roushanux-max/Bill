@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { StoreInfo } from '../types/invoice';
-import { getBrandingSettings, getStoreInfo, getUserKey } from '../utils/storage';
+import { getBrandingSettings, getStoreInfo, getUserKey, subscribeToStores } from '../utils/storage';
 
 interface BrandingContextType {
   settings: BrandingSettings;
@@ -46,21 +46,30 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   }, [settings]);
 
   const refreshBranding = async () => {
+    // Avoid double-loading if we already have a user but no data yet
     setLoading(true);
-    const [savedSettings, savedStoreInfo] = await Promise.all([
-      getBrandingSettings(true),
-      getStoreInfo(true)
-    ]);
+    try {
+      const [savedSettings, savedStoreInfo] = await Promise.all([
+        getBrandingSettings(true),
+        getStoreInfo(true)
+      ]);
 
-    if (savedSettings) {
-      setSettings(savedSettings);
-      applyBrandingStyles(savedSettings);
-    } else {
-      applyBrandingStyles(defaultBrandingSettings);
+      if (savedSettings) {
+        setSettings(savedSettings);
+        applyBrandingStyles(savedSettings);
+        // Sync to local storage for the next instant-load
+        localStorage.setItem(getUserKey('bill_branding_settings'), JSON.stringify(savedSettings));
+      }
+
+      if (savedStoreInfo) {
+        setStoreInfo(savedStoreInfo);
+        localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(savedStoreInfo));
+      }
+    } catch (e) {
+      console.error('Error refreshing branding sync:', e);
+    } finally {
+      setLoading(false);
     }
-
-    setStoreInfo(savedStoreInfo);
-    setLoading(false);
   };
 
   // Load branding settings on mount and when store status changes
@@ -69,8 +78,20 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   }, [user, hasStore]);
 
   useEffect(() => {
+    if (!user) return;
 
-    // Listen for storage changes
+    // Listen for remote changes via Supabase Realtime
+    const unsubscribe = subscribeToStores(() => {
+      refreshBranding();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
+
+  useEffect(() => {
+    // Listen for local storage changes (cross-tab sync)
     const handleStorageChange = (e: StorageEvent | Event) => {
       // If it's a real StorageEvent, check the key
       if ('key' in e) {

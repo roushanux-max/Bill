@@ -11,11 +11,12 @@ interface InvoiceTemplateProps {
 }
 
 export default function InvoiceTemplate({ invoice, settings, storeInfo }: InvoiceTemplateProps) {
-  const subtotal = invoice.items?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
+  const subtotal = invoice.items?.reduce((sum, item) => sum + (item.totalAmount || (item as any).amount || 0), 0) ?? invoice.subtotal ?? 0;
   const isSameState = (storeInfo?.state ?? '') === (invoice.customer?.state ?? '');
 
   const taxByRate = (invoice.items ?? []).reduce((acc, item) => {
-    const taxAmount = (item.amount * item.taxRate) / 100;
+    const amt = item.totalAmount || (item as any).amount || 0;
+    const taxAmount = (amt * item.taxRate) / 100;
     if (!acc[item.taxRate]) {
       acc[item.taxRate] = 0;
     }
@@ -24,7 +25,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   }, {} as Record<number, number>);
 
   const totalTax = Object.values(taxByRate).reduce((sum, tax) => sum + tax, 0);
-  const totalBeforeRoundOff = subtotal + totalTax + (invoice.transportCharges ?? 0) - (invoice.discount ?? 0);
+  const totalBeforeRoundOff = subtotal + totalTax + (invoice.transportCharges ?? 0) - (invoice.discountTotal ?? 0);
   const total = Math.round(totalBeforeRoundOff);
 
   const numberToWords = (num: number): string => {
@@ -101,9 +102,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             )}
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-auto">
               <div className="text-slate-500 font-medium">Invoice No:</div>
-              <div className="font-semibold text-slate-900">{invoice.invoiceNumber}</div>
+              <div className="font-semibold text-slate-900">{invoice.invoiceNumber || 'NEW'}</div>
               <div className="text-slate-500 font-medium">Date:</div>
-              <div className="font-semibold text-slate-900">{formatDateForDisplay(invoice.date)}</div>
+              <div className="font-semibold text-slate-900">{formatDateForDisplay(invoice.date) || '-'}</div>
             </div>
           </div>
         </div>
@@ -143,22 +144,23 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {invoice.items.map((item, index) => {
-                const taxAmount = (item.amount * item.taxRate) / 100;
+              {(invoice.items || []).map((item, index) => {
+                const amount = item.totalAmount || (item as any).amount || 0;
+                const taxAmount = (amount * item.taxRate) / 100;
                 const cgst = isSameState ? taxAmount / 2 : 0;
                 const sgst = isSameState ? taxAmount / 2 : 0;
                 const igst = !isSameState ? taxAmount : 0;
-                const totalAmount = item.amount + taxAmount;
+                const totalAmount = amount + taxAmount;
 
                 return (
                   <tr key={item.id} className="text-slate-700">
                     <td className="py-4 px-1 text-center align-top text-slate-400">{index + 1}</td>
                     <td className="py-4 px-2 align-top">
-                      <p className="font-medium text-slate-900">{item.name}</p>
+                      <p className="font-medium text-slate-900">{item.productName || (item as any).name}</p>
                     </td>
                     <td className="py-4 px-2 text-center align-top">{item.hsn || '-'}</td>
                     <td className="py-4 px-2 text-center align-top">{item.quantity}</td>
-                    <td className="py-4 px-2 text-right align-top">{item.rate.toLocaleString('en-IN')}</td>
+                    <td className="py-4 px-2 text-right align-top">{(item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN')}</td>
                     {isSameState ? (
                       <>
                         <td className="py-4 px-2 text-right align-top">
@@ -189,7 +191,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             <div className="space-y-3 text-sm text-slate-600">
               <div className="flex justify-between py-1">
                 <span>Subtotal</span>
-                <span className="font-medium text-slate-900">{subtotal.toLocaleString('en-IN')}</span>
+                <span className="font-medium text-slate-900">{(invoice.subtotal || subtotal).toLocaleString('en-IN')}</span>
               </div>
               
               {invoice.transportCharges > 0 && (
@@ -199,10 +201,10 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 </div>
               )}
 
-              {invoice.discount > 0 && (
+              {invoice.discountTotal > 0 && (
                 <div className="flex justify-between py-1 text-emerald-600">
                   <span>Discount</span>
-                  <span className="font-medium">- {invoice.discount.toLocaleString('en-IN')}</span>
+                  <span className="font-medium">- {invoice.discountTotal.toLocaleString('en-IN')}</span>
                 </div>
               )}
 
@@ -211,7 +213,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   Total Amount <br/>(INR)
                 </div>
                 <div className="text-2xl font-bold text-slate-900" style={{ color: settings.primaryColor }}>
-                  ₹ {total.toLocaleString('en-IN')}
+                  ₹ {(invoice.grandTotal || total).toLocaleString('en-IN')}
                 </div>
               </div>
             </div>

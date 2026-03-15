@@ -315,7 +315,7 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <main className="px-4 py-6 sm:py-8 max-w-7xl mx-auto pb-24 lg:pb-8">
+      <main className="px-4 py-6 sm:py-8 max-w-6xl mx-auto pb-24 lg:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar Navigation - Desktop Only */}
           <div className="hidden lg:block lg:col-span-1">

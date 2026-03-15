@@ -128,7 +128,7 @@ export default function Invoices() {
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'amount':
-          return (b.total || 0) - (a.total || 0);
+          return (b.grandTotal || 0) - (a.grandTotal || 0);
         case 'customer':
           return (a.customer?.name || '').localeCompare(b.customer?.name || '');
         case 'date':
@@ -194,7 +194,7 @@ export default function Invoices() {
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: `Invoice ${invoice.invoiceNumber}`,
-          text: `Invoice for ${invoice.customer.name}`,
+          text: `Invoice for ${invoice.customer?.name || 'Customer'}`,
           files: [file],
         });
         toast.dismiss(toastId);
@@ -222,7 +222,7 @@ export default function Invoices() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <ArrowLeft className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Back</span>
                 </Button>
@@ -249,7 +249,7 @@ export default function Invoices() {
               placeholder="Search invoices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 text-sm"
+              className="pl-10"
             />
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function Invoices() {
                       {/* Total amount */}
                       <div className="pt-1">
                         <span className="text-base font-bold text-slate-900">
-                          ₹{(invoice.total || 0).toLocaleString('en-IN')}
+                          ₹{(invoice.grandTotal || 0).toLocaleString('en-IN')}
                         </span>
                       </div>
                     </div>

@@ -178,9 +178,9 @@ export default function CreateInvoice() {
           setInvoiceNumber(existing.invoiceNumber);
           setDate(parseDateFromDisplay(existing.date));
           setSelectedCustomerId(existing.customerId);
-          setItems(existing.items);
+          setItems(existing.items || []);
           setTransportCharges(existing.transportCharges);
-          setDiscount(existing.discount);
+          setDiscount(existing.discountTotal || 0);
           setNotes(existing.notes || '');
 
           // Always restore customer form data from the invoice snapshot in edit mode.
@@ -216,7 +216,7 @@ export default function CreateInvoice() {
                 setSelectedCustomerId(parsedDraft.customerId || '');
                 setItems(parsedDraft.items || []);
                 setTransportCharges(parsedDraft.transportCharges || 0);
-                setDiscount(parsedDraft.discount || 0);
+                setDiscount(parsedDraft.discountTotal || 0);
                 setNotes(parsedDraft.notes || '');
                 if (parsedDraft.newCustomerData) {
                   setNewCustomerData(parsedDraft.newCustomerData);
@@ -279,27 +279,31 @@ export default function CreateInvoice() {
       const existingInvoice = editId ? invoices.find(inv => inv.id === editId) : null;
 
       const invoice: Invoice = {
-        id: editId || invoiceNumber, 
+        id: editId || localInvoiceId, 
         invoiceNumber,
         date: formatDateForDisplay(date), 
         customerId: selectedCustomerId,
         customer: {
+          id: selectedCustomerId,
           name: newCustomerData.name || 'Walk-in Customer',
           gstin: newCustomerData.gstin,
           address: newCustomerData.address,
           state: newCustomerData.state,
           phone: newCustomerData.phone,
           email: newCustomerData.email || '',
+          createdAt: activeCustomer?.createdAt || new Date().toISOString(),
         },
         items,
         transportCharges: Number(transportCharges) || 0,
-        discount: Number(discount) || 0,
+        discountTotal: Number(discount) || 0,
         notes,
         subtotal,
-        totalTax,
-        total,
+        taxTotal: totalTax,
+        grandTotal: total,
+        status: 'unpaid',
         createdAt: existingInvoice?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        store_id: storeInfo?.id || '',
       };
 
       try {
@@ -329,7 +333,7 @@ export default function CreateInvoice() {
     let totalTax = 0;
 
     items.forEach(item => {
-      const rate = Number(item.rate) || 0;
+      const rate = Number(item.unitPrice || (item as any).rate) || 0;
       const qty = Number(item.quantity) || 0;
       const tax = Number(item.taxRate) || 0;
       itemSubtotal += rate * qty;
@@ -471,14 +475,17 @@ export default function CreateInvoice() {
     const amount = rate * qty;
     const item: InvoiceItem = {
       id: Date.now().toString(),
-      productId: finalProductId,
-      name: newItemData.name,
-      hsn: newItemData.hsn,
+      invoice_id: editId || localInvoiceId,
+      product_id: finalProductId,
+      productName: newItemData.name, // Snapshot
+      unitPrice: rate,               // Snapshot
       quantity: qty,
+      hsn: newItemData.hsn,
       unit: 'pcs',
-      rate: rate,
       taxRate: taxRate,
-      amount,
+      taxAmount: (rate * qty * taxRate) / 100,
+      discountAmount: 0,
+      totalAmount: rate * qty,       // Keeping matches current UI "amount" expectation (pre-tax)
     };
     if (editingItemIndex !== null) {
       const updatedItems = [...items];
@@ -504,12 +511,12 @@ export default function CreateInvoice() {
   const handleEditItem = (index: number) => {
     const item = items[index];
     setNewItemData({
-      name: item.name,
+      name: item.productName || (item as any).name,
       hsn: item.hsn || '',
       quantity: item.quantity,
-      rate: item.rate,
+      rate: item.unitPrice || (item as any).rate,
       taxRate: item.taxRate,
-      amount: item.amount,
+      amount: item.totalAmount || (item as any).amount,
     });
     setEditingItemIndex(index);
     scrollToSection(itemsCardRef);
@@ -674,18 +681,29 @@ export default function CreateInvoice() {
     return {
       id: editId || localInvoiceId,
       invoiceNumber,
-      date: formatDateForDisplay(date), // Always save as DD.MM.YY for consistency
+      date: formatDateForDisplay(date),
       customerId: resolvedCustomerId,
-      customer: customerDetails,
+      customer: {
+        id: resolvedCustomerId,
+        name: newCustomerData.name || activeCustomer?.name || 'Walk-in Customer',
+        gstin: newCustomerData.gstin || activeCustomer?.gstin || '',
+        address: newCustomerData.address || activeCustomer?.address || '',
+        state: newCustomerData.state || activeCustomer?.state || 'Bihar',
+        phone: newCustomerData.phone || activeCustomer?.phone || '',
+        email: newCustomerData.email || activeCustomer?.email || '',
+        createdAt: activeCustomer?.createdAt || new Date().toISOString(),
+      },
       items,
       transportCharges: Number(transportCharges) || 0,
-      discount: Number(discount) || 0,
+      discountTotal: Number(discount) || 0,
       notes: notes || settings.invoiceNotes || (settings as any).termsAndConditions || '',
       subtotal,
-      totalTax,
-      total,
+      taxTotal: totalTax,
+      grandTotal: total,
+      status: 'unpaid',
       createdAt: existingInvoice?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      store_id: storeInfo?.id || '',
     };
   };
 
@@ -778,11 +796,11 @@ export default function CreateInvoice() {
       const file = new File([pdfBlob], filename, { type: 'application/pdf' });
       
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: `Invoice ${invoice.invoiceNumber}`,
-          text: `Invoice for ${invoice.customer.name}`,
-          files: [file],
-        });
+          await navigator.share({
+            title: `Invoice ${invoice.invoiceNumber}`,
+            text: `Invoice for ${invoice.customer?.name}`,
+            files: [file],
+          });
         toast.dismiss(toastId);
       } else {
         // Fallback: download the PDF
@@ -815,12 +833,12 @@ export default function CreateInvoice() {
                                 onClick={() => handleNavigateAway(() => navigate('/invoices'))}
                                 className="inline-flex items-center gap-2 sm:gap-3"
                             >
-                                <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                                     <ArrowLeft className="h-4 w-4 sm:mr-2" />
                                     <span className="hidden sm:inline">Back</span>
                                 </Button>
                             </button>
-                            <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">
+                            <h1 className="text-2xl font-bold text-slate-900 truncate">
                                 {editId ? 'Edit Invoice' : 'Create Invoice'}
                             </h1>
                         </div>
@@ -837,7 +855,7 @@ export default function CreateInvoice() {
           <div ref={detailsCardRef} className="transition-all duration-300 rounded-lg">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base sm:text-lg">Invoice Details</CardTitle>
+                <CardTitle className="text-xl font-bold">Invoice Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -872,7 +890,7 @@ export default function CreateInvoice() {
             <Card className="border-slate-200/60 shadow-sm overflow-hidden hover-lift glass-card">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between py-4 px-6 gap-4">
                 <div className="flex flex-col">
-                  <CardTitle className="text-base font-semibold text-slate-800">Customer Details</CardTitle>
+                  <CardTitle className="text-xl font-bold text-slate-900">Customer Details</CardTitle>
                   <p className="text-[11px] text-slate-500 font-normal mt-1">Select an existing customer or enter details manually below.</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1162,13 +1180,13 @@ export default function CreateInvoice() {
                             )}
                           >
                             <div className="flex-1 min-w-0 pr-4">
-                              <div className="font-semibold text-sm text-slate-900 truncate">{item.name}</div>
+                              <div className="font-semibold text-sm text-slate-900 truncate">{item.productName}</div>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-medium px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600">
                                   Qty: {item.quantity}
                                 </span>
                                 <span className="text-xs text-slate-500">
-                                  × ₹{item.rate.toLocaleString('en-IN')}
+                                  × ₹{item.unitPrice.toLocaleString('en-IN')}
                                 </span>
                                 <span className="text-xs font-semibold text-slate-400">|</span>
                                 <span className="text-xs font-medium text-[var(--color-primary)]">
@@ -1178,7 +1196,7 @@ export default function CreateInvoice() {
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="text-right">
-                                <div className="text-sm font-bold text-slate-900">₹{item.amount.toLocaleString('en-IN')}</div>
+                                <div className="text-sm font-bold text-slate-900">₹{item.totalAmount.toLocaleString('en-IN')}</div>
                               </div>
                               <div className="flex gap-1">
                                 <Button

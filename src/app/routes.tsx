@@ -23,6 +23,7 @@ const LoadingFallback = () => <LoadingScreen />;
 
 import MobileNav from "./components/MobileNav";
 import Header from "./components/Header";
+import ErrorPage from "./pages/ErrorPage";
 
 const RootLayout = () => (
   <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",

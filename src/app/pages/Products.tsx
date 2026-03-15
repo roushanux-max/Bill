@@ -155,12 +155,12 @@ export default function Products() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <ArrowLeft className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Back</span>
                 </Button>
               </Link>
-              <h1 className="text-lg sm:text-2xl font-semibold text-slate-900">Products</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Products</h1>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
               setIsDialogOpen(open);

@@ -5,11 +5,12 @@ import { ArrowLeft, Download, Share2, Printer, Pencil } from 'lucide-react';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import InvoiceTemplate from '../components/InvoiceTemplate';
 import { Invoice, StoreInfo } from '../types/invoice';
-import { getInvoices, getStoreInfo, getBrandingSettings } from '../utils/storage';
+import { getInvoices, getInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { useBranding } from '../contexts/BrandingContext';
 import { toast } from 'sonner';
-import { getUserKey } from '../utils/storage';
+
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function InvoicePreview() {
   const { settings: globalSettings, storeInfo: globalStoreInfo } = useBranding();
@@ -72,8 +73,7 @@ export default function InvoicePreview() {
       // Try to load from ID parameter (from invoice list)
       const previewInvoiceId = searchParams.get('id');
       if (previewInvoiceId) {
-        const invoices = await getInvoices();
-        const selectedInvoice = invoices.find((inv) => inv.id === previewInvoiceId);
+        const selectedInvoice = await getInvoice(previewInvoiceId);
         if (selectedInvoice) {
           setInvoice(selectedInvoice);
           return;
@@ -87,45 +87,55 @@ export default function InvoicePreview() {
         date: '16.01.26',
         customerId: 'sample',
         customer: {
+          id: 'sample',
           name: 'Credit Access India Foundation',
           gstin: '10DAOPK4311H1Z1',
           address: 'Jayanagar, Bangalore - 560070',
           state: 'Karnataka',
           phone: '+91 98765 12345',
-          email: 'sample@example.com'
+          email: 'sample@example.com',
+          createdAt: new Date().toISOString()
         },
         items: [
           {
             id: '1',
-            productId: '1',
-            name: 'Iron Rack Size (6×3.5) with Five Plate',
+            invoice_id: 'sample',
+            product_id: '1',
+            productName: 'Iron Rack Size (6×3.5) with Five Plate',
             hsn: '9403',
             quantity: 3,
             unit: 'pcs',
-            rate: 3550,
+            unitPrice: 3550,
             taxRate: 18,
-            amount: 10650,
+            taxAmount: (3550 * 3 * 18) / 100,
+            discountAmount: 0,
+            totalAmount: 10650,
           },
           {
             id: '2',
-            productId: '2',
-            name: '3 Seater SS Visitor Chair Made Up With 304 Grade 2 Endless and Bottom Connecting (50/100 mm SS Pipe) (6.2 1/4 HW) 34 KG and 600 Gms Seating Size 29 Inches Seating Size',
+            invoice_id: 'sample',
+            product_id: '2',
+            productName: '3 Seater SS Visitor Chair Made Up With 304 Grade 2 Endless and Bottom Connecting (50/100 mm SS Pipe) (6.2 1/4 HW) 34 KG and 600 Gms Seating Size 29 Inches Seating Size',
             hsn: '9403',
             quantity: 3,
             unit: 'pcs',
-            rate: 12450,
+            unitPrice: 12450,
             taxRate: 18,
-            amount: 37350,
+            taxAmount: (12450 * 3 * 18) / 100,
+            discountAmount: 0,
+            totalAmount: 37350,
           },
         ],
         transportCharges: 2500,
-        discount: 0,
+        discountTotal: 0,
         notes: 'All Subject to Arrah Jurisdiction only.\nGoods once sold will not be taken back\nAll works transit will be entertained.',
         subtotal: 48000,
-        totalTax: 8640,
-        total: 59140,
+        taxTotal: 8640,
+        grandTotal: 59140,
+        status: 'paid',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        store_id: 'sample',
       });
     };
 
@@ -217,7 +227,7 @@ export default function InvoicePreview() {
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: `Invoice ${invoice.invoiceNumber}`,
-          text: `Invoice for ${invoice.customer.name}`,
+          text: `Invoice for ${invoice.customer?.name || 'Walk-in'}`,
           files: [file],
         });
         toast.dismiss(toastId);
@@ -239,11 +249,12 @@ export default function InvoicePreview() {
   };
 
   if (!invoice) {
-    return <div className="flex items-center justify-center min-h-screen">Loading invoice...</div>;
+    return <LoadingScreen />;
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {isGenerating && <LoadingScreen type="printing" />}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
         <div className="px-2 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between gap-2">

@@ -84,12 +84,12 @@ export default function Dashboard() {
       });
 
       setStats({
-        todaySales: todayInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
+        todaySales: todayInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0),
         todayCount: todayInvoices.length,
-        monthSales: monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
+        monthSales: monthInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0),
         monthCount: monthInvoices.length,
         totalInvoices: invoices.length,
-        totalRevenue: invoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
+        totalRevenue: invoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0),
         totalCustomers: customers.length,
         totalProducts: products.length,
       });
@@ -118,7 +118,7 @@ export default function Dashboard() {
       <main className="px-4 py-4 sm:py-8 max-w-6xl mx-auto pb-20 sm:pb-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Dashboard</h2>
+            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
             <Button
               onClick={() => navigate('/create-invoice')}
               className="hidden sm:flex bg-[var(--color-primary)] hover:opacity-90 text-sm sm:text-base"
@@ -222,7 +222,7 @@ export default function Dashboard() {
                       <div>
                         <div className="font-medium">{inv.invoiceNumber} — {inv.customer?.name}</div>
                         <div className="text-xs text-slate-500">
-                          {inv.date} • {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ₹{inv.total?.toLocaleString('en-IN')}
+                          {inv.date} • {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ₹{inv.grandTotal?.toLocaleString('en-IN')}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
