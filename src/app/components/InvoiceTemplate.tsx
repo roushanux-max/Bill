@@ -248,7 +248,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
               {/* Transport Charges Row */}
               <tr style={{ borderColor: '#e2e8f0' }}>
-                <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}>{invoice.items.length + 1}</td>
+                <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
                 <td className="border px-2 py-2 font-medium text-center" colSpan={5} style={{ borderColor: '#e2e8f0' }}>
                   Transportation Charges
                 </td>
