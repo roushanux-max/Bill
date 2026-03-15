@@ -664,7 +664,12 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       .select('id')
       .single();
 
-    if (invError || !invData) throw invError;
+    if (invError) {
+      console.error('Invoice metadata sync failed:', invError);
+      throw new Error(`Invoice sync failed: ${invError.message}`);
+    }
+    
+    if (!invData) throw new Error('No data returned from invoice upsert');
     const invId = invData.id;
 
     // 2. Upsert Invoice Items
@@ -673,25 +678,35 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
         user_id: user.id,
         invoice_id: invId,
         product_id: item.product_id,
-        product_name: item.productName || (item as any).name, // Fallback for old types
-        unit_price: item.unitPrice || (item as any).rate,
-        quantity: item.quantity,
-        hsn: item.hsn,
-        unit: item.unit,
-        tax_rate: item.taxRate,
-        tax_amount: item.taxAmount || ((item as any).amount * (item.taxRate / 100)),
-        discount_amount: item.discountAmount || 0,
-        total_amount: item.totalAmount || (item as any).amount,
+        product_name: item.productName || (item as any).name,
+        unit_price: Number(item.unitPrice || (item as any).rate || 0),
+        quantity: Number(item.quantity || 0),
+        hsn: item.hsn || '',
+        unit: item.unit || 'pcs',
+        tax_rate: Number(item.taxRate || 0),
+        tax_amount: Number(item.taxAmount || 0),
+        discount_amount: Number(item.discountAmount || 0),
+        total_amount: Number(item.totalAmount || 0),
       }));
 
       // Delete old items first to handle removals
-      await supabase.from('invoice_items').delete().eq('invoice_id', invId);
+      const { error: deleteError } = await supabase.from('invoice_items').delete().eq('invoice_id', invId);
+      if (deleteError) {
+        console.warn('Could not clean up old invoice items (table might be missing):', deleteError.message);
+        // If the table is missing, we must throw or the relational integrity is broken
+        if (deleteError.code === '42P01') {
+          throw new Error('Database table "invoice_items" missing. Please run the migration.');
+        }
+      }
       
       const { error: itemsError } = await supabase
         .from('invoice_items')
         .insert(itemsPayload);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Invoice items sync failed:', itemsError);
+        throw new Error(`Items sync failed: ${itemsError.message}`);
+      }
     }
 
     // Update local cache

@@ -891,7 +891,6 @@ export default function CreateInvoice() {
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between py-4 px-6 gap-4">
                 <div className="flex flex-col">
                   <CardTitle className="text-xl font-bold text-slate-900">Customer Details</CardTitle>
-                  <p className="text-[11px] text-slate-500 font-normal mt-1">Select an existing customer or enter details manually below.</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-full sm:w-64">
@@ -926,7 +925,6 @@ export default function CreateInvoice() {
                       <Label htmlFor="customerName" className="text-sm flex items-center gap-1">
                         Customer Name <span className="text-red-500">*</span>
                       </Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Legal name for billing</p>
                       <SuggestionInput
                         id="customerName"
                         value={newCustomerData.name}
@@ -941,7 +939,6 @@ export default function CreateInvoice() {
                       <Label htmlFor="customerPhone" className="text-sm flex items-center gap-1">
                         Phone <span className="text-red-500">*</span>
                       </Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Mobile number for contact</p>
                       <SuggestionInput
                         id="customerPhone"
                         value={newCustomerData.phone}
@@ -993,7 +990,6 @@ export default function CreateInvoice() {
                       <Label htmlFor="customerState" className="text-sm flex items-center gap-1">
                         State <span className="text-red-500">*</span>
                       </Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Determines tax type (IGST vs CGST/SGST)</p>
                       <Select value={newCustomerData.state} onValueChange={value => setNewCustomerData({ ...newCustomerData, state: value })}>
                         <SelectTrigger className="bg-white/50">
                           <SelectValue placeholder={activeCustomer?.state || "Select state"} />
@@ -1046,7 +1042,6 @@ export default function CreateInvoice() {
                       <Label htmlFor="itemName" className="text-sm flex items-center gap-1">
                         Product Name <span className="text-red-500">*</span>
                       </Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Description of goods or services</p>
                       <SuggestionInput
                         id="itemName"
                         value={newItemData.name}
@@ -1071,7 +1066,6 @@ export default function CreateInvoice() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="itemQuantity" className="text-sm">Quantity</Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Number of units (Min 1)</p>
                       <Input
                         id="itemQuantity"
                         value={newItemData.quantity}
@@ -1094,7 +1088,6 @@ export default function CreateInvoice() {
                       <Label htmlFor="itemRate" className="text-sm flex items-center gap-1">
                         Rate (₹) <span className="text-red-500">*</span>
                       </Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Unit price excluding GST</p>
                       <Input
                         id="itemRate"
                         value={newItemData.rate}
@@ -1113,8 +1106,7 @@ export default function CreateInvoice() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="itemTaxRate" className="text-sm">GST (%)</Label>
-                      <p className="text-[10px] text-slate-500 font-normal leading-tight">Applicable tax rate</p>
+                      <Label htmlFor="itemTaxRate" className="text-sm">GST</Label>
                       <Input
                         id="itemTaxRate"
                         value={newItemData.taxRate}
@@ -1168,7 +1160,6 @@ export default function CreateInvoice() {
                     <div className="space-y-3 pt-6 border-t border-slate-100">
                       <div className="flex items-center justify-between mb-1">
                         <Label className="text-sm font-semibold text-slate-800">Bill Items ({items.length})</Label>
-                        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full uppercase tracking-wider">Scroll to view all</span>
                       </div>
                       <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                         {items.map((item, index) => (
