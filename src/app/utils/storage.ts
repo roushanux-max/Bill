@@ -1,5 +1,6 @@
 import { Customer, Product, Invoice, StoreInfo, InvoiceItem, Payment, ActivityLog } from '../types/invoice';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
+import { toast } from 'sonner';
 import { supabase } from './supabase';
 import { parseDateFromDisplay } from './dateUtils';
 
@@ -149,7 +150,8 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
       const { error } = await Promise.race([upsertPromise, timeoutPromise]) as any;
 
       if (error) {
-        console.warn('Supabase store sync failed/timed out:', error.message);
+        console.error('Supabase store sync failed/timed out:', error, 'Payload:', payload);
+        toast.error('Failed to sync to cloud: ' + (error.message || 'Timeout'));
       }
     } catch (err) {
       console.error('Failed to sync store info:', err);
