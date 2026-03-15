@@ -10,12 +10,6 @@ function hexToRgb(hex: string): [number, number, number] {
         : [0, 0, 0];
 }
 
-function getContrastColor(hex: string): [number, number, number] {
-    const [r, g, b] = hexToRgb(hex);
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq >= 128 ? [17, 24, 39] : [255, 255, 255];
-}
-
 function numberToWords(num: number): string {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -38,15 +32,17 @@ export function generateInvoicePDF(
 ): jsPDF {
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageW = 210;
-    const margin = 10;
+    const margin = 15;
     const contentW = pageW - margin * 2;
     const primary = hexToRgb(settings.primaryColor);
-    const primaryText = getContrastColor(settings.primaryColor);
-    const borderColor: [number, number, number] = [226, 232, 240];
-    const textDark: [number, number, number] = [30, 41, 59];
-    const textMid: [number, number, number] = [100, 116, 139];
+    
+    // Aesthetic Colors
+    const textDark: [number, number, number] = [15, 23, 42]; // slate-900
+    const textMid: [number, number, number] = [71, 85, 105]; // slate-600
+    const textLight: [number, number, number] = [148, 163, 184]; // slate-400
+    const borderLight: [number, number, number] = [226, 232, 240]; // slate-200
+    const borderDark: [number, number, number] = [15, 23, 42]; // slate-900
 
-    // Font mapping - jsPDF standard fonts fallback
     const fontMap: Record<string, string> = {
         inter: 'helvetica',
         roboto: 'helvetica',
@@ -55,208 +51,183 @@ export function generateInvoicePDF(
     };
     const activeFont = fontMap[settings.fontFamily] || 'helvetica';
 
-    let y = margin;
-    const midX = margin + contentW / 2;
+    let y = margin + 5; // Top padding
 
-    const setBorderColor = () => pdf.setDrawColor(...borderColor);
-    const setTextDark = () => pdf.setTextColor(...textDark);
-    const setTextMid = () => pdf.setTextColor(...textMid);
-
-    // ── Top info bar ──────────────────────────────────────────────
-    setBorderColor();
-    pdf.setLineWidth(0.3);
-    const barH = 10; // Slightly taller bar for logo
-
-    // Calculate columns based on logo presence
-    // Calculate logo width based on settings
-    const logoSizeMap: Record<string, number> = {
-        small: 20,
-        medium: 30,
-        large: 45
+    // Helpers
+    const setFont = (style: 'normal' | 'bold' | 'italic', size: number, color: [number, number, number]) => {
+        pdf.setFont(activeFont, style);
+        pdf.setFontSize(size);
+        pdf.setTextColor(...color);
     };
-    const logoW = settings.logo ? (logoSizeMap[settings.logoSize] || 30) : 0;
-    const infoColsW = (contentW - logoW) / 3;
+
+    // ── Header Section ──────────────────────────────────────────────
+    
+    const logoSizeMap: Record<string, number> = {
+        small: 15,
+        medium: 20,
+        large: 28
+    };
+    const maxLogoH = logoSizeMap[settings.logoSize] || 20;
+    let rightHeaderY = y;
+    
+    // Right side text (Invoice Title & Logo)
+    setFont('normal', 24, [203, 213, 225]); // slate-300 light title
+    pdf.text(storeInfo.gstin ? 'TAX INVOICE' : 'INVOICE', margin + contentW, rightHeaderY + 6, { align: 'right' });
+    rightHeaderY += 12;
 
     if (settings.logo) {
         try {
-            // Need to calculate aspect ratio properly so it doesn't stretch
             const imgProps = pdf.getImageProperties(settings.logo);
             const imgRatio = imgProps.width / imgProps.height;
-            const maxW = logoW - 4;
-            const maxH = barH - 2;
-            const boxRatio = maxW / maxH;
-
-            let finalW = maxW;
-            let finalH = maxH;
+            const maxLogoW = 50;
             
-            if (imgRatio > boxRatio) {
-                // Image is wider than box
+            let finalH = maxLogoH;
+            let finalW = finalH * imgRatio;
+            
+            if (finalW > maxLogoW) {
+                finalW = maxLogoW;
                 finalH = finalW / imgRatio;
-            } else {
-                // Image is taller than box
-                finalW = finalH * imgRatio;
             }
             
-            // Center the image in the allocated logo box
-            const offsetX = margin + 2 + ((maxW - finalW) / 2);
-            const offsetY = y + 1 + ((maxH - finalH) / 2);
-
-            pdf.addImage(settings.logo, 'PNG', offsetX, offsetY, finalW, finalH, undefined, 'FAST');
+            pdf.addImage(settings.logo, 'PNG', margin + contentW - finalW, rightHeaderY, finalW, finalH, undefined, 'FAST');
+            rightHeaderY += finalH + 5;
         } catch (e) {
             console.error('Error adding logo to PDF:', e);
         }
-        pdf.line(margin + logoW, y, margin + logoW, y + barH);
     }
 
-    pdf.setFontSize(8);
-    setTextDark();
-    pdf.setFont(activeFont, 'bold');
+    // Invoice Meta (No, Date)
+    setFont('normal', 9, textMid);
+    pdf.text('Invoice No:', margin + contentW - 25, rightHeaderY, { align: 'right' });
+    pdf.text('Date:', margin + contentW - 25, rightHeaderY + 5, { align: 'right' });
+    
+    setFont('bold', 9, textDark);
+    pdf.text(invoice.invoiceNumber, margin + contentW, rightHeaderY, { align: 'right' });
+    pdf.text(formatDateForDisplay(invoice.date), margin + contentW, rightHeaderY + 5, { align: 'right' });
+    
+    const rightSideBottomY = rightHeaderY + 10;
 
-    // GSTIN Column
-    pdf.text(`GSTIN No: ${storeInfo.gstin}`, margin + logoW + 2, y + (barH / 2) + 1);
-    pdf.line(margin + logoW + infoColsW, y, margin + logoW + infoColsW, y + barH);
+    // Left side text (Store Info)
+    let leftY = y + 6;
+    setFont('bold', 18, primary);
+    const storeName = storeInfo.name?.toUpperCase() || 'YOUR COMPANY';
+    const storeNameLines = pdf.splitTextToSize(storeName, contentW * 0.5);
+    pdf.text(storeNameLines, margin, leftY);
+    leftY += storeNameLines.length * 7;
 
-    // Title Column
-    pdf.text(storeInfo.gstin ? 'TAX INVOICE' : 'BILL OF SUPPLY', margin + logoW + infoColsW + (infoColsW / 2), y + (barH / 2) + 1, { align: 'center' });
-    pdf.line(margin + logoW + infoColsW * 2, y, margin + logoW + infoColsW * 2, y + barH);
+    setFont('normal', 9, textMid);
+    const addressLines = pdf.splitTextToSize(storeInfo.address || 'Company Address', contentW * 0.5);
+    pdf.text(addressLines, margin, leftY);
+    leftY += addressLines.length * 4;
 
-    // Phone Column
-    pdf.text(`Mob:- ${storeInfo.phone}`, margin + contentW - 2, y + (barH / 2) + 1, { align: 'right' });
-
-    pdf.rect(margin, y, contentW, barH);
-    y += barH;
-
-    // ── Company name banner ───────────────────────────────────────
-    pdf.setFillColor(...primary);
-    const bannerH = 12; // Increased height for better centering
-    pdf.rect(margin, y, contentW, bannerH, 'F');
-    pdf.setTextColor(...primaryText);
-    pdf.setFontSize(16); // Slightly larger
-    pdf.setFont('helvetica', 'bold');
-    // Center text both horizontally and vertically
-    pdf.text(storeInfo.name.toUpperCase(), pageW / 2, y + (bannerH / 2) + 1.5, { align: 'center' });
-    y += bannerH;
-
-    // ── Address ───────────────────────────────────────────────────
-    setBorderColor();
-    setTextDark();
-    pdf.setFontSize(8.5);
-    pdf.setFont('helvetica', 'normal');
-
-    // Split address if it's too long
-    const storeAddrLines = pdf.splitTextToSize(storeInfo.address, contentW - 4);
-    const addrBoxH = Math.max(8, storeAddrLines.length * 4 + 2);
-    pdf.text(storeAddrLines, pageW / 2, y + (addrBoxH / 2) + 1, { align: 'center' });
-    pdf.rect(margin, y, contentW, addrBoxH);
-    y += addrBoxH;
-
+    if (storeInfo.phone) {
+        pdf.text(`Phone: ${storeInfo.phone}`, margin, leftY);
+        leftY += 4;
+    }
+    if (storeInfo.email) {
+        pdf.text(`Email: ${storeInfo.email}`, margin, leftY);
+        leftY += 4;
+    }
+    if (storeInfo.gstin) {
+        setFont('bold', 9, textDark);
+        pdf.text(`GSTIN: ${storeInfo.gstin}`, margin, leftY + 1);
+        leftY += 5;
+    }
     if (storeInfo.authDistributors) {
-        const authLines = pdf.splitTextToSize(storeInfo.authDistributors, contentW - 4);
-        const authBoxH = Math.max(8, authLines.length * 4 + 2);
-        pdf.text(authLines, pageW / 2, y + (authBoxH / 2) + 1, { align: 'center' });
-        pdf.rect(margin, y, contentW, authBoxH);
-        y += authBoxH;
+        setFont('italic', 8, textDark);
+        const authLines = pdf.splitTextToSize(storeInfo.authDistributors, contentW * 0.5);
+        pdf.text(authLines, margin, leftY + 1);
+        leftY += authLines.length * 3 + 1;
     }
 
-    // ── Customer + Invoice details ────────────────────────────────
-    pdf.setFontSize(8.5);
-    setTextDark();
+    y = Math.max(leftY, rightSideBottomY) + 5;
 
-    // Right side first to get heights
-    pdf.setFont('helvetica', 'bold');
-    const gstinText = `GSTIN No. ${invoice.customer.gstin || ''}`;
-    const invNoText = `INVOICE NO:- ${invoice.invoiceNumber}`;
-    const dateText = `Invoice Date: - ${formatDateForDisplay(invoice.date)}`;
+    // Separator
+    pdf.setDrawColor(...borderLight);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, y, margin + contentW, y);
+    y += 8;
 
-    // Left side: Party details
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Party Name & Address:-', margin + 2, y + 5);
+    // ── Bill To Section ───────────────────────────────────────────
+    setFont('bold', 7.5, textLight);
+    pdf.text('BILL TO', margin, y);
+    y += 5;
 
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Name:', margin + 2, y + 10);
-    pdf.setFont('helvetica', 'bold');
-    const partyNameLines = pdf.splitTextToSize(invoice.customer.name, (contentW / 2) - 15);
-    pdf.text(partyNameLines, margin + 14, y + 10);
+    setFont('bold', 12, textDark);
+    const custNameLines = pdf.splitTextToSize(invoice.customer.name || 'Walk-in Customer', contentW * 0.6);
+    pdf.text(custNameLines, margin, y);
+    y += custNameLines.length * 5;
 
-    const partyNameH = partyNameLines.length * 4;
+    setFont('normal', 9, textMid);
+    if (invoice.customer.address) {
+        const custAddrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
+        pdf.text(custAddrLines, margin, y);
+        y += custAddrLines.length * 4;
+    }
+    if (invoice.customer.phone) {
+        pdf.text(`Phone: ${invoice.customer.phone}`, margin, y);
+        y += 4;
+    }
+    if (invoice.customer.gstin) {
+        setFont('bold', 9, textDark);
+        pdf.text(`GSTIN: ${invoice.customer.gstin}`, margin, y + 1);
+        y += 5;
+    }
 
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Address:', margin + 2, y + 10 + partyNameH);
-    const addrLines = pdf.splitTextToSize(invoice.customer.address || '', (contentW / 2) - 18);
-    pdf.text(addrLines, margin + 20, y + 10 + partyNameH);
+    y += 5;
 
-    const partyAddrH = addrLines.length * 4;
-    const leftHeight = 10 + partyNameH + partyAddrH + 2;
-
-    // Right side rendering
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(gstinText, midX + 2, y + 5);
-    pdf.text(invNoText, margin + contentW - 2, y + 5, { align: 'right' });
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Invoice Date:', midX + 2, y + 12);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(formatDateForDisplay(invoice.date), margin + contentW - 2, y + 12, { align: 'right' });
-
-    const detailRowH = Math.max(28, leftHeight);
-    pdf.rect(margin, y, contentW, detailRowH);
-    pdf.line(midX, y, midX, y + detailRowH);
-    y += detailRowH;
-
-    // ── Items table header ────────────────────────────────────────
+    // ── Items Table Header ────────────────────────────────────────
     const isSameState = storeInfo.state === invoice.customer.state;
     const cols = isSameState
         ? [
-            { label: 'S.\nNo', w: 10 },
-            { label: 'Particulars', w: 60 },
-            { label: 'HSN\nCode', w: 14 },
-            { label: 'Qty', w: 10 },
-            { label: 'Rate', w: 18 },
-            { label: 'Amount', w: 18 },
-            { label: `CGST\n${(invoice.items[0]?.taxRate || 18) / 2}%`, w: 15 },
-            { label: `SGST\n${(invoice.items[0]?.taxRate || 18) / 2}%`, w: 15 },
-            { label: 'Amount', w: 30 },
+            { label: '#', w: 8, align: 'center' },
+            { label: 'Item Description', w: 62, align: 'left' },
+            { label: 'HSN', w: 15, align: 'center' },
+            { label: 'Qty', w: 10, align: 'center' },
+            { label: 'Rate', w: 20, align: 'right' },
+            { label: 'CGST', w: 16, align: 'right' },
+            { label: 'SGST', w: 16, align: 'right' },
+            { label: 'Amount', w: 33, align: 'right' },
         ]
         : [
-            { label: 'S.\nNo', w: 10 },
-            { label: 'Particulars', w: 80 },
-            { label: 'HSN\nCode', w: 14 },
-            { label: 'Qty', w: 10 },
-            { label: 'Rate', w: 20 },
-            { label: 'Amount', w: 20 },
-            { label: `IGST\n${invoice.items[0]?.taxRate || 18}%`, w: 16 },
-            { label: 'Amount', w: 20 },
+            { label: '#', w: 8, align: 'center' },
+            { label: 'Item Description', w: 78, align: 'left' },
+            { label: 'HSN', w: 15, align: 'center' },
+            { label: 'Qty', w: 10, align: 'center' },
+            { label: 'Rate', w: 22, align: 'right' },
+            { label: 'IGST', w: 16, align: 'right' },
+            { label: 'Amount', w: 31, align: 'right' },
         ];
 
-    // Adjust column widths to fit contentW (190mm)
+    // Scale to contentW
     const totalColsW = cols.reduce((sum, c) => sum + c.w, 0);
     const scaleFactor = contentW / totalColsW;
     cols.forEach(c => c.w = c.w * scaleFactor);
 
-    const hdrH = 12;
-    pdf.setFillColor(...primary);
-    pdf.rect(margin, y, contentW, hdrH, 'F');
-    pdf.setTextColor(...primaryText);
-    pdf.setFontSize(7.5);
-    pdf.setFont('helvetica', 'bold');
+    // Header Line
+    pdf.setDrawColor(...borderDark);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, y, margin + contentW, y);
+    y += 5;
 
+    setFont('bold', 8.5, textDark);
     let cx = margin;
     for (const col of cols) {
-        const lines = col.label.split('\n');
-        if (lines.length === 2) {
-            pdf.text(lines[0], cx + col.w / 2, y + 4.5, { align: 'center' });
-            pdf.text(lines[1], cx + col.w / 2, y + 8.5, { align: 'center' });
-        } else {
-            pdf.text(lines[0], cx + col.w / 2, y + 7, { align: 'center' });
-        }
-        setBorderColor();
-        pdf.line(cx + col.w, y, cx + col.w, y + hdrH);
+        let textX = cx;
+        if (col.align === 'center') textX = cx + col.w / 2;
+        else if (col.align === 'right') textX = cx + col.w - 2;
+        else textX = cx + 2;
+
+        pdf.text(col.label, textX, y, { align: col.align as "center" | "right" | "left" });
         cx += col.w;
     }
-    pdf.rect(margin, y, contentW, hdrH);
-    y += hdrH;
+    
+    y += 2;
+    // Bottom Header Line
+    pdf.line(margin, y, margin + contentW, y);
+    y += 4;
 
-    // ── Items rows ────────────────────────────────────────────────
+    // ── Items Rows ────────────────────────────────────────────────
     let cgstTotal = 0;
     let sgstTotal = 0;
     let igstTotal = 0;
@@ -278,192 +249,233 @@ export function generateInvoicePDF(
         grandTotal += rowTotal;
 
         const nameLines = pdf.splitTextToSize(item.name, cols[1].w - 4);
-        const rowH = Math.max(8, nameLines.length * 4.5 + 2);
+        const rowH = Math.max(8, nameLines.length * 4.5);
 
-        setTextDark();
-        pdf.setFontSize(7.5);
-        pdf.setFont('helvetica', 'normal');
+        // Page break if near bottom
+        if (y + rowH > 270) {
+            // Draw a subtle line to close the current page's table
+            pdf.setDrawColor(...borderLight);
+            pdf.setLineWidth(0.1);
+            pdf.line(margin, y, margin + contentW, y);
 
-        cx = margin;
-        const vals = isSameState
+            pdf.addPage();
+            y = margin;
+            
+            // Re-draw header
+            pdf.setDrawColor(...borderDark);
+            pdf.setLineWidth(0.5);
+            pdf.line(margin, y, margin + contentW, y);
+            y += 5;
+            setFont('bold', 8.5, textDark);
+            let hx = margin;
+            for (const col of cols) {
+                let textX = hx;
+                if (col.align === 'center') textX = hx + col.w / 2;
+                else if (col.align === 'right') textX = hx + col.w - 2;
+                else textX = hx + 2;
+                pdf.text(col.label, textX, y, { align: col.align as "center" | "right" | "left" });
+                hx += col.w;
+            }
+            y += 2;
+            pdf.line(margin, y, margin + contentW, y);
+            y += 4;
+        }
+
+        setFont('normal', 8.5, textDark);
+        pdf.setTextColor(30, 41, 59); // slightly offset text
+        
+        let rcx = margin;
+        
+        const stringVals = isSameState
             ? [
                 String(i + 1),
-                item.name,
-                item.hsn || '',
+                nameLines,
+                item.hsn || '-',
                 String(item.quantity),
-                item.rate.toFixed(2),
-                item.amount.toFixed(2),
-                cgst.toFixed(2),
-                sgst.toFixed(2),
-                rowTotal.toFixed(2),
-            ]
-            : [
+                item.rate.toLocaleString('en-IN'),
+                Math.round(cgst).toLocaleString('en-IN'),
+                Math.round(sgst).toLocaleString('en-IN'),
+                Math.round(rowTotal).toLocaleString('en-IN'),
+            ] : [
                 String(i + 1),
-                item.name,
-                item.hsn || '',
+                nameLines,
+                item.hsn || '-',
                 String(item.quantity),
-                item.rate.toFixed(2),
-                item.amount.toFixed(2),
-                igst.toFixed(2),
-                rowTotal.toFixed(2),
+                item.rate.toLocaleString('en-IN'),
+                Math.round(igst).toLocaleString('en-IN'),
+                Math.round(rowTotal).toLocaleString('en-IN'),
             ];
 
         for (let ci = 0; ci < cols.length; ci++) {
             const col = cols[ci];
-            const val = vals[ci];
+            const val = stringVals[ci];
+            
+            let textX = rcx;
+            if (col.align === 'center') textX = rcx + col.w / 2;
+            else if (col.align === 'right') textX = rcx + col.w - 2;
+            else textX = rcx + 2;
+
             if (ci === 1) {
-                // Particulars - wrap text
-                pdf.text(nameLines, cx + 2, y + 5);
-            } else if (ci === 0 || ci === 2 || ci === 3) {
-                pdf.text(val, cx + col.w / 2, y + 5, { align: 'center' });
+                // Name Lines
+                setFont('bold', 8.5, textDark);
+                pdf.text(val as string[], textX, y + 4);
             } else {
-                pdf.text(val, cx + col.w - 2, y + 5, { align: 'right' });
+                setFont('normal', 8.5, textMid);
+                if (ci === cols.length - 1) setFont('bold', 8.5, textDark); // Make amount bold
+                if (ci === 0) setFont('normal', 8, textLight); // Make index lighter
+                pdf.text(val as string, textX, y + 4, { align: col.align as "center" | "right" | "left" });
+                
+                // Add % subtext for taxes
+                if (isSameState && (ci === 5 || ci === 6)) {
+                    setFont('normal', 7, textLight);
+                    pdf.text(`${(item.taxRate || 18) / 2}%`, textX, y + 7.5, { align: 'right' });
+                } else if (!isSameState && ci === 5) {
+                    setFont('normal', 7, textLight);
+                    pdf.text(`${item.taxRate || 18}%`, textX, y + 7.5, { align: 'right' });
+                }
             }
-            setBorderColor();
-            pdf.line(cx + col.w, y, cx + col.w, y + rowH);
-            cx += col.w;
+            rcx += col.w;
         }
-        pdf.rect(margin, y, contentW, rowH);
+
         y += rowH;
-
-        // Page break if near bottom
-        if (y > 270 && i < invoice.items.length - 1) {
-            pdf.addPage();
-            y = margin;
-            // Redraw header on new page? (Optional, but good practice)
-        }
+        
+        // Subtle row separator
+        pdf.setDrawColor(...borderLight);
+        pdf.setLineWidth(0.1);
+        pdf.line(margin, y, margin + contentW, y);
+        y += 1; // Slight gap before next row
     }
 
-    // ── Transport charges row ─────────────────────────────────────
+    // ── Summary Section ───────────────────────────────────────────
+    y += 5; // Gap before summary
+
+    const summaryW = 70;
+    const summaryX = margin + contentW - summaryW;
+    
+    // Page break protection for summary
+    if (y > 230) {
+        pdf.addPage();
+        y = margin;
+    }
+
+    const drawSummaryRow = (label: string, value: string, isDiscount = false) => {
+        setFont('normal', 9, textMid);
+        pdf.text(label, summaryX, y);
+        if (isDiscount) setFont('bold', 9, [5, 150, 105]); // emerald-600
+        else setFont('bold', 9, textDark);
+        pdf.text(value, summaryX + summaryW, y, { align: 'right' });
+        y += 6;
+    };
+
+    drawSummaryRow('Subtotal', amountTotal.toLocaleString('en-IN'));
     if (invoice.transportCharges > 0) {
-        const tcH = 8;
-        setTextDark();
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(7.5);
-        
-        const tcLabelW = cols.slice(0, cols.length - 1).reduce((a, col) => a + col.w, 0);
-        
-        pdf.text('Transportation Charges', margin + cols[0].w + 2, y + 5);
-        
-        const lastCol = cols[cols.length - 1];
-        pdf.text(invoice.transportCharges.toFixed(2), margin + tcLabelW + lastCol.w - 2, y + 5, { align: 'right' });
-        
-        setBorderColor();
-        pdf.rect(margin, y, contentW, tcH);
-        pdf.line(margin + tcLabelW, y, margin + tcLabelW, y + tcH);
-        
-        y += tcH;
+        drawSummaryRow('Transportation Charges', invoice.transportCharges.toLocaleString('en-IN'));
+    }
+    if (invoice.discount > 0) {
+        drawSummaryRow('Discount', `- ${invoice.discount.toLocaleString('en-IN')}`, true);
     }
 
-    // ── Totals row ────────────────────────────────────────────────
-    const totalH = 8;
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    setTextDark();
-    
-    const totalLabelW = cols.slice(0, cols.length - 1).reduce((a, col) => a + col.w, 0);
-    pdf.text('Amount', margin + totalLabelW - 4, y + 5, { align: 'right' });
-    
-    const finalCol = cols[cols.length - 1];
-    pdf.text((grandTotal + invoice.transportCharges).toFixed(2), margin + totalLabelW + finalCol.w - 2, y + 5, { align: 'right' });
-    
-    setBorderColor();
-    pdf.rect(margin, y, contentW, totalH);
-    pdf.line(margin + totalLabelW, y, margin + totalLabelW, y + totalH);
-    
-    y += totalH;
-
-    // ── Final total ───────────────────────────────────────────────
+    // Grand total
     const baseTotal = amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + invoice.transportCharges - invoice.discount;
     const finalTotal = Math.round(baseTotal);
 
+    y += 2;
+    pdf.setDrawColor(...borderLight);
+    pdf.setLineWidth(0.3);
+    pdf.line(summaryX, y - 4, summaryX + summaryW, y - 4);
+    
+    setFont('bold', 7.5, textLight);
+    pdf.text('TOTAL AMOUNT (INR)', summaryX, y + 1);
+    
+    setFont('bold', 16, primary);
+    pdf.text(`RS. ${finalTotal.toLocaleString('en-IN')}`, summaryX + summaryW, y + 1, { align: 'right' });
+    
+    y += 5;
+
+    // ── Footer: Amount In Words & Terms ───────────────────────────
+    y = Math.max(y + 10, y + 10);
+    
+    // Page break protection for footer
+    if (y > 250) {
+        pdf.addPage();
+        y = margin;
+    }
+
     const amtInWords = `${numberToWords(finalTotal)} Only`;
-    const amtRowH = 10;
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8.5);
+    setFont('bold', 7.5, textLight);
+    pdf.text('AMOUNT IN WORDS', margin, y);
+    y += 4;
+    setFont('bold', 9, textDark);
+    pdf.text(amtInWords, margin, y);
+    y += 10;
 
-    // Wrap amount in words if too long
-    const wordLines = pdf.splitTextToSize(amtInWords, contentW - 60);
-    pdf.text(wordLines, margin + 2, y + 6);
+    // Line separator for footer
+    pdf.setDrawColor(...borderLight);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, y, margin + contentW, y);
+    y += 8;
 
-    pdf.setFontSize(9);
-    pdf.text('TOTAL AMOUNT:', margin + contentW - 40, y + 6);
-    pdf.setTextColor(...primary);
-    pdf.setFontSize(11);
-    pdf.text(finalTotal.toLocaleString('en-IN'), margin + contentW - 2, y + 6, { align: 'right' });
-    pdf.rect(margin, y, contentW, amtRowH);
-    y += amtRowH;
-
-    // ── Footer: Terms & Signature ─────────────────────────────────
-    const footerH = 35;
-    if (y + footerH > 280) { pdf.addPage(); y = margin; }
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    setTextDark();
-    pdf.text('Terms and Conditions E. & O. E.', margin + 2, y + 5);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7.5);
-    if (invoice.notes) {
-        const noteLines = pdf.splitTextToSize(invoice.notes, contentW / 2 - 4);
-        pdf.text(noteLines, margin + 2, y + 10);
+    const footerTopY = y;
+    let leftSideY = y;
+    
+    // Terms & Conditions (Left)
+    if (invoice.notes || settings.invoiceNotes) {
+        setFont('bold', 7.5, textLight);
+        pdf.text('TERMS & CONDITIONS', margin, leftSideY);
+        leftSideY += 5;
+        
+        setFont('normal', 8, textMid);
+        const termsLines = pdf.splitTextToSize((invoice.notes || settings.invoiceNotes) as string, contentW * 0.6);
+        pdf.text(termsLines, margin, leftSideY);
+        leftSideY += termsLines.length * 4;
     }
 
-    // Signature side
-    pdf.setFont(activeFont, 'normal');
-    pdf.text('Receiver\'s Signature', midX + 2, y + 5);
+    // Signature (Right)
+    const sigBoxW = 60;
+    const sigBoxX = margin + contentW - sigBoxW;
+    let rightSideY = footerTopY;
 
-    pdf.setFont(activeFont, 'bold');
-    pdf.text(`For:- ${storeInfo.name}`, margin + contentW - 2, y + footerH - 12, { align: 'right' });
-
-    // Signature Image
-    if (settings.showSignature && settings.signatureImage) {
-        try {
-            const sigProps = pdf.getImageProperties(settings.signatureImage);
-            const sigRatio = sigProps.width / sigProps.height;
-            const maxSigW = 40;
-            const maxSigH = 12;
-            const boxSigRatio = maxSigW / maxSigH;
-
-            let finalSigW = maxSigW;
-            let finalSigH = maxSigH;
-            
-            if (sigRatio > boxSigRatio) {
-                finalSigH = finalSigW / sigRatio;
-            } else {
-                finalSigW = finalSigH * sigRatio;
+    if (settings.showSignature) {
+        if (settings.signatureImage) {
+            try {
+                const imgProps = pdf.getImageProperties(settings.signatureImage);
+                const imgRatio = imgProps.width / imgProps.height;
+                const maxSigH = 15;
+                let finalW = maxSigH * imgRatio;
+                if (finalW > sigBoxW) {
+                    finalW = sigBoxW;
+                }
+                pdf.addImage(settings.signatureImage, 'PNG', sigBoxX + (sigBoxW - finalW)/2, rightSideY, finalW, maxSigH, undefined, 'FAST');
+                rightSideY += maxSigH + 2;
+            } catch (e) {
+                console.error('Error adding signature img:', e);
+                rightSideY += 17;
             }
-
-            // Right-aligned, bottom-aligned relative to the allocated box 
-            // (box is margin + contentW - 2 - maxSigW, up to margin + contentW - 2)
-            const sigOffsetX = margin + contentW - 2 - finalSigW;
-            const sigOffsetY = y + footerH - 12 - finalSigH - 1; // 1mm padding above the name text
-
-            pdf.addImage(settings.signatureImage, 'PNG', sigOffsetX, sigOffsetY, finalSigW, finalSigH, undefined, 'FAST');
-        } catch (e) {
-            console.error('Error adding signature to PDF:', e);
+        } else {
+            rightSideY += 17;
         }
+
+        pdf.setDrawColor(...borderLight);
+        pdf.setLineWidth(0.5);
+        pdf.line(sigBoxX, rightSideY, sigBoxX + sigBoxW, rightSideY);
+        rightSideY += 4;
+
+        setFont('bold', 8, textDark);
+        const authSigner = settings.signatureText || `For ${storeInfo.name || 'Company'}`;
+        const authSignerLines = pdf.splitTextToSize(authSigner, sigBoxW);
+        pdf.text(authSignerLines, sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
+        rightSideY += authSignerLines.length * 4;
+
+        setFont('normal', 7, textLight);
+        pdf.text('Authorized Signatory', sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
+        rightSideY += 4;
     }
 
-    pdf.setFont(activeFont, 'normal');
-    pdf.text(settings.showSignature && settings.signatureText ? settings.signatureText : 'Authorized Signatory', margin + contentW - 2, y + footerH - 5, { align: 'right' });
-
-    pdf.line(midX, y, midX, y + footerH);
-    pdf.rect(margin, y, contentW, footerH);
-    y += footerH;
-
-    // ── Thank you footer ─────────────────────────────────────────
+    // Footer Text
     if (settings.showFooter) {
-        pdf.setTextColor(...textMid);
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(8);
-        pdf.text(settings.footerText || 'Thank you for your business!', pageW / 2, y + 6, { align: 'center' });
-    } else {
-        setTextMid();
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(8);
-        pdf.text('Thank you for your business!', pageW / 2, y + 6, { align: 'center' });
+        const bottomY = 285;
+        setFont('normal', 8, textLight);
+        pdf.text(settings.footerText || 'Thank you for your business!', pageW / 2, bottomY, { align: 'center' });
     }
 
     return pdf;

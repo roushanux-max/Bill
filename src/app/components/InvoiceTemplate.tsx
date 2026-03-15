@@ -25,7 +25,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
   const totalTax = Object.values(taxByRate).reduce((sum, tax) => sum + tax, 0);
   const totalBeforeRoundOff = subtotal + totalTax + (invoice.transportCharges ?? 0) - (invoice.discount ?? 0);
-  const roundOff = Math.round(totalBeforeRoundOff) - totalBeforeRoundOff;
   const total = Math.round(totalBeforeRoundOff);
 
   const numberToWords = (num: number): string => {
@@ -54,26 +53,10 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   };
 
   const logoSizeMap = {
-    small: 'h-8 sm:h-12',
-    medium: 'h-10 sm:h-16',
-    large: 'h-14 sm:h-20',
+    small: 'h-10 sm:h-14',
+    medium: 'h-14 sm:h-20',
+    large: 'h-20 sm:h-28',
   };
-
-  const getContrastColor = (hexColor: string) => {
-    // Remove the hash if it exists
-    const hex = hexColor.replace('#', '');
-    // Parse RGB values
-    if (hex.length < 6) return '#111827';
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    // Calculate YIQ brightness
-    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    // Return white for dark backgrounds, dark gray for light backgrounds
-    return yiq >= 128 ? '#111827' : '#ffffff';
-  };
-
-  const headerTextColor = getContrastColor(settings.primaryColor);
 
   return (
     <div
@@ -83,124 +66,83 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
         color: '#1e293b',
         width: '210mm',
         minHeight: '297mm',
-        padding: '10mm',
+        padding: '12mm 15mm',
         margin: '0 auto',
         fontSize: '10pt',
       }}
     >
-      <div>
-        {/* Top Info Bar */}
-        <div className="flex items-stretch border-b" style={{ borderColor: '#e2e8f0' }}>
-          {settings.logo && (
-            <div className="border-r p-2 flex items-center justify-center" style={{ borderColor: '#e2e8f0', minWidth: '30mm' }}>
+      <div className="flex flex-col h-full">
+        {/* Header Section */}
+        <div className="flex justify-between items-start mb-10">
+          <div className="flex-1 pr-6">
+            <h1 className="text-3xl font-bold text-slate-900 leading-tight mb-2 tracking-wide" style={{ color: settings.primaryColor }}>
+              {storeInfo?.name?.toUpperCase() || 'YOUR COMPANY'}
+            </h1>
+            <div className="text-slate-600 text-sm space-y-1">
+              <p className="whitespace-pre-line">{storeInfo?.address || 'Company Address'}</p>
+              {storeInfo?.phone && <p>Phone: {storeInfo.phone}</p>}
+              {storeInfo?.email && <p>Email: {storeInfo.email}</p>}
+              {storeInfo?.gstin && <p className="font-semibold mt-1 text-slate-800">GSTIN: {storeInfo.gstin}</p>}
+              {storeInfo?.authDistributors && <p className="text-xs italic mt-2">{storeInfo.authDistributors}</p>}
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-end text-right">
+            <h2 className="text-4xl font-light text-slate-300 tracking-widest uppercase mb-4">
+              {storeInfo?.gstin ? 'TAX INVOICE' : 'INVOICE'}
+            </h2>
+            {settings.logo && (
               <img
                 src={settings.logo}
-                alt="Logo"
-                className={`object-contain ${logoSizeMap[settings.logoSize] || 'h-12'}`}
+                alt="Company Logo"
+                className={`object-contain mb-4 ${logoSizeMap[settings.logoSize] || 'h-16'}`}
                 style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }}
               />
-            </div>
-          )}
-          <div className="flex-1 grid grid-cols-3">
-            <div className="border-r p-2 flex items-center" style={{ borderColor: '#e2e8f0' }}>
-              {storeInfo?.gstin && <div className="font-semibold">GSTIN No: {storeInfo.gstin}</div>}
-            </div>
-            <div className="border-r p-2 text-center flex items-center justify-center" style={{ borderColor: '#e2e8f0' }}>
-              <div className="font-bold">{storeInfo?.gstin ? 'TAX INVOICE' : 'BILL OF SUPPLY'}</div>
-            </div>
-            <div className="p-2 text-right flex items-center justify-end">
-              {storeInfo?.phone && <div className="font-semibold">Mob:- {storeInfo.phone}</div>}
+            )}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-auto">
+              <div className="text-slate-500 font-medium">Invoice No:</div>
+              <div className="font-semibold text-slate-900">{invoice.invoiceNumber}</div>
+              <div className="text-slate-500 font-medium">Date:</div>
+              <div className="font-semibold text-slate-900">{formatDateForDisplay(invoice.date)}</div>
             </div>
           </div>
         </div>
 
-        {/* Company Name Banner */}
-        <div
-          className="flex items-center justify-center py-4 px-4 min-h-[14mm]"
-          style={{
-            backgroundColor: settings.primaryColor,
-            color: getContrastColor(settings.primaryColor),
-          }}
-        >
-          <style>{`
-            .company-name-banner { color: ${getContrastColor(settings.primaryColor)} !important; }
-          `}</style>
-          <h1 className="text-2xl font-bold tracking-wide company-name-banner text-center leading-none">
-            {storeInfo?.name}
-          </h1>
-        </div>
+        <div className="border-b border-slate-200 mb-8"></div>
 
-        {/* Address and Auth Info */}
-        <div className="border-b text-center py-2 px-2" style={{ borderColor: '#e2e8f0' }}>
-          <div className="font-medium leading-tight">{storeInfo?.address || 'Address not provided'}</div>
-        </div>
-        {storeInfo?.authDistributors && (
-          <div className="border-b text-center py-2 px-2" style={{ borderColor: '#e2e8f0' }}>
-            <div className="leading-tight">{storeInfo.authDistributors}</div>
-          </div>
-        )}
-
-        {/* Customer and Invoice Details */}
-        <div className="grid grid-cols-2 border-b" style={{ borderColor: '#e2e8f0' }}>
-          <div className="border-r p-3" style={{ borderColor: '#e2e8f0' }}>
-            <div className="font-semibold mb-2">Party Name & Address:-</div>
-            <div className="space-y-2">
-              <div>
-                <div className="text-xs text-gray-600 font-medium">Name:</div>
-                <div className="font-medium">{invoice.customer?.name || '—'}</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-600 font-medium">Address:</div>
-                <div className="text-sm leading-tight">{invoice.customer?.address || '—'}</div>
-              </div>
-            </div>
-          </div>
-          <div className="p-3">
-            <div className="flex justify-between mb-2">
-              <div>
-                <div className="font-semibold mb-1">GSTIN No. {invoice.customer?.gstin}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-semibold mb-1">INVOICE NO:- {invoice.invoiceNumber}</div>
-              </div>
-            </div>
-            <div className="flex justify-between text-right">
-              <div className="font-semibold">Invoice Date: -</div>
-              <div className="font-medium">{formatDateForDisplay(invoice.date)}</div>
-            </div>
+        {/* Bill To Section */}
+        <div className="mb-10">
+          <h3 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-3">Bill To</h3>
+          <div className="text-sm space-y-1">
+            <p className="font-bold text-lg text-slate-900">{invoice.customer?.name || 'Walk-in Customer'}</p>
+            {invoice.customer?.address && <p className="text-slate-600 max-w-sm">{invoice.customer.address}</p>}
+            {invoice.customer?.phone && <p className="text-slate-600">Phone: {invoice.customer.phone}</p>}
+            {invoice.customer?.gstin && <p className="font-semibold text-slate-800 mt-1">GSTIN: {invoice.customer.gstin}</p>}
           </div>
         </div>
 
         {/* Items Table */}
-        <div>
-          <table className="w-full" style={{ borderColor: '#e2e8f0', borderCollapse: 'collapse' }}>
+        <div className="mb-8">
+          <table className="w-full text-sm text-left">
             <thead>
-              <tr style={{ backgroundColor: settings.primaryColor, color: headerTextColor }}>
-                <th className="border px-2 py-2 text-left" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '40px' }}>S. No</th>
-                <th className="border px-2 py-2 text-left" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', minWidth: '200px' }}>Particulars</th>
-                <th className="border px-2 py-2 text-center" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '80px' }}>HSN Code</th>
-                <th className="border px-2 py-2 text-center" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '50px' }}>Qty</th>
-                <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '80px' }}>Rate</th>
-                <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '90px' }}>Amount</th>
-                {!isSameState && (
-                  <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '80px' }}>
-                    IGST{invoice.items[0]?.taxRate || 18}%
-                  </th>
-                )}
-                {isSameState && (
+              <tr className="border-b-2 border-slate-900 text-slate-900">
+                <th className="py-3 px-1 font-semibold w-12 text-center">#</th>
+                <th className="py-3 px-2 font-semibold">Item Description</th>
+                <th className="py-3 px-2 font-semibold text-center w-20">HSN</th>
+                <th className="py-3 px-2 font-semibold text-center w-16">Qty</th>
+                <th className="py-3 px-2 font-semibold text-right w-24">Rate</th>
+                {isSameState ? (
                   <>
-                    <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '80px' }}>
-                      CGST{(invoice.items[0]?.taxRate || 18) / 2}%
-                    </th>
-                    <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '80px' }}>
-                      SGST{(invoice.items[0]?.taxRate || 18) / 2}%
-                    </th>
+                    <th className="py-3 px-2 font-semibold text-right w-20">CGST</th>
+                    <th className="py-3 px-2 font-semibold text-right w-20">SGST</th>
                   </>
+                ) : (
+                  <th className="py-3 px-2 font-semibold text-right w-24">IGST</th>
                 )}
-                <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '100px' }}>Amount</th>
+                <th className="py-3 px-2 font-semibold text-right w-32">Amount</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {invoice.items.map((item, index) => {
                 const taxAmount = (item.amount * item.taxRate) / 100;
                 const cgst = isSameState ? taxAmount / 2 : 0;
@@ -209,135 +151,122 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 const totalAmount = item.amount + taxAmount;
 
                 return (
-                  <tr key={item.id} style={{ borderColor: '#e2e8f0' }}>
-                    <td className="border px-2 py-2 align-top" style={{ borderColor: '#e2e8f0' }}>{index + 1}</td>
-                    <td className="border px-2 py-2 align-top leading-tight" style={{ borderColor: '#e2e8f0' }}>
-                      {item.name}
+                  <tr key={item.id} className="text-slate-700">
+                    <td className="py-4 px-1 text-center align-top text-slate-400">{index + 1}</td>
+                    <td className="py-4 px-2 align-top">
+                      <p className="font-medium text-slate-900">{item.name}</p>
                     </td>
-                    <td className="border px-2 py-2 text-center align-top" style={{ borderColor: '#e2e8f0' }}>{item.hsn}</td>
-                    <td className="border px-2 py-2 text-center align-top" style={{ borderColor: '#e2e8f0' }}>
-                      {item.quantity}
-                    </td>
-                    <td className="border px-2 py-2 text-right align-top" style={{ borderColor: '#e2e8f0' }}>
-                      {item.rate.toLocaleString('en-IN')}
-                    </td>
-                    <td className="border px-2 py-2 text-right align-top" style={{ borderColor: '#e2e8f0' }}>
-                      {item.amount.toLocaleString('en-IN')}
-                    </td>
-                    {!isSameState && (
-                      <td className="border px-2 py-2 text-right align-top" style={{ borderColor: '#e2e8f0' }}>
-                        {Math.round(igst).toLocaleString('en-IN')}
-                      </td>
-                    )}
-                    {isSameState && (
+                    <td className="py-4 px-2 text-center align-top">{item.hsn || '-'}</td>
+                    <td className="py-4 px-2 text-center align-top">{item.quantity}</td>
+                    <td className="py-4 px-2 text-right align-top">{item.rate.toLocaleString('en-IN')}</td>
+                    {isSameState ? (
                       <>
-                        <td className="border px-2 py-2 text-right align-top" style={{ borderColor: '#e2e8f0' }}>
-                          {Math.round(cgst).toLocaleString('en-IN')}
+                        <td className="py-4 px-2 text-right align-top">
+                          {Math.round(cgst).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{(item.taxRate || 18) / 2}%</span>
                         </td>
-                        <td className="border px-2 py-2 text-right align-top" style={{ borderColor: '#e2e8f0' }}>
-                          {Math.round(sgst).toLocaleString('en-IN')}
+                        <td className="py-4 px-2 text-right align-top">
+                          {Math.round(sgst).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{(item.taxRate || 18) / 2}%</span>
                         </td>
                       </>
+                    ) : (
+                      <td className="py-4 px-2 text-right align-top">
+                        {Math.round(igst).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{item.taxRate || 18}%</span>
+                      </td>
                     )}
-                    <td className="border px-2 py-2 text-right align-top font-semibold" style={{ borderColor: '#e2e8f0' }}>
+                    <td className="py-4 px-2 text-right align-top font-semibold text-slate-900">
                       {Math.round(totalAmount).toLocaleString('en-IN')}
                     </td>
                   </tr>
                 );
               })}
-
-              {/* Transport Charges Row */}
-              <tr style={{ borderColor: '#e2e8f0' }}>
-                <td className="border px-2 py-2 font-medium text-left" colSpan={isSameState ? 8 : 7} style={{ borderColor: '#e2e8f0' }}>
-                  <div style={{ paddingLeft: '2rem' }}>Transportation Charges</div>
-                </td>
-                <td className="border px-2 py-2 text-right font-semibold" style={{ borderColor: '#e2e8f0' }}>
-                  {(invoice.transportCharges || 0).toLocaleString('en-IN')}
-                </td>
-              </tr>
-
-              {/* Total Row */}
-              <tr style={{ borderColor: '#e2e8f0', backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                <td className="border px-4 py-2 font-bold text-right pr-6" colSpan={isSameState ? 8 : 7} style={{ borderColor: '#e2e8f0' }}>
-                  Amount
-                </td>
-                <td className="border px-2 py-2 text-right font-bold" style={{ borderColor: '#e2e8f0' }}>
-                  {(subtotal + totalTax + (invoice.transportCharges || 0)).toLocaleString('en-IN')}
-                </td>
-              </tr>
-
-
-
-              {/* Overall Discount Row */}
-              {invoice.discount > 0 && (
-                <tr style={{ borderColor: '#e2e8f0' }}>
-                  <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
-                  <td className="border px-2 py-2 font-medium" colSpan={isSameState ? 7 : 6} style={{ borderColor: '#e2e8f0' }}>
-                    Overall Discount
-                  </td>
-                  <td className="border px-2 py-2 text-right text-red-600 font-semibold" style={{ borderColor: '#e2e8f0' }}>
-                    - {(invoice.discount || 0).toLocaleString('en-IN')}
-                  </td>
-                </tr>
-              )}
-
-              {/* Amount in Words */}
-              <tr style={{ borderColor: '#e2e8f0' }}>
-                <td className="border px-2 py-2 font-semibold" colSpan={isSameState ? 7 : 6} style={{ borderColor: '#e2e8f0' }}>
-                  {amountInWords}
-                </td>
-                <td className="border px-2 py-2 text-right font-bold whitespace-nowrap" colSpan={2} style={{ borderColor: '#e2e8f0', color: settings.primaryColor, fontSize: '12pt' }}>
-                  <span className="text-slate-800 text-sm mr-2 uppercase tracking-wide">Total Amount:</span> {total.toLocaleString('en-IN')}
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Terms and Footer */}
-        <div className="grid grid-cols-2 border-t" style={{ borderColor: '#e2e8f0' }}>
-          <div className="border-r p-3 space-y-1" style={{ borderColor: '#e2e8f0' }}>
-            <div className="font-bold mb-1">Terms and Conditions E. & O. E.</div>
-            {(invoice?.notes || settings?.invoiceNotes || '').split('\n').map((line, index) => (
-              <div key={index} className="leading-tight">{line}</div>
-            ))}
-          </div>
-          <div className="p-3" style={{ borderColor: '#e2e8f0' }}>
-            <div className="mb-12">
-              <div className="font-semibold">Receiver's Signature</div>
-            </div>
-            <div className="text-right mt-12">
-              <div className="font-semibold">For:- {storeInfo?.name}</div>
-              {settings.showSignature && (
-                <>
-                  {settings.signatureImage ? (
-                    <img
-                      src={settings.signatureImage}
-                      alt="Signature"
-                      className="ml-auto my-2"
-                      style={{ height: '50px', maxWidth: '150px', objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <div className="h-[50px] my-2"></div>
-                  )}
-                  <div className="mt-2 pt-2 border-t inline-block ml-auto" style={{ borderColor: '#e2e8f0', minWidth: '120px' }}>
-                    {settings.signatureText || 'Authorised Signatory'}
-                  </div>
-                </>
+        {/* Summary Section */}
+        <div className="flex justify-end mb-12">
+          <div className="w-1/2">
+            <div className="space-y-3 text-sm text-slate-600">
+              <div className="flex justify-between py-1">
+                <span>Subtotal</span>
+                <span className="font-medium text-slate-900">{subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              
+              {invoice.transportCharges > 0 && (
+                <div className="flex justify-between py-1">
+                  <span>Transportation Charges</span>
+                  <span className="font-medium text-slate-900">{invoice.transportCharges.toLocaleString('en-IN')}</span>
+                </div>
               )}
+
+              {invoice.discount > 0 && (
+                <div className="flex justify-between py-1 text-emerald-600">
+                  <span>Discount</span>
+                  <span className="font-medium">- {invoice.discount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+
+              <div className="border-t border-slate-200 pt-3 mt-3 flex justify-between items-end">
+                <div className="text-xs text-slate-500 max-w-[150px] uppercase tracking-wide leading-tight">
+                  Total Amount <br/>(INR)
+                </div>
+                <div className="text-2xl font-bold text-slate-900" style={{ color: settings.primaryColor }}>
+                  ₹ {total.toLocaleString('en-IN')}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        {settings.showFooter && (
-          <div
-            className="text-center py-2 border-t"
-            style={{ borderColor: '#e2e8f0', color: '#475569' }}
-          >
-            <div className="leading-tight font-medium">{settings.footerText || 'Thank you for your business!'}</div>
+        {/* Notes and Formatting Footer */}
+        <div className="mt-auto">
+          <div className="mb-8">
+            <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Amount in Words</h4>
+            <p className="text-sm font-medium text-slate-700">{amountInWords}</p>
           </div>
-        )}
+
+          <div className="flex justify-between items-end border-t border-slate-200 pt-8 gap-8">
+            <div className="flex-1">
+              {(invoice?.notes || settings?.invoiceNotes) && (
+                <>
+                  <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Terms & Conditions</h4>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    {(invoice?.notes || settings.invoiceNotes)?.split('\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="text-center min-w-[200px]">
+              {settings.showSignature && (
+                <div className="flex flex-col items-center">
+                  {settings.signatureImage ? (
+                     <img
+                       src={settings.signatureImage}
+                       alt="Signature"
+                       className="h-16 mb-2 object-contain"
+                       style={{ maxWidth: '160px' }}
+                     />
+                  ) : (
+                    <div className="h-16 mb-2"></div>
+                  )}
+                  <div className="w-full border-t border-slate-300 pt-2 text-xs font-semibold text-slate-700">
+                    {settings.signatureText || `For ${storeInfo?.name || 'Company'}`}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">Authorized Signatory</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {settings.showFooter && (
+            <div className="mt-8 text-center text-xs text-slate-400 font-medium">
+              {settings.footerText || 'Thank you for your business!'}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
