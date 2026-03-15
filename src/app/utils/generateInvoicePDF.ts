@@ -215,7 +215,7 @@ export function generateInvoicePDF(
             { label: 'Amount', w: 18 },
             { label: `CGST\n${(invoice.items[0]?.taxRate || 18) / 2}%`, w: 15 },
             { label: `SGST\n${(invoice.items[0]?.taxRate || 18) / 2}%`, w: 15 },
-            { label: 'Total\nAmount', w: 30 },
+            { label: 'Amount', w: 30 },
         ]
         : [
             { label: 'S.\nNo', w: 10 },
@@ -225,7 +225,7 @@ export function generateInvoicePDF(
             { label: 'Rate', w: 20 },
             { label: 'Amount', w: 20 },
             { label: `IGST\n${invoice.items[0]?.taxRate || 18}%`, w: 16 },
-            { label: 'Total\nAmount', w: 20 },
+            { label: 'Amount', w: 20 },
         ];
 
     // Adjust column widths to fit contentW (190mm)
@@ -367,7 +367,7 @@ export function generateInvoicePDF(
     setTextDark();
     cx = margin;
     const totalLabelW = cols.slice(0, 5).reduce((a, col) => a + col.w, 0);
-    pdf.text('Total Amount', margin + totalLabelW / 2, y + 5, { align: 'center' });
+    pdf.text('Amount', margin + totalLabelW / 2, y + 5, { align: 'center' });
     let tcx = margin + totalLabelW;
 
     const summaryVals = isSameState
@@ -395,9 +395,12 @@ export function generateInvoicePDF(
     pdf.setFontSize(8.5);
 
     // Wrap amount in words if too long
-    const wordLines = pdf.splitTextToSize(amtInWords, contentW - 40);
+    const wordLines = pdf.splitTextToSize(amtInWords, contentW - 60);
     pdf.text(wordLines, margin + 2, y + 6);
 
+    pdf.setFontSize(9);
+    pdf.text('TOTAL AMOUNT:', margin + contentW - 40, y + 6);
+    pdf.setTextColor(...primary);
     pdf.setFontSize(11);
     pdf.text(finalTotal.toLocaleString('en-IN'), margin + contentW - 2, y + 6, { align: 'right' });
     pdf.rect(margin, y, contentW, amtRowH);

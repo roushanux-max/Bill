@@ -197,7 +197,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                     </th>
                   </>
                 )}
-                <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '100px' }}>Total Amount</th>
+                <th className="border px-2 py-2 text-right" style={{ borderColor: headerTextColor === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', width: '100px' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -270,7 +270,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               <tr style={{ borderColor: '#e2e8f0', backgroundColor: 'rgba(0,0,0,0.02)' }}>
                 <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
                 <td className="border px-2 py-2 font-bold" colSpan={5} style={{ borderColor: '#e2e8f0' }}>
-                  Total Amount
+                  Amount
                 </td>
                 {!isSameState && (
                   <td className="border px-2 py-2" style={{ borderColor: '#e2e8f0' }}></td>
@@ -303,11 +303,11 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
               {/* Amount in Words */}
               <tr style={{ borderColor: '#e2e8f0' }}>
-                <td className="border px-2 py-2 font-semibold" colSpan={isSameState ? 8 : 7} style={{ borderColor: '#e2e8f0' }}>
+                <td className="border px-2 py-2 font-semibold" colSpan={isSameState ? 7 : 6} style={{ borderColor: '#e2e8f0' }}>
                   {amountInWords}
                 </td>
-                <td className="border px-2 py-2 text-right font-bold" style={{ borderColor: '#e2e8f0', color: settings.primaryColor, fontSize: '12pt' }}>
-                  {total.toLocaleString('en-IN')}
+                <td className="border px-2 py-2 text-right font-bold whitespace-nowrap" colSpan={2} style={{ borderColor: '#e2e8f0', color: settings.primaryColor, fontSize: '12pt' }}>
+                  <span className="text-slate-800 text-sm mr-2 uppercase tracking-wide">Total Amount:</span> {total.toLocaleString('en-IN')}
                 </td>
               </tr>
             </tbody>
