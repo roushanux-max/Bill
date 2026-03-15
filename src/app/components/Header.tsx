@@ -87,70 +87,72 @@ export default function Header() {
                 </Link>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
-                                width: '40px', height: '40px', borderRadius: '12px',
-                                background: 'var(--color-primary-light)',
-                                color: 'var(--color-primary)',
-                                border: 'none', cursor: 'pointer',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)'
-                            }} onMouseEnter={e => {
-                                e.currentTarget.style.transform = 'scale(1.05)';
-                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
-                            }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                    e.currentTarget.style.boxShadow = '0 2px 4px -1px rgba(0,0,0,0.06)';
-                                }}>
-                                <div style={{ width: '20px', height: '2.5px', background: 'currentColor', borderRadius: '10px' }} />
-                                <div style={{ width: '12px', height: '2.5px', background: 'currentColor', borderRadius: '10px', marginLeft: 'auto' }} />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 mt-2">
-                            {user ? (
-                                <>
-                                    <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {navItems.map((item) => (
-                                        <Link key={item.path} to={item.path} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    {!(isLandingPage || isAuthPage) && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                                    width: '40px', height: '40px', borderRadius: '12px',
+                                    background: 'var(--color-primary-light)',
+                                    color: 'var(--color-primary)',
+                                    border: 'none', cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)'
+                                }} onMouseEnter={e => {
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                    e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                                }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 2px 4px -1px rgba(0,0,0,0.06)';
+                                    }}>
+                                    <div style={{ width: '20px', height: '2.5px', background: 'currentColor', borderRadius: '10px' }} />
+                                    <div style={{ width: '12px', height: '2.5px', background: 'currentColor', borderRadius: '10px', marginLeft: 'auto' }} />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 mt-2">
+                                {user ? (
+                                    <>
+                                        <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {navItems.map((item) => (
+                                            <Link key={item.path} to={item.path} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
+                                                    <item.icon className="w-4 h-4 text-slate-500" />
+                                                    <span>{item.label}</span>
+                                                </DropdownMenuItem>
+                                            </Link>
+                                        ))}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem 
+                                            className="cursor-pointer gap-2 py-2.5 text-red-600 focus:text-red-600 focus:bg-red-50"
+                                            onClick={() => signOut()}
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            <span>Sign Out</span>
+                                        </DropdownMenuItem>
+                                    </>
+                                ) : (
+                                    <>
+                                        <DropdownMenuLabel>Account</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <Link to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
                                             <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
-                                                <item.icon className="w-4 h-4 text-slate-500" />
-                                                <span>{item.label}</span>
+                                                <LogOut className="w-4 h-4 text-slate-500 rotate-180" />
+                                                <span>Sign In</span>
                                             </DropdownMenuItem>
                                         </Link>
-                                    ))}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                        className="cursor-pointer gap-2 py-2.5 text-red-600 focus:text-red-600 focus:bg-red-50"
-                                        onClick={() => signOut()}
-                                    >
-                                        <LogOut className="w-4 h-4" />
-                                        <span>Sign Out</span>
-                                    </DropdownMenuItem>
-                                </>
-                            ) : (
-                                <>
-                                    <DropdownMenuLabel>Account</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <Link to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
-                                            <LogOut className="w-4 h-4 text-slate-500 rotate-180" />
-                                            <span>Sign In</span>
-                                        </DropdownMenuItem>
-                                    </Link>
-                                    <Link to="/register" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
-                                            <PlusCircle className="w-4 h-4 text-slate-500" />
-                                            <span>Get Started</span>
-                                        </DropdownMenuItem>
-                                    </Link>
-                                </>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                        <Link to="/register" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            <DropdownMenuItem className="cursor-pointer gap-2 py-2.5">
+                                                <PlusCircle className="w-4 h-4 text-slate-500" />
+                                                <span>Get Started</span>
+                                            </DropdownMenuItem>
+                                        </Link>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
 
                     {!user && (
                         <div className="hidden md:flex items-center gap-3">

@@ -17,7 +17,7 @@ const MobileNav: React.FC = () => {
   ];
 
   // Hidden on setup-shop or other full-screen onboarding pages if needed
-  const hideOnPaths = ['/setup-shop', '/invoice-preview'];
+  const hideOnPaths = ['/setup-shop', '/invoice-preview', '/login', '/register', '/'];
   if (hideOnPaths.some(path => location.pathname.startsWith(path))) {
     return null;
   }
