@@ -144,63 +144,67 @@ export default function Header() {
 
             {/* Full-Page Overlay Menu */}
             <div 
-                className={`fixed inset-0 bg-white/98 backdrop-blur-xl z-[1000] flex flex-col items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16, 1, 0.3, 1)] ${
+                className={`fixed inset-0 bg-white/98 backdrop-blur-xl z-[1000] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.16, 1, 0.3, 1)] ${
                     isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible pointer-events-none'
                 }`}
             >
-                <div className="flex flex-col items-center gap-8 w-full max-w-lg px-6">
-                    <div className="w-full space-y-2">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-6">Navigation</p>
-                        {navItems.map((item, idx) => (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                onClick={() => setIsMenuOpen(false)}
-                                className={`flex items-center gap-4 p-4 rounded-2xl w-full transition-all duration-300 hover:bg-slate-50 group ${
-                                    location.pathname === item.path ? 'bg-slate-50' : ''
-                                }`}
-                                style={{
-                                    transitionDelay: `${idx * 50}ms`,
+                <div className="flex-1 overflow-y-auto pt-24 pb-12 flex flex-col items-center">
+                    <div className="flex flex-col items-center gap-6 w-full max-w-lg px-6">
+                        <div className="w-full space-y-1.5">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-4">Navigation</p>
+                            {navItems.map((item, idx) => (
+                                <Link
+                                    key={item.path}
+                                    to={item.path}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={`flex items-center gap-4 p-4 rounded-2xl w-full transition-all duration-300 hover:bg-slate-50 group ${
+                                        location.pathname === item.path ? 'bg-slate-50' : ''
+                                    }`}
+                                    style={{
+                                    transitionDelay: `${idx * 40}ms`,
                                     transform: isMenuOpen ? 'translateY(0)' : 'translateY(20px)',
-                                    opacity: isMenuOpen ? 1 : 0
+                                    opacity: isMenuOpen ? 1 : 0,
+                                    textDecoration: 'none',
+                                    color: 'inherit'
                                 }}
-                            >
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ${
-                                    location.pathname === item.path 
-                                        ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-primary/20' 
-                                        : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-md'
-                                }`}>
-                                    <item.icon className="w-6 h-6" />
-                                </div>
-                                <span className={`text-xl font-bold transition-colors ${
-                                    location.pathname === item.path ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'
-                                }`}>
-                                    {item.label}
-                                </span>
-                            </Link>
-                        ))}
-                    </div>
+                                >
+                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ${
+                                        location.pathname === item.path 
+                                            ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-primary/20' 
+                                            : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-md'
+                                    }`}>
+                                        <item.icon className="w-5 h-5" />
+                                    </div>
+                                    <span className={`text-lg font-bold transition-colors ${
+                                        location.pathname === item.path ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'
+                                    }`}>
+                                        {item.label}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
 
-                    <div 
-                        className="w-full pt-8 mt-4 border-t border-slate-100"
-                        style={{
-                            transitionDelay: `${navItems.length * 50}ms`,
-                            transform: isMenuOpen ? 'translateY(0)' : 'translateY(20px)',
-                            opacity: isMenuOpen ? 1 : 0
-                        }}
-                    >
-                        {user && (
-                            <button
-                                onClick={() => {
-                                    setIsMenuOpen(false);
-                                    signOut();
-                                }}
-                                className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl bg-red-50 text-red-600 font-bold text-lg transition-all hover:bg-red-600 hover:text-white group"
-                            >
-                                <LogOut className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                                Sign Out
-                            </button>
-                        )}
+                        <div 
+                            className="w-full pt-6 mt-2 border-t border-slate-100"
+                            style={{
+                                transitionDelay: `${navItems.length * 40}ms`,
+                                transform: isMenuOpen ? 'translateY(0)' : 'translateY(20px)',
+                                opacity: isMenuOpen ? 1 : 0
+                            }}
+                        >
+                            {user && (
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        signOut();
+                                    }}
+                                    className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl bg-red-50 text-red-600 font-bold text-lg transition-all hover:bg-red-600 hover:text-white group"
+                                >
+                                    <LogOut className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                                    Sign Out
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

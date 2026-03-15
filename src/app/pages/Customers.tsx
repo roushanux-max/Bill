@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { useBranding } from '../contexts/BrandingContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -25,6 +28,7 @@ export default function Customers() {
   const navigate = useNavigate();
   const shouldOpenDialog = searchParams.get('add') === 'true';
 
+  const { storeInfo } = useBranding();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,62 +141,66 @@ export default function Customers() {
     return invoices.filter(invoice => invoice.customerId === customerId).length;
   };
 
-  // Export customers data to CSV
+  // Export customers data to PDF
   const handleExport = () => {
-    // customers and invoices are already in state
-
-    // Calculate spending data for each customer
     const customerData = filteredSortedCustomers.map(customer => {
       const customerInvoices = invoices.filter(inv => inv.customerId === customer.id);
       const totalSpent = customerInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-      const invoiceCount = customerInvoices.length;
-      const lastInvoiceDate = customerInvoices.length > 0
-        ? new Date(Math.max(...customerInvoices.map(inv => new Date(inv.createdAt).getTime())))
-        : null;
-
       return {
-        'Customer Name': customer.name,
-        'Phone': customer.phone,
-        'GSTIN': customer.gstin || 'N/A',
-        'Address': customer.address || 'N/A',
-        'State': customer.state,
-        'Total Spent': `₹${totalSpent.toLocaleString('en-IN')}`,
-        'Invoice Count': invoiceCount,
-        'Last Invoice Date': lastInvoiceDate ? lastInvoiceDate.toLocaleDateString('en-IN') : 'N/A',
-        'Added On': new Date(customer.createdAt).toLocaleDateString('en-IN'),
+        name: customer.name,
+        phone: customer.phone || '—',
+        gstin: customer.gstin || '—',
+        state: customer.state || '—',
+        invoiceCount: customerInvoices.length,
+        totalSpent: `Rs.${totalSpent.toLocaleString('en-IN')}`,
       };
     });
 
-    // Convert to CSV
-    const headers = Object.keys(customerData[0] || {});
-    const csvContent = [
-      headers.join(','),
-      ...customerData.map(row =>
-        headers.map(header => {
-          const value = row[header as keyof typeof row];
-          // Escape commas and quotes in values
-          return typeof value === 'string' && value.includes(',')
-            ? `"${value.replace(/"/g, '""')}"`
-            : value;
-        }).join(',')
-      )
-    ].join('\n');
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const storeName = storeInfo?.name || 'Business';
+    const exportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `customers_data_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text(storeName, 14, 18);
 
-    toast.success('Customer data exported successfully!', {
-      description: 'CSV file downloaded',
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text(`Customer Report  |  Exported on ${exportDate}`, 14, 26);
+
+    // Table
+    autoTable(doc, {
+      startY: 34,
+      head: [['Customer Name', 'Phone', 'GSTIN', 'State', 'Invoices', 'Total Spent']],
+      body: customerData.map(c => [c.name, c.phone, c.gstin, c.state, c.invoiceCount, c.totalSpent]),
+      headStyles: {
+        fillColor: [99, 102, 241], // indigo-500
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 9,
+      },
+      bodyStyles: {
+        fontSize: 9,
+        textColor: [30, 41, 59],
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252], // slate-50
+      },
+      styles: {
+        cellPadding: 4,
+        lineColor: [226, 232, 240],
+        lineWidth: 0.1,
+      },
+      margin: { left: 14, right: 14 },
     });
+
+    doc.save(`customers_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('Customer data exported!', { description: 'PDF downloaded' });
   };
+
 
   const clearFilters = () => {
     setFilterState('all');

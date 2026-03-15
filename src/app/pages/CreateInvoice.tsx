@@ -838,33 +838,20 @@ export default function CreateInvoice() {
         <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
             <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 print:hidden transition-all duration-300">
                 <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 sm:gap-6">
-                            <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 group shrink-0">
-                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white flex items-center justify-center border border-indigo-100 overflow-hidden shadow-sm transition-transform group-hover:scale-105">
-                                    {settings.logo ? (
-                                        <img src={settings.logo} alt="Logo" className="w-full h-full object-contain" />
-                                    ) : (
-                                        <Logo className="w-6 h-6 sm:w-7 sm:h-7" />
-                                    )}
-                                </div>
-                            </Link>
-                            
-                            <div className="flex items-center gap-2 sm:gap-4 border-l border-slate-200 pl-3 sm:pl-6">
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => handleNavigateAway(() => navigate('/invoices'))}
-                                    className="h-9 px-2 sm:px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg group"
-                                >
-                                    <ArrowLeft className="h-4 w-4 sm:mr-2 transition-transform group-hover:-translate-x-0.5" />
-                                    <span className="hidden sm:inline font-medium">Back</span>
-                                </Button>
-                                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
-                                    {editId ? 'Edit Invoice' : 'Create Invoice'}
-                                </h1>
-                            </div>
-                        </div>
+                    <div className="flex items-center gap-4">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleNavigateAway(() => navigate('/invoices'))}
+                            className="h-9 px-2 sm:px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg group"
+                        >
+                            <ArrowLeft className="h-4 w-4 sm:mr-2 transition-transform group-hover:-translate-x-0.5" />
+                            <span className="hidden sm:inline font-medium">Back</span>
+                        </Button>
+                        <div className="h-6 w-[1px] bg-slate-200 hidden sm:block" />
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+                            {editId ? 'Edit Invoice' : 'Create Invoice'}
+                        </h1>
                     </div>
                 </div>
             </header>
