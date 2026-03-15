@@ -213,33 +213,36 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header with Glassmorphism */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-50 shadow-sm">
-        <div className="px-4 py-4 sm:py-5 max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="h-9 gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back</span>
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: settings.primaryColor }} />
-                  Settings
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Manage your account, store and preferences</p>
-              </div>
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all duration-300 h-20">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between w-full">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link 
+              to="/dashboard" 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Link>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                Settings
+              </h1>
             </div>
-            {/* Desktop only buttons */}
-            <div className="hidden lg:flex items-center gap-2">
-              {hasChanges && (
-                <span className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full">
-                  <div className="w-2 h-2 bg-amber-600 rounded-full animate-pulse" />
-                  Unsaved changes
-                </span>
-              )}
-              <Button variant="outline" size="sm" className="gap-2" onClick={async () => {
+          </div>
+
+          {/* Header Actions */}
+          <div className="flex items-center gap-2">
+            {hasChanges && (
+              <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-100 mr-2">
+                <div className="w-1.5 h-1.5 bg-amber-600 rounded-full animate-pulse" />
+                Unsaved changes
+              </span>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 hidden sm:flex border-slate-200 text-amber-600 hover:bg-amber-50" 
+              onClick={async () => {
                 // Prepare a preview invoice using current settings and storeInfo
                 try {
                   const previewInvoice = {
@@ -278,10 +281,8 @@ export default function SettingsPage() {
                   };
 
                   localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(previewInvoice));
-                  // Also store preview settings so invoice preview can render unsaved changes
                   localStorage.setItem(getUserKey('previewBrandingSettings'), JSON.stringify(settings));
                   if (storeInfo) localStorage.setItem(getUserKey('previewStoreInfo'), JSON.stringify(storeInfo));
-                  // Navigate to preview
                   navigate('/invoice-preview?return=/settings');
                 } catch (e) {
                   console.error('Failed to prepare preview', e);
@@ -293,24 +294,34 @@ export default function SettingsPage() {
               </Button>
               {hasChanges && (
                 <Button 
-                  onClick={handleSave} 
+                  onClick={async () => {
+                    setIsSaving(true);
+                    try {
+                      await Promise.all([
+                        saveBrandingSettings(settings),
+                        storeInfo ? saveStoreInfo(storeInfo) : Promise.resolve()
+                      ]);
+                      setHasChanges(false);
+                      refreshBranding();
+                      toast.success('Settings saved successfully!');
+                    } catch (e) {
+                      toast.error('Failed to save settings');
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }} 
                   disabled={isSaving}
                   size="sm" 
-                  className="gap-2 transition-all" 
-                  style={{ 
-                    backgroundColor: settings.primaryColor, 
-                    color: 'white' 
-                  }}
+                  className="gap-2 transition-all bg-amber-400 hover:bg-amber-500 text-slate-900 border-none" 
                 >
                   {isSaving ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
                   <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
                 </Button>
               )}
-            </div>
           </div>
         </div>
       </header>

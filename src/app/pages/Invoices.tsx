@@ -217,25 +217,24 @@ export default function Invoices() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 sm:pb-8">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 flex-1">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Back</span>
-                </Button>
-              </Link>
-              <h1 className="text-lg sm:text-2xl font-semibold text-slate-900">Invoices</h1>
-            </div>
-            <Link to="/create-invoice" className="hidden sm:flex">
-              <Button size="sm">
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Create Invoice</span>
-              </Button>
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link 
+              to="/dashboard" 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
             </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoices</h1>
           </div>
+          <Link to="/create-invoice" className="hidden sm:flex">
+            <Button size="sm" className="bg-amber-400 hover:bg-amber-500 text-slate-900 border-none font-semibold px-4">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Invoice
+            </Button>
+          </Link>
         </div>
       </header>
 

@@ -11,7 +11,7 @@ import { ArrowLeft, Eye, Download, Printer, Share2, Trash2, Save, Pencil, Filter
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Invoice, InvoiceItem, Customer, Product, StoreInfo } from '../types/invoice';
-import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts, getUserKey } from '../utils/storage';
+import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getInvoice, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts, getUserKey } from '../utils/storage';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
 import { useBranding } from '../contexts/BrandingContext';
@@ -153,11 +153,10 @@ export default function CreateInvoice() {
 
       // Check for editing or draft
       if (editId) {
-        const invoices = await getInvoices();
-        let existing = invoices.find(i => i.id === editId);
+        // Use getInvoice to get full details including items
+        let existing = await getInvoice(editId);
 
-        // FALLBACK: If not found in main list, check the local draft or preview cache
-        // This is crucial for returning from preview without a full backend round-trip
+        // FALLBACK: If not found in main database, check the local draft or preview cache
         if (!existing) {
           try {
             const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
@@ -589,15 +588,27 @@ export default function CreateInvoice() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const handleNavigateAway = (callback: () => void) => {
+  const handleNavigateAway = async (callback: () => void) => {
     const hasData = items.length > 0 || (selectedCustomerId && selectedCustomerId !== '');
     const isComplete = items.length > 0 && selectedCustomerId && selectedCustomerId !== '';
 
     if (hasData && !isComplete) {
       setPendingAction(() => callback);
       setShowConfirm(true);
+    } else if (isComplete) {
+      // Auto-save user's valid work when they leave
+      await persistAndGetInvoice();
+      callback();
     } else {
       callback();
+    }
+  };
+
+  const handleExplicitSave = async () => {
+    const invoice = await persistAndGetInvoice();
+    if (invoice) {
+        toast.success(`Invoice ${invoice.invoiceNumber} saved!`);
+        navigate('/invoices');
     }
   };
 
@@ -832,12 +843,12 @@ export default function CreateInvoice() {
 
   const { total } = calculateTotals();
 
-    const isInvoiceIncomplete = !selectedCustomerId || items.length === 0;
+    const isInvoiceIncomplete = !selectedCustomerId || items.length === 0 || items.some(item => !item.productName?.trim());
 
     return (
         <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
-            <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 print:hidden transition-all duration-300">
-                <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
+            <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 print:hidden transition-all duration-300 h-20">
+                <div className="max-w-6xl mx-auto px-4 h-full flex items-center">
                     <div className="flex items-center gap-4">
                         <Button 
                             variant="ghost" 
@@ -1277,6 +1288,14 @@ export default function CreateInvoice() {
             </CardHeader>
             <CardContent className="px-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <Button 
+                  onClick={handleExplicitSave} 
+                  disabled={isGenerating || isInvoiceIncomplete} 
+                  className="w-full rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 border-none font-semibold shadow-sm lg:col-span-1"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Invoice
+                </Button>
                 <Button variant="outline" size="lg" onClick={handlePreview} disabled={isGenerating} className="w-full rounded-xl">
                   <Eye className="h-4 w-4 mr-2" />
                   Preview

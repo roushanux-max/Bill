@@ -150,24 +150,24 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 sm:pb-8">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 flex-1">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Back</span>
-                </Button>
-              </Link>
-              <h1 className="text-2xl font-bold text-slate-900">Products</h1>
-            </div>
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link 
+              to="/dashboard" 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Products</h1>
+          </div>
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
               setIsDialogOpen(open);
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="bg-amber-400 hover:bg-amber-500 text-slate-900 border-none px-4 font-semibold">
                   <Plus className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Add Product</span>
                 </Button>
@@ -249,7 +249,6 @@ export default function Products() {
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
         </div>
       </header>
 

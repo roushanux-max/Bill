@@ -255,37 +255,36 @@ export default function InvoicePreview() {
   return (
     <div className="min-h-screen bg-slate-50">
       {isGenerating && <LoadingScreen type="printing" />}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
-        <div className="px-2 sm:px-4 py-2 sm:py-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-              <Link to={returnPath}>
-                <Button variant="ghost" size="sm" className="h-9 px-2 sm:px-3 shrink-0">
-                  <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Back</span>
-                </Button>
-              </Link>
-              <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">Invoice Preview</h1>
-            </div>
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden h-20">
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link 
+              to={returnPath} 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoice Preview</h1>
           </div>
-          {/* Action Buttons - Mobile */}
-          <div className="flex flex-wrap gap-2 sm:hidden">
-            <Link to={returnPath} className="flex-1 min-w-[45%]">
+
+          <div className="hidden sm:flex items-center gap-3">
+            <Link to={returnPath}>
               <Button
                 variant="default"
                 size="sm"
-                className="w-full"
+                className="bg-amber-400 hover:bg-amber-500 text-slate-900 border-none px-4"
                 disabled={isGenerating}
               >
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit
+                Edit Invoice
               </Button>
             </Link>
             <Button
               variant="outline"
               size="sm"
               onClick={handlePrint}
-              className="flex-1 min-w-[45%]"
+              className="text-amber-600 border-amber-200 hover:bg-amber-50"
               disabled={isGenerating}
             >
               <Printer className="h-4 w-4 mr-2" />
@@ -295,61 +294,36 @@ export default function InvoicePreview() {
               variant="outline"
               size="sm"
               onClick={handleDownload}
-              className="flex-1"
+              className="text-amber-600 border-amber-200 hover:bg-amber-50"
               disabled={isGenerating}
             >
               <Download className="h-4 w-4 mr-2" />
               Save PDF
             </Button>
             <Button
+              variant="default"
               size="sm"
               onClick={handleShare}
-              className="flex-1"
+              className="bg-amber-400 hover:bg-amber-500 text-slate-900"
               disabled={isGenerating}
             >
               <Share2 className="h-4 w-4 mr-2" />
               Share
             </Button>
           </div>
-        </div>
-        {/* Desktop Action Buttons */}
-        <div className="hidden sm:flex sm:items-center sm:justify-end sm:gap-2 sm:px-4 sm:pb-4">
-          <Link to={returnPath}>
+
+          {/* Mobile Actions */}
+          <div className="flex sm:hidden items-center gap-2">
             <Button
               variant="default"
               size="sm"
+              onClick={handleShare}
+              className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-3"
               disabled={isGenerating}
             >
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit Invoice
+              <Share2 className="h-4 w-4" />
             </Button>
-          </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            disabled={isGenerating}
-          >
-            <Printer className="h-4 w-4 mr-2" />
-            Print Preview
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownload}
-            disabled={isGenerating}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Save PDF
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleShare}
-            disabled={isGenerating}
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
+          </div>
         </div>
       </header>
 

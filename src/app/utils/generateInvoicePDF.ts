@@ -109,16 +109,20 @@ export function generateInvoicePDF(
 
     // Left side text (Store Info)
     let leftY = y + 6;
-    setFont('bold', 18, primary);
-    const storeName = storeInfo.name?.toUpperCase() || 'YOUR COMPANY';
-    const storeNameLines = pdf.splitTextToSize(storeName, contentW * 0.5);
-    pdf.text(storeNameLines, margin, leftY);
-    leftY += storeNameLines.length * 7;
+    if (storeInfo.name) {
+        setFont('bold', 18, primary);
+        const storeName = storeInfo.name.toUpperCase();
+        const storeNameLines = pdf.splitTextToSize(storeName, contentW * 0.5);
+        pdf.text(storeNameLines, margin, leftY);
+        leftY += storeNameLines.length * 7;
+    }
 
     setFont('normal', 9, textMid);
-    const addressLines = pdf.splitTextToSize(storeInfo.address || 'Company Address', contentW * 0.5);
-    pdf.text(addressLines, margin, leftY);
-    leftY += addressLines.length * 4;
+    if (storeInfo.address) {
+        const addressLines = pdf.splitTextToSize(storeInfo.address, contentW * 0.5);
+        pdf.text(addressLines, margin, leftY);
+        leftY += addressLines.length * 4;
+    }
 
     if (storeInfo.phone) {
         pdf.text(`Phone: ${storeInfo.phone}`, margin, leftY);
@@ -149,55 +153,62 @@ export function generateInvoicePDF(
     y += 8;
 
     // ── Bill To Section ───────────────────────────────────────────
-    setFont('bold', 7.5, textLight);
-    pdf.text('BILL TO', margin, y);
-    y += 5;
+    if (invoice.customer?.name) {
+        setFont('bold', 7.5, textLight);
+        pdf.text('BILL TO', margin, y);
+        y += 5;
 
-    setFont('bold', 12, textDark);
-    const custNameLines = pdf.splitTextToSize(invoice.customer?.name || 'Walk-in Customer', contentW * 0.6);
-    pdf.text(custNameLines, margin, y);
-    y += custNameLines.length * 5;
+        setFont('bold', 12, textDark);
+        const custNameLines = pdf.splitTextToSize(invoice.customer.name, contentW * 0.6);
+        pdf.text(custNameLines, margin, y);
+        y += custNameLines.length * 5;
 
-    setFont('normal', 9, textMid);
-    if (invoice.customer?.address) {
-        const custAddrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
-        pdf.text(custAddrLines, margin, y);
-        y += custAddrLines.length * 4;
-    }
-    if (invoice.customer?.phone) {
-        pdf.text(`Phone: ${invoice.customer.phone}`, margin, y);
-        y += 4;
-    }
-    if (invoice.customer?.gstin) {
-        setFont('bold', 9, textDark);
-        pdf.text(`GSTIN: ${invoice.customer.gstin}`, margin, y + 1);
+        setFont('normal', 9, textMid);
+        if (invoice.customer?.address) {
+            const custAddrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
+            pdf.text(custAddrLines, margin, y);
+            y += custAddrLines.length * 4;
+        }
+        if (invoice.customer?.phone) {
+            pdf.text(`Phone: ${invoice.customer.phone}`, margin, y);
+            y += 4;
+        }
+        if (invoice.customer?.gstin) {
+            setFont('bold', 9, textDark);
+            pdf.text(`GSTIN: ${invoice.customer.gstin}`, margin, y + 1);
+            y += 5;
+        }
         y += 5;
     }
 
-    y += 5;
-
     // ── Items Table Header ────────────────────────────────────────
     const isSameState = storeInfo.state === invoice.customer?.state;
-    const cols = isSameState
-        ? [
-            { label: '#', w: 8, align: 'center' },
-            { label: 'Item Description', w: 62, align: 'left' },
-            { label: 'HSN', w: 15, align: 'center' },
-            { label: 'Qty', w: 10, align: 'center' },
-            { label: 'Rate', w: 20, align: 'right' },
-            { label: 'CGST', w: 16, align: 'right' },
-            { label: 'SGST', w: 16, align: 'right' },
-            { label: 'Amount', w: 33, align: 'right' },
-        ]
-        : [
-            { label: '#', w: 8, align: 'center' },
-            { label: 'Item Description', w: 78, align: 'left' },
-            { label: 'HSN', w: 15, align: 'center' },
-            { label: 'Qty', w: 10, align: 'center' },
-            { label: 'Rate', w: 22, align: 'right' },
-            { label: 'IGST', w: 16, align: 'right' },
-            { label: 'Amount', w: 31, align: 'right' },
-        ];
+    const hasAnyHSN = (invoice.items || []).some(item => item.hsn && item.hsn.trim() !== '' && item.hsn !== '-');
+    
+    let baseCols = [
+        { label: '#', w: 8, align: 'center' },
+        { label: 'Item Description', w: 62, align: 'left', id: 'desc' },
+        { label: 'HSN', w: 15, align: 'center', id: 'hsn' },
+        { label: 'Qty', w: 10, align: 'center' },
+        { label: 'Rate', w: 20, align: 'right' },
+    ];
+
+    if (isSameState) {
+        baseCols.push({ label: 'CGST', w: 16, align: 'right' });
+        baseCols.push({ label: 'SGST', w: 16, align: 'right' });
+    } else {
+        baseCols.push({ label: 'IGST', w: 16, align: 'right' });
+    }
+    baseCols.push({ label: 'Amount', w: 33, align: 'right' });
+
+    // Filter out HSN column if not needed
+    let cols = hasAnyHSN ? baseCols : baseCols.filter(c => c.id !== 'hsn');
+    
+    // Adjust Description width if HSN is hidden
+    if (!hasAnyHSN) {
+        const descCol = cols.find(c => c.id === 'desc');
+        if (descCol) descCol.w += 15;
+    }
 
     // Scale to contentW
     const totalColsW = cols.reduce((sum, c) => sum + c.w, 0);
@@ -232,7 +243,6 @@ export function generateInvoicePDF(
     let sgstTotal = 0;
     let igstTotal = 0;
     let amountTotal = 0;
-    let grandTotal = 0;
 
     for (let i = 0; i < (invoice.items || []).length; i++) {
         const item = invoice.items![i];
@@ -247,22 +257,17 @@ export function generateInvoicePDF(
         sgstTotal += sgst;
         igstTotal += igst;
         amountTotal += amount;
-        grandTotal += rowTotal;
 
-        const nameLines = pdf.splitTextToSize(item.productName || (item as any).name, cols[1].w - 4);
+        const nameLines = pdf.splitTextToSize(item.productName || (item as any).name || 'Item', cols[1].w - 4);
         const rowH = Math.max(8, nameLines.length * 4.5);
 
         // Page break if near bottom
         if (y + rowH > 270) {
-            // Draw a subtle line to close the current page's table
             pdf.setDrawColor(...borderLight);
             pdf.setLineWidth(0.1);
             pdf.line(margin, y, margin + contentW, y);
-
             pdf.addPage();
             y = margin;
-            
-            // Re-draw header
             pdf.setDrawColor(...borderDark);
             pdf.setLineWidth(0.5);
             pdf.line(margin, y, margin + contentW, y);
@@ -274,7 +279,7 @@ export function generateInvoicePDF(
                 if (col.align === 'center') textX = hx + col.w / 2;
                 else if (col.align === 'right') textX = hx + col.w - 2;
                 else textX = hx + 2;
-                pdf.text(col.label, textX, y, { align: col.align as "center" | "right" | "left" });
+                pdf.text(col.label, textX, y, { align: hx + col.w / 2 === textX ? 'center' : (hx + col.w - 2 === textX ? 'right' : 'left') });
                 hx += col.w;
             }
             y += 2;
@@ -283,77 +288,60 @@ export function generateInvoicePDF(
         }
 
         setFont('normal', 8.5, textDark);
-        pdf.setTextColor(30, 41, 59); // slightly offset text
-        
         let rcx = margin;
         
-        const stringVals = isSameState
-            ? [
-                String(i + 1),
-                nameLines,
-                item.hsn || '-',
-                String(item.quantity),
-                (item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'),
-                Math.round(cgst).toLocaleString('en-IN'),
-                Math.round(sgst).toLocaleString('en-IN'),
-                Math.round(rowTotal).toLocaleString('en-IN'),
-            ] : [
-                String(i + 1),
-                nameLines,
-                item.hsn || '-',
-                String(item.quantity),
-                (item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'),
-                Math.round(igst).toLocaleString('en-IN'),
-                Math.round(rowTotal).toLocaleString('en-IN'),
-            ];
+        let rowVals: any[] = [String(i + 1), nameLines];
+        if (hasAnyHSN) rowVals.push(item.hsn || '-');
+        rowVals.push(String(item.quantity));
+        rowVals.push((item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'));
+        
+        if (isSameState) {
+            rowVals.push(Math.round(cgst).toLocaleString('en-IN'));
+            rowVals.push(Math.round(sgst).toLocaleString('en-IN'));
+        } else {
+            rowVals.push(Math.round(igst).toLocaleString('en-IN'));
+        }
+        rowVals.push(Math.round(rowTotal).toLocaleString('en-IN'));
 
         for (let ci = 0; ci < cols.length; ci++) {
             const col = cols[ci];
-            const val = stringVals[ci];
-            
+            const val = rowVals[ci];
             let textX = rcx;
             if (col.align === 'center') textX = rcx + col.w / 2;
             else if (col.align === 'right') textX = rcx + col.w - 2;
             else textX = rcx + 2;
 
             if (ci === 1) {
-                // Name Lines
                 setFont('bold', 8.5, textDark);
                 pdf.text(val as string[], textX, y + 4);
             } else {
                 setFont('normal', 8.5, textMid);
-                if (ci === cols.length - 1) setFont('bold', 8.5, textDark); // Make amount bold
-                if (ci === 0) setFont('normal', 8, textLight); // Make index lighter
-                pdf.text(val as string, textX, y + 4, { align: col.align as "center" | "right" | "left" });
+                if (ci === cols.length - 1) setFont('bold', 8.5, textDark);
+                if (ci === 0) setFont('normal', 8, textLight);
+                pdf.text(val as string, textX, y + 4, { align: col.align as any });
                 
-                // Add % subtext for taxes
-                if (isSameState && (ci === 5 || ci === 6)) {
+                // Tax rates subtext
+                const taxColIndex = hasAnyHSN ? (isSameState ? [5, 6] : [5]) : (isSameState ? [4, 5] : [4]);
+                if (taxColIndex.includes(ci)) {
                     setFont('normal', 7, textLight);
-                    pdf.text(`${(item.taxRate || 18) / 2}%`, textX, y + 7.5, { align: 'right' });
-                } else if (!isSameState && ci === 5) {
-                    setFont('normal', 7, textLight);
-                    pdf.text(`${item.taxRate || 18}%`, textX, y + 7.5, { align: 'right' });
+                    const label = isSameState ? `${(item.taxRate || 0) / 2}%` : `${item.taxRate || 0}%`;
+                    pdf.text(label, textX, y + 7.5, { align: 'right' });
                 }
             }
             rcx += col.w;
         }
-
         y += rowH;
-        
-        // Subtle row separator
         pdf.setDrawColor(...borderLight);
         pdf.setLineWidth(0.1);
         pdf.line(margin, y, margin + contentW, y);
-        y += 1; // Slight gap before next row
+        y += 1;
     }
 
     // ── Summary Section ───────────────────────────────────────────
-    y += 5; // Gap before summary
-
+    y += 5;
     const summaryW = 70;
     const summaryX = margin + contentW - summaryW;
     
-    // Page break protection for summary
     if (y > 230) {
         pdf.addPage();
         y = margin;
@@ -372,11 +360,18 @@ export function generateInvoicePDF(
     if (invoice.transportCharges > 0) {
         drawSummaryRow('Transportation Charges', invoice.transportCharges.toLocaleString('en-IN'));
     }
+    if (invoice.taxTotal > 0) {
+        if (isSameState) {
+            drawSummaryRow('CGST Total', Math.round(cgstTotal).toLocaleString('en-IN'));
+            drawSummaryRow('SGST Total', Math.round(sgstTotal).toLocaleString('en-IN'));
+        } else {
+            drawSummaryRow('IGST Total', Math.round(igstTotal).toLocaleString('en-IN'));
+        }
+    }
     if (invoice.discountTotal > 0) {
-        drawSummaryRow('Discount', `- ${invoice.discountTotal.toLocaleString('en-IN')}`, true);
+        drawSummaryRow('Overall Discount', `- ${invoice.discountTotal.toLocaleString('en-IN')}`, true);
     }
 
-    // Grand total
     const finalTotal = invoice.grandTotal || Math.round(amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
 
     y += 2;
@@ -386,20 +381,13 @@ export function generateInvoicePDF(
     
     setFont('bold', 7.5, textLight);
     pdf.text('TOTAL AMOUNT (INR)', summaryX, y + 1);
-    
     setFont('bold', 16, primary);
     pdf.text(`RS. ${finalTotal.toLocaleString('en-IN')}`, summaryX + summaryW, y + 1, { align: 'right' });
-    
     y += 5;
 
     // ── Footer: Amount In Words & Terms ───────────────────────────
     y = Math.max(y + 10, y + 10);
-    
-    // Page break protection for footer
-    if (y > 250) {
-        pdf.addPage();
-        y = margin;
-    }
+    if (y > 250) { pdf.addPage(); y = margin; }
 
     const amtInWords = `${numberToWords(finalTotal)} Only`;
     setFont('bold', 7.5, textLight);
@@ -409,7 +397,6 @@ export function generateInvoicePDF(
     pdf.text(amtInWords, margin, y);
     y += 10;
 
-    // Line separator for footer
     pdf.setDrawColor(...borderLight);
     pdf.setLineWidth(0.3);
     pdf.line(margin, y, margin + contentW, y);
@@ -418,19 +405,16 @@ export function generateInvoicePDF(
     const footerTopY = y;
     let leftSideY = y;
     
-    // Terms & Conditions (Left)
     if (invoice.notes || settings.invoiceNotes) {
         setFont('bold', 7.5, textLight);
         pdf.text('TERMS & CONDITIONS', margin, leftSideY);
         leftSideY += 5;
-        
         setFont('normal', 8, textMid);
         const termsLines = pdf.splitTextToSize((invoice.notes || settings.invoiceNotes) as string, contentW * 0.6);
         pdf.text(termsLines, margin, leftSideY);
         leftSideY += termsLines.length * 4;
     }
 
-    // Signature (Right)
     const sigBoxW = 60;
     const sigBoxX = margin + contentW - sigBoxW;
     let rightSideY = footerTopY;
@@ -442,18 +426,11 @@ export function generateInvoicePDF(
                 const imgRatio = imgProps.width / imgProps.height;
                 const maxSigH = 15;
                 let finalW = maxSigH * imgRatio;
-                if (finalW > sigBoxW) {
-                    finalW = sigBoxW;
-                }
+                if (finalW > sigBoxW) finalW = sigBoxW;
                 pdf.addImage(settings.signatureImage, 'PNG', sigBoxX + (sigBoxW - finalW)/2, rightSideY, finalW, maxSigH, undefined, 'FAST');
                 rightSideY += maxSigH + 2;
-            } catch (e) {
-                console.error('Error adding signature img:', e);
-                rightSideY += 17;
-            }
-        } else {
-            rightSideY += 17;
-        }
+            } catch (e) { rightSideY += 17; }
+        } else { rightSideY += 17; }
 
         pdf.setDrawColor(...borderLight);
         pdf.setLineWidth(0.5);
@@ -461,21 +438,20 @@ export function generateInvoicePDF(
         rightSideY += 4;
 
         setFont('bold', 8, textDark);
-        const authSigner = settings.signatureText || `For ${storeInfo.name || 'Company'}`;
-        const authSignerLines = pdf.splitTextToSize(authSigner, sigBoxW);
-        pdf.text(authSignerLines, sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
-        rightSideY += authSignerLines.length * 4;
-
-        setFont('normal', 7, textLight);
-        pdf.text('Authorized Signatory', sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
-        rightSideY += 4;
+        const authSigner = settings.signatureText || (storeInfo.name ? `For ${storeInfo.name}` : '');
+        if (authSigner) {
+            const authSignerLines = pdf.splitTextToSize(authSigner, sigBoxW);
+            pdf.text(authSignerLines, sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
+            rightSideY += authSignerLines.length * 4;
+            setFont('normal', 7, textLight);
+            pdf.text('Authorized Signatory', sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
+        }
     }
 
-    // Footer Text
-    if (settings.showFooter) {
+    if (settings.showFooter && settings.footerText) {
         const bottomY = 285;
         setFont('normal', 8, textLight);
-        pdf.text(settings.footerText || 'Thank you for your business!', pageW / 2, bottomY, { align: 'center' });
+        pdf.text(settings.footerText, pageW / 2, bottomY, { align: 'center' });
     }
 
     return pdf;

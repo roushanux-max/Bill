@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { FileText, IndianRupee, Users, Package, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { FileText, IndianRupee, Users, Package, Eye, EyeOff, UserPlus, Plus } from 'lucide-react';
 import { getInvoices, getCustomers, getProducts, subscribeToInvoices, subscribeToProducts, subscribeToCustomers } from '../utils/storage';
 import { Invoice } from '../types/invoice';
 import { useAuth } from '../contexts/AuthContext';
@@ -118,18 +118,18 @@ export default function Dashboard() {
       <main className="px-4 py-4 sm:py-8 max-w-6xl mx-auto pb-20 sm:pb-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
             <Button
               onClick={() => navigate('/create-invoice')}
-              className="hidden sm:flex bg-[var(--color-primary)] hover:opacity-90 text-sm sm:text-base"
+              className="hidden sm:flex bg-amber-400 hover:bg-amber-500 text-slate-900 border-none font-semibold px-4"
               size="sm"
             >
-              <UserPlus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" />
               <span>Create Invoice</span>
             </Button>
           </div>
-          <p className="text-sm sm:text-base text-slate-600">
-            Welcome back <span className="font-semibold text-slate-900">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong style={{ color: 'var(--color-primary)' }}>{storeInfo.name}</strong> : 'organization'} overview.
+          <p className="text-sm sm:text-base text-slate-500">
+            Welcome back <span className="font-semibold text-slate-800">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong className="text-amber-600">{storeInfo.name}</strong> : 'organization'} overview.
           </p>
         </div>
 
@@ -200,11 +200,11 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-600 mt-1">Products in catalog</p>
               </CardContent>
             </Card>
-          </div >
+          </div>
         )}
 
         {/* Recent Invoices */}
-        < div className="mt-6" >
+        <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold">Recent Invoices</h3>
             <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>View all</Button>
@@ -236,8 +236,8 @@ export default function Dashboard() {
               </div>
             )
           }
-        </div >
-      </main >
+        </div>
+      </main>
 
     </div>
   );
