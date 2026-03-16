@@ -496,7 +496,7 @@ export default function SetupShop() {
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => navigate('/branding')}
+                onClick={() => navigate('/settings')}
                 className="w-full px-6 py-3.5 bg-[var(--color-primary)] text-white font-semibold rounded-xl hover:opacity-90 shadow-lg shadow-[var(--color-primary)]/20 hover:-translate-y-0.5 transition-all"
               >
                 Edit Store Details

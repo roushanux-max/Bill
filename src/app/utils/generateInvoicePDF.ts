@@ -22,7 +22,7 @@ function numberToWords(num: number): string {
     if (num < 1000) return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' and ' + numberToWords(num % 100) : '');
     if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' Thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
     if (num < 10000000) return numberToWords(Math.floor(num / 100000)) + ' Lakh' + (num % 100000 ? ' ' + numberToWords(num % 100000) : '');
-    return 'Amount too large';
+    return numberToWords(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + numberToWords(num % 10000000) : '');
 }
 
 export function generateInvoicePDF(
@@ -394,8 +394,9 @@ export function generateInvoicePDF(
     pdf.text('AMOUNT IN WORDS', margin, y);
     y += 4;
     setFont('bold', 9, textDark);
-    pdf.text(amtInWords, margin, y);
-    y += 10;
+    const amtLines = pdf.splitTextToSize(amtInWords, contentW);
+    pdf.text(amtLines, margin, y);
+    y += (amtLines.length * 4.5) + 5;
 
     pdf.setDrawColor(...borderLight);
     pdf.setLineWidth(0.3);
@@ -407,10 +408,20 @@ export function generateInvoicePDF(
     
     if (invoice.notes || settings.invoiceNotes) {
         setFont('bold', 7.5, textLight);
+        pdf.text('INVOICE NOTES', margin, leftSideY);
+        leftSideY += 5;
+        setFont('normal', 8, textMid);
+        const noteLines = pdf.splitTextToSize((invoice.notes || settings.invoiceNotes) as string, contentW * 0.6);
+        pdf.text(noteLines, margin, leftSideY);
+        leftSideY += noteLines.length * 4 + 2;
+    }
+
+    if (settings.termsAndConditions) {
+        setFont('bold', 7.5, textLight);
         pdf.text('TERMS & CONDITIONS', margin, leftSideY);
         leftSideY += 5;
         setFont('normal', 8, textMid);
-        const termsLines = pdf.splitTextToSize((invoice.notes || settings.invoiceNotes) as string, contentW * 0.6);
+        const termsLines = pdf.splitTextToSize(settings.termsAndConditions, contentW * 0.6);
         pdf.text(termsLines, margin, leftSideY);
         leftSideY += termsLines.length * 4;
     }

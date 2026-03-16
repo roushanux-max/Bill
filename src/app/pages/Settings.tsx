@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
@@ -26,6 +26,8 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('store');
   const [fetchingPincode, setFetchingPincode] = useState(false);
+  const location = useLocation();
+  const sectionParam = new URLSearchParams(location.search).get('section');
 
   // Load saved settings on mount
   useEffect(() => {
@@ -41,7 +43,19 @@ export default function SettingsPage() {
       setStoreInfo(savedStoreInfo);
     };
     init();
-  }, []);
+  }, []); // Only on mount
+
+  // Handle deep linking to specific sections
+  useEffect(() => {
+    if (sectionParam) {
+      const validSections = ['store', 'logo', 'footer', 'terms', 'account'];
+      if (validSections.includes(sectionParam)) {
+        setActiveSection(sectionParam);
+        // Scroll to top of the content area if possible
+        window.scrollTo(0, 0);
+      }
+    }
+  }, [sectionParam]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

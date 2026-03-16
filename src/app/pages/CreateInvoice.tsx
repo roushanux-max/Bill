@@ -465,7 +465,7 @@ export default function CreateInvoice() {
       } else {
         // Create new product
         const newProduct: Product = {
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           name: newItemData.name,
           category: 'Other',
           hsnCode: newItemData.hsn || '',
@@ -484,7 +484,7 @@ export default function CreateInvoice() {
 
     const amount = rate * qty;
     const item: InvoiceItem = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       invoice_id: editId || localInvoiceId,
       product_id: finalProductId,
       productName: newItemData.name, // Snapshot
@@ -1270,7 +1270,7 @@ export default function CreateInvoice() {
               </div>
               <div className="mt-6 pt-6 border-t border-slate-100">
                 <p className="text-xs text-slate-500 italic">
-                  Notes and Terms are now managed globally in <Link to="/branding" className="text-indigo-600 hover:underline font-medium">Branding Settings</Link>.
+                  Notes and Terms are now managed globally in <Link to="/settings?section=terms" className="text-indigo-600 hover:underline font-medium">Branding Settings</Link>.
                 </p>
               </div>
             </CardContent>

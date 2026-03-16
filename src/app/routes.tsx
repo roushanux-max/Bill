@@ -3,6 +3,8 @@ import { createBrowserRouter, Outlet } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import LoadingScreen from "./components/LoadingScreen";
+import { useEffect } from "react";
+import { useLocation, ScrollRestoration } from "react-router-dom";
 
 // Lazy load pages for performance
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -25,17 +27,20 @@ import MobileNav from "./components/MobileNav";
 import Header from "./components/Header";
 import ErrorPage from "./pages/ErrorPage";
 
-const RootLayout = () => (
-  <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
-    <Header />
-    <Suspense fallback={<LoadingFallback />}>
-      <div className="flex-1 pb-24 md:pb-0">
-        <Outlet />
-      </div>
-    </Suspense>
-    <MobileNav />
-  </div>
-);
+const RootLayout = () => {
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
+      <ScrollRestoration />
+      <Header />
+      <Suspense fallback={<LoadingFallback />}>
+        <div className="flex-1 pb-24 md:pb-0">
+          <Outlet />
+        </div>
+      </Suspense>
+      <MobileNav />
+    </div>
+  );
+};
 
 export const router = createBrowserRouter([
   {

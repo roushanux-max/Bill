@@ -40,7 +40,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
     if (num < 1000) return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' and ' + numberToWords(num % 100) : '');
     if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' Thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
     if (num < 10000000) return numberToWords(Math.floor(num / 100000)) + ' Lakh' + (num % 100000 ? ' ' + numberToWords(num % 100000) : '');
-    return 'Amount too large';
+    return numberToWords(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + numberToWords(num % 10000000) : '');
   };
 
   const amountInWords = `${numberToWords(total)} Only`;
@@ -228,16 +228,26 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           </div>
 
           <div className="flex justify-between items-end border-t border-slate-200 pt-8 gap-8">
-            <div className="flex-1">
+            <div className="flex-1 space-y-6">
               {(invoice?.notes || settings?.invoiceNotes) && (
-                <>
-                  <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Terms & Conditions</h4>
+                <div>
+                  <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Invoice Notes</h4>
                   <div className="text-xs text-slate-500 space-y-1">
                     {(invoice?.notes || settings.invoiceNotes)?.split('\n').map((line, index) => (
                       <p key={index}>{line}</p>
                     ))}
                   </div>
-                </>
+                </div>
+              )}
+              {settings.termsAndConditions && (
+                <div>
+                  <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Terms & Conditions</h4>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    {settings.termsAndConditions.split('\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 

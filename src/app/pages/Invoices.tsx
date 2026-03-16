@@ -44,7 +44,7 @@ export default function Invoices() {
   const handleDuplicate = async (invoice: Invoice) => {
     const newInvoice: Invoice = {
       ...invoice,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       invoiceNumber: `${invoice.invoiceNumber}-COPY`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

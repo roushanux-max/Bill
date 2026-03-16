@@ -692,9 +692,10 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       const itemsPayload = invoice.items
         .filter(item => (item.productName || (item as any).name))
         .map(item => ({
+          id: (item.id && item.id.length > 30) ? item.id : crypto.randomUUID(),
           user_id: user.id,
           invoice_id: invId,
-          product_id: item.product_id || null,
+          product_id: (item.product_id && item.product_id.length > 30) ? item.product_id : null,
           product_name: item.productName || (item as any).name || 'Item',
           unit_price: Number(item.unitPrice || (item as any).rate || 0),
           quantity: Number(item.quantity || 0),
