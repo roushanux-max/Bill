@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Admin emails - hardcoded for now as requested
-  const ADMIN_EMAILS = ['roushanux@gmail.com'];
+  const ADMIN_EMAILS = ['roushan.ux@gmail.com'];
 
   useEffect(() => {
     if (user?.email && ADMIN_EMAILS.includes(user.email)) {

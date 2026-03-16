@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading, hasStore } = useAuth();
+  const { user, loading, hasStore, isAdmin } = useAuth();
   const location = useLocation();
 
   if (loading || (user && hasStore === null)) {
@@ -21,8 +21,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect new users to setup, but NOT if already there
-  if (hasStore === false && location.pathname !== '/setup-shop') {
+  // Redirect new users to setup, but NOT if already there, and NOT if they are an admin
+  if (hasStore === false && location.pathname !== '/setup-shop' && !isAdmin) {
     return <Navigate to="/setup-shop" replace />;
   }
 
