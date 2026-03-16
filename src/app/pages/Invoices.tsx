@@ -55,7 +55,8 @@ export default function Invoices() {
   };
 
   const handleView = (invoice: Invoice) => {
-    localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
+    // Clear any stale preview data to force a fresh fetch by ID
+    localStorage.removeItem(getUserKey('previewInvoice'));
     navigate(`/invoice-preview?id=${invoice.id}&return=${encodeURIComponent('/invoices')}`);
   };
 

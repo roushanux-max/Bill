@@ -274,7 +274,7 @@ export default function InvoicePreview() {
           </div>
 
           <div className="hidden sm:flex items-center gap-3">
-            <Link to={returnPath}>
+            <Link to={`/create-invoice?edit=${invoice.id}`}>
               <Button
                 variant="default"
                 size="sm"

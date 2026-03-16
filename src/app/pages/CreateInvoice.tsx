@@ -631,7 +631,7 @@ export default function CreateInvoice() {
       // Navigate to preview with a return path that includes the ID
       const finalId = editId || invoice.id;
       const returnPath = `/create-invoice?edit=${finalId}`;
-      navigate(`/invoice-preview?return=${encodeURIComponent(returnPath)}`);
+      navigate(`/invoice-preview?id=${finalId}&return=${encodeURIComponent(returnPath)}`);
     } catch (error) {
       console.error('Error saving preview:', error);
       toast.error('Failed to save and preview');
