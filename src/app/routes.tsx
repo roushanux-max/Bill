@@ -5,21 +5,22 @@ import PublicRoute from "./components/PublicRoute";
 import LoadingScreen from "./components/LoadingScreen";
 import { useEffect } from "react";
 import { useLocation, ScrollRestoration } from "react-router-dom";
+import { lazyWithRetry, clearLazyRetryFlag } from "./utils/lazyRetry";
 
 // Lazy load pages for performance
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const HomeRoute = lazy(() => import("./pages/HomeRoute"));
-const SetupShop = lazy(() => import("./pages/SetupShop"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Invoices = lazy(() => import("./pages/Invoices"));
-const CreateInvoice = lazy(() => import("./pages/CreateInvoice"));
-const InvoicePreview = lazy(() => import("./pages/InvoicePreview"));
-const Customers = lazy(() => import("./pages/Customers"));
-const Products = lazy(() => import("./pages/Products"));
-const StressTest = lazy(() => import("./pages/StressTest"));
+const LandingPage = lazyWithRetry(() => import("./pages/LandingPage"));
+const Login = lazyWithRetry(() => import("./pages/Login"));
+const Register = lazyWithRetry(() => import("./pages/Register"));
+const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const HomeRoute = lazyWithRetry(() => import("./pages/HomeRoute"));
+const SetupShop = lazyWithRetry(() => import("./pages/SetupShop"));
+const Settings = lazyWithRetry(() => import("./pages/Settings"));
+const Invoices = lazyWithRetry(() => import("./pages/Invoices"));
+const CreateInvoice = lazyWithRetry(() => import("./pages/CreateInvoice"));
+const InvoicePreview = lazyWithRetry(() => import("./pages/InvoicePreview"));
+const Customers = lazyWithRetry(() => import("./pages/Customers"));
+const Products = lazyWithRetry(() => import("./pages/Products"));
+const StressTest = lazyWithRetry(() => import("./pages/StressTest"));
 
 const LoadingFallback = () => <LoadingScreen />;
 
@@ -28,6 +29,10 @@ import Header from "./components/Header";
 import ErrorPage from "./pages/ErrorPage";
 
 const RootLayout = () => {
+  useEffect(() => {
+    clearLazyRetryFlag();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
       <ScrollRestoration />
