@@ -62,10 +62,15 @@ export default function InvoicePreview() {
       if (previewInvoiceId && previewInvoiceId !== 'sample') {
         try {
           const selectedInvoice = await getInvoice(previewInvoiceId);
-          if (selectedInvoice) {
-            console.log('Loaded invoice from ID param:', selectedInvoice.id);
+          // Only use if it actually has items (unless it's a known old one, but fresh is better)
+          if (selectedInvoice && (selectedInvoice.items?.length || 0) > 0) {
+            console.log('Loaded invoice from ID param (with items):', selectedInvoice.id);
             setInvoice(selectedInvoice);
             return;
+          }
+          // If fetched from DB but NO items, keep as fallback but try storage first if available
+          if (selectedInvoice) {
+            console.warn('Fetched invoice from DB but it has 0 items. Checking storage...');
           }
         } catch (e) {
           console.error('Failed to load invoice by ID:', e);
@@ -73,6 +78,7 @@ export default function InvoicePreview() {
       }
 
       // 2. Try to load from localStorage previewInvoice (from create page or list shortcut)
+      // This is often more reliable for IMMEDIATE previews before sync is fully confirmed
       const previewData = localStorage.getItem(getUserKey('previewInvoice'));
       if (previewData) {
         try {
@@ -83,6 +89,15 @@ export default function InvoicePreview() {
         } catch (error) {
           console.error('Error parsing preview invoice:', error);
         }
+      }
+
+      // 3. Fallback to the fetched invoice if it was empty but is all we have
+      if (previewInvoiceId && previewInvoiceId !== 'sample') {
+         const selectedInvoice = await getInvoice(previewInvoiceId);
+         if (selectedInvoice) {
+           setInvoice(selectedInvoice);
+           return;
+         }
       }
 
       // Fallback to sample data

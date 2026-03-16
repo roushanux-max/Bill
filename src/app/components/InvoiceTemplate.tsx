@@ -11,8 +11,11 @@ interface InvoiceTemplateProps {
 }
 
 export default function InvoiceTemplate({ invoice, settings, storeInfo }: InvoiceTemplateProps) {
-  const subtotal = invoice.items?.reduce((sum, item) => sum + (item.totalAmount || (item as any).amount || 0), 0) ?? invoice.subtotal ?? 0;
-  const isSameState = (storeInfo?.state ?? '') === (invoice.customer?.state ?? '');
+  const subtotal = (invoice.items && invoice.items.length > 0)
+    ? invoice.items.reduce((sum, item) => sum + (item.totalAmount || (item as any).amount || 0), 0)
+    : (invoice.subtotal || 0);
+
+  const isSameState = (storeInfo?.state?.toLowerCase() ?? '') === (invoice.customer?.state?.toLowerCase() ?? '');
 
   const taxByRate = (invoice.items ?? []).reduce((acc, item) => {
     const amt = item.totalAmount || (item as any).amount || 0;
@@ -25,22 +28,25 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   }, {} as Record<number, number>);
 
   const totalTax = Object.values(taxByRate).reduce((sum, tax) => sum + tax, 0);
-  const totalBeforeRoundOff = subtotal + totalTax + (invoice.transportCharges ?? 0) - (invoice.discountTotal ?? 0);
-  const total = Math.round(totalBeforeRoundOff);
+  const calculatedGrandTotal = Math.round(subtotal + totalTax + (invoice.transportCharges ?? 0) - (invoice.discountTotal ?? 0));
+  const total = invoice.grandTotal || calculatedGrandTotal;
 
   const numberToWords = (num: number): string => {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
     const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
 
-    if (num === 0) return 'Zero';
-    if (num < 10) return ones[num];
-    if (num < 20) return teens[num - 10];
-    if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
-    if (num < 1000) return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' and ' + numberToWords(num % 100) : '');
-    if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' Thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
-    if (num < 10000000) return numberToWords(Math.floor(num / 100000)) + ' Lakh' + (num % 100000 ? ' ' + numberToWords(num % 100000) : '');
-    return numberToWords(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + numberToWords(num % 10000000) : '');
+    const n = Math.round(num);
+    if (n === 0) return 'Zero';
+    if (n < 0) return 'Minus ' + numberToWords(Math.abs(n));
+
+    if (n < 10) return ones[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + numberToWords(n % 100) : '');
+    if (n < 100000) return numberToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + numberToWords(n % 1000) : '');
+    if (n < 10000000) return numberToWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + numberToWords(n % 100000) : '');
+    return numberToWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + numberToWords(n % 10000000) : '');
   };
 
   const amountInWords = `${numberToWords(total)} Only`;
