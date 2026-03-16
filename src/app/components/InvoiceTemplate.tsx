@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { BrandingSettings } from '../types/branding';
 import { Invoice as InvoiceType, StoreInfo } from '../types/invoice';
 
@@ -205,6 +206,40 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   <span>Transportation Charges</span>
                   <span className="font-medium text-slate-900">{invoice.transportCharges.toLocaleString('en-IN')}</span>
                 </div>
+              )}
+
+              {Object.keys(taxByRate).length > 0 ? (
+                Object.entries(taxByRate).map(([rate, amount]) => (
+                  <React.Fragment key={rate}>
+                    {isSameState ? (
+                      <>
+                        <div className="flex justify-between py-1">
+                          <span>CGST ({Number(rate) / 2}%)</span>
+                          <span className="font-medium text-slate-900">{Math.round(amount / 2).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                          <span>SGST ({Number(rate) / 2}%)</span>
+                          <span className="font-medium text-slate-900">{Math.round(amount / 2).toLocaleString('en-IN')}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between py-1">
+                        <span>IGST ({rate}%)</span>
+                        <span className="font-medium text-slate-900">{Math.round(amount).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))
+              ) : (
+                // Legacy Fallback: If no items, but grandTotal is higher than subtotal, show balance as GST
+                (invoice.grandTotal || total) > (subtotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0)) && (
+                   <div className="flex justify-between py-1">
+                     <span>GST (Estimated)</span>
+                     <span className="font-medium text-slate-900">
+                       {Math.round((invoice.grandTotal || total) - (subtotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0))).toLocaleString('en-IN')}
+                     </span>
+                   </div>
+                )
               )}
 
               {invoice.discountTotal > 0 && (

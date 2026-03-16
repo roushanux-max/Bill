@@ -21,6 +21,7 @@ const InvoicePreview = lazyWithRetry(() => import("./pages/InvoicePreview"));
 const Customers = lazyWithRetry(() => import("./pages/Customers"));
 const Products = lazyWithRetry(() => import("./pages/Products"));
 const StressTest = lazyWithRetry(() => import("./pages/StressTest"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 
 const LoadingFallback = () => <LoadingScreen />;
 
@@ -124,6 +125,10 @@ export const router = createBrowserRouter([
           {
             path: "/products",
             element: <Products />,
+          },
+          {
+            path: "/admin",
+            element: <AdminDashboard />,
           },
         ],
       },

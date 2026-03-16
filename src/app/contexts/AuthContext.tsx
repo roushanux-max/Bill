@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
-import { saveInvoice, getUserKey } from '../utils/storage';
+import { saveInvoice, getUserKey, logActivity } from '../utils/storage';
 import LoadingScreen from '../components/LoadingScreen';
 
 interface AuthContextType {
@@ -14,6 +14,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string, mobile?: string, city?: string, dob?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  isAdmin: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -24,6 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasStore, setHasStore] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Admin emails - hardcoded for now as requested
+  const ADMIN_EMAILS = ['roushanux@gmail.com', 'roushani@vercel.app'];
+
+  useEffect(() => {
+    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Check initial session
@@ -86,11 +99,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         localStorage.setItem('bill_user_id', session.user.id);
-        // When user appears (login or refresh), immediately try to restore store
-        setLoading(true);
-        await refreshHasStore(session.user);
+        // Don't wait for refresh here, let the useEffect handle it
       } else {
         localStorage.removeItem('bill_user_id');
+        setHasStore(null);
       }
       
       setLoading(false);
@@ -99,23 +111,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const isRefreshing = useRef(false);
+
   const refreshHasStore = async (currUser = user) => {
     if (!currUser) {
       setHasStore(null);
       return;
     }
 
-    // 1. Check local storage first (fastest)
-    const localStoreId = localStorage.getItem(getUserKey('active_store_id'));
-    const localOnboarding = localStorage.getItem(getUserKey('hasCompletedOnboarding')) === 'true';
-    
-    if (localStoreId && localOnboarding) {
-      setHasStore(true);
-      return;
+    if (isRefreshing.current) {
+        console.log('AuthContext: refreshHasStore already in progress, skipping.');
+        return;
     }
 
-    // 2. Query Supabase to see if this user actually has a store
+    isRefreshing.current = true;
     try {
+      // 1. Check local storage first (fastest)
+      const localStoreId = localStorage.getItem(getUserKey('active_store_id'));
+      const localOnboarding = localStorage.getItem(getUserKey('hasCompletedOnboarding')) === 'true';
+      
+      if (localStoreId && localOnboarding) {
+        setHasStore(true);
+        return;
+      }
+
+      // 2. Query Supabase to see if this user actually has a store
       const { data: stores, error } = await supabase
         .from('stores')
         .select('id')
@@ -138,8 +158,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.warn('AuthContext: Store check failed', e);
-      // Fallback: assume they have one if we're not sure, to avoid blocking them
-      setHasStore(true);
+      // Fallback: don't set hasStore false on error to avoid pushing to onboarding accidentally
+      if (hasStore === null) setHasStore(true); 
+    } finally {
+      isRefreshing.current = false;
     }
   };
 
@@ -220,10 +242,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (!error && data.user) {
+      await logActivity('login', 'user', data.user.id);
+    }
     return { error };
   };
 
@@ -265,6 +290,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signInWithGoogle,
     signOut,
+    isAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

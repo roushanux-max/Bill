@@ -28,12 +28,18 @@ const INDIAN_STATES = [
 
 export default function SetupShop() {
   const navigate = useNavigate();
-  const { user, displayEmail, refreshHasStore } = useAuth();
+  const { user, displayEmail, refreshHasStore, hasStore } = useAuth();
   const { refreshBranding } = useBranding();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [fetchingPincode, setFetchingPincode] = useState(false);
+
+  useEffect(() => {
+    if (hasStore === true) {
+      navigate('/dashboard');
+    }
+  }, [hasStore, navigate]);
   const [savingLater, setSavingLater] = useState(false);
   const [hasExistingStore, setHasExistingStore] = useState(false);
 

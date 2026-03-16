@@ -363,20 +363,29 @@ export function generateInvoicePDF(
     if (invoice.transportCharges > 0) {
         drawSummaryRow('Transportation Charges', invoice.transportCharges.toLocaleString('en-IN'));
     }
-    if (invoice.taxTotal > 0) {
-        if (isSameState) {
-            drawSummaryRow('CGST Total', Math.round(cgstTotal).toLocaleString('en-IN'));
-            drawSummaryRow('SGST Total', Math.round(sgstTotal).toLocaleString('en-IN'));
+    const calculatedGrandTotal = Math.round(amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
+    const finalTotal = invoice.grandTotal || calculatedGrandTotal;
+
+    if (invoice.taxTotal > 0 || (calculatedGrandTotal > (amountTotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0)))) {
+        if (invoice.items && invoice.items.length > 0) {
+            if (isSameState) {
+                drawSummaryRow('CGST Total', Math.round(cgstTotal).toLocaleString('en-IN'));
+                drawSummaryRow('SGST Total', Math.round(sgstTotal).toLocaleString('en-IN'));
+            } else {
+                drawSummaryRow('IGST Total', Math.round(igstTotal).toLocaleString('en-IN'));
+            }
         } else {
-            drawSummaryRow('IGST Total', Math.round(igstTotal).toLocaleString('en-IN'));
+            // Legacy Fallback: Show the difference as GST
+            const taxGap = finalTotal - (amountTotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
+            if (taxGap > 0) {
+                drawSummaryRow('GST (Estimated)', Math.round(taxGap).toLocaleString('en-IN'));
+            }
         }
     }
     if (invoice.discountTotal > 0) {
         drawSummaryRow('Overall Discount', `- ${invoice.discountTotal.toLocaleString('en-IN')}`, true);
     }
 
-    const calculatedGrandTotal = Math.round(amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
-    const finalTotal = invoice.grandTotal || calculatedGrandTotal;
 
     y += 2;
     pdf.setDrawColor(...borderLight);

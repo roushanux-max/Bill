@@ -12,6 +12,7 @@ import {
     Settings as SettingsIcon, 
     Package, 
     LogOut,
+    Shield,
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -36,6 +37,11 @@ export default function Header() {
         { label: 'Clients', icon: Users, path: '/customers' },
         { label: 'Settings', icon: SettingsIcon, path: '/settings' },
     ];
+
+    const { isAdmin } = useAuth();
+    if (isAdmin) {
+        navItems.push({ label: 'Admin', icon: Shield, path: '/admin' });
+    }
 
     const primaryColor = user ? settings.primaryColor : '#6366f1';
     const businessName = (user && storeInfo?.name) ? storeInfo.name : 'Bill';

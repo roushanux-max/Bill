@@ -5,6 +5,14 @@ import { supabase } from './supabase';
 import { parseDateFromDisplay } from './dateUtils';
 
 // Helper to get user-specific storage key
+// Helper to generate a unique ID if crypto.randomUUID is not available
+const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 export const getUserKey = (key: string) => {
   if (typeof window === 'undefined') return key;
 
@@ -31,7 +39,7 @@ export const getUserKey = (key: string) => {
     }
   }
 
-  // If we still don't have a user ID, we return the base key to avoid "undefined_" prefixes
+// If we still don't have a user ID, we return the base key to avoid "undefined_" prefixes
   // which would cause data to be lost once the user ID finally arrives.
   return storedUser ? `${storedUser}_${key}` : key;
 };
@@ -82,7 +90,7 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
     .from('stores')
     .select('*')
     .eq('id', storeId)
-    .single();
+    .maybeSingle();
 
   if (data && !error) {
     const info: StoreInfo = {
@@ -199,7 +207,7 @@ export const getBrandingSettings = async (force = false): Promise<BrandingSettin
     .from('stores')
     .select('branding_settings')
     .eq('id', storeId)
-    .single();
+    .maybeSingle();
 
   if (error || !data || !data.branding_settings) {
     if (force) return defaultBrandingSettings;
@@ -597,6 +605,10 @@ export const getInvoice = async (id: string): Promise<Invoice | null> => {
     .select('*')
     .eq('invoice_id', id);
 
+  if (itemsError) {
+    console.error('getInvoice: Failed to fetch items:', itemsError.message);
+  }
+
   return {
     id: inv.id,
     invoiceNumber: inv.invoice_number,
@@ -695,7 +707,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       const itemsPayload = invoice.items
         .filter(item => (item.productName || (item as any).name))
         .map(item => ({
-          id: (item.id && item.id.length > 30) ? item.id : crypto.randomUUID(),
+          id: (item.id && item.id.length > 30) ? item.id : generateId(),
           user_id: user.id,
           invoice_id: invId,
           product_id: (item.product_id && item.product_id.length > 30) ? item.product_id : null,
@@ -718,7 +730,9 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
         .insert(itemsPayload);
 
       if (itemsError) {
-        console.warn('Invoice items sync failed (stored locally):', itemsError.message);
+        console.error('Invoice items sync failed (Database Error):', itemsError.message, itemsError.details);
+      } else {
+        console.log(`Successfully synced ${itemsPayload.length} items for invoice ${invId}`);
       }
     }
 
@@ -810,16 +824,91 @@ export const savePayment = async (payment: Partial<Payment>) => {
 };
 
 export const logActivity = async (action: string, entityType: string, entityId?: string, metadata?: any) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-  await supabase.from('activity_logs').insert({
-    user_id: user.id,
-    action,
-    entity_type: entityType,
-    entity_id: entityId,
-    metadata
-  });
+    await supabase.from('activity_logs').insert([{
+      user_id: user.id,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      metadata: metadata || {}
+    }]);
+  } catch (e) {
+    console.warn('Logging failed:', e);
+  }
+};
+
+// --- Admin Utilities ---
+
+export const getAdminStats = async () => {
+  try {
+    // 1. Get total users
+    const { data: stores } = await supabase.from('stores').select('user_id');
+    const totalUsers = new Set(stores?.map(s => s.user_id)).size;
+
+    // 2. Get total invoices today
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { count: invoicesToday } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', startOfDay.toISOString());
+
+    // 3. Get total revenue
+    const { data: revenueData } = await supabase.from('invoices').select('grand_total');
+    const totalRevenue = revenueData?.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0) || 0;
+
+    // 4. Get recent logs
+    const { data: recentLogs } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    return {
+      totalUsers,
+      invoicesToday: invoicesToday || 0,
+      totalRevenue,
+      recentLogs: recentLogs || []
+    };
+  } catch (e) {
+    console.error('Admin stats failed:', e);
+    return null;
+  }
+};
+
+export const getAllUsers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('stores')
+      .select('*, invoices:invoices(count)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.error('Failed to get users:', e);
+    return [];
+  }
+};
+
+export const updateUserAccess = async (userId: string, isBlocked: boolean) => {
+  try {
+    const { error } = await supabase
+      .from('stores')
+      .update({ is_blocked: isBlocked })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    
+    await logActivity(isBlocked ? 'blocked_user' : 'unblocked_user', 'user', userId);
+    return true;
+  } catch (e) {
+    console.error('Failed to update user access:', e);
+    return false;
+  }
 };
 
 // Realtime subscriptions helpers
