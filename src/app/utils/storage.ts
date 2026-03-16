@@ -546,34 +546,37 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
     return [];
   }
 
-  const invoices = (data || []).map(inv => ({
-    id: inv.id,
-    invoiceNumber: inv.invoice_number,
-    date: inv.date,
-    customerId: inv.customer_id,
-    customer: {
-      id: inv.customers?.id,
-      name: inv.customers?.name || 'Deleted Customer',
-      gstin: inv.customers?.gstin || '',
-      address: inv.customers?.address || '',
-      state: inv.customers?.state || '',
-      phone: inv.customers?.phone || '',
-      email: inv.customers?.email || '',
-      createdAt: inv.customers?.created_at,
-    },
-    // For listing, we just need the count, but we'll mock an empty array or length-only for UI compatibility
-    items: new Array(inv.items?.[0]?.count || 0).fill({}) as any[],
-    subtotal: Number(inv.subtotal),
-    taxTotal: Number(inv.tax_total),
-    discountTotal: Number(inv.discount_total),
-    grandTotal: Number(inv.grand_total),
-    transportCharges: Number(inv.transport_charges) || 0,
-    notes: inv.notes || '',
-    status: inv.status || 'unpaid',
-    createdAt: inv.created_at,
-    updatedAt: inv.updated_at || inv.created_at,
-    store_id: storeId,
-  }));
+  const invoices = (data || [])
+    .map(inv => ({
+      id: inv.id,
+      invoiceNumber: inv.invoice_number,
+      date: inv.date,
+      customerId: inv.customer_id,
+      customer: {
+        id: inv.customers?.id,
+        name: inv.customers?.name || 'Deleted Customer',
+        gstin: inv.customers?.gstin || '',
+        address: inv.customers?.address || '',
+        state: inv.customers?.state || '',
+        phone: inv.customers?.phone || '',
+        email: inv.customers?.email || '',
+        createdAt: inv.customers?.created_at,
+      },
+      // For listing, we just need the count, but we'll mock an empty array or length-only for UI compatibility
+      items: new Array(inv.items?.[0]?.count || 0).fill({}) as any[],
+      subtotal: Number(inv.subtotal),
+      taxTotal: Number(inv.tax_total),
+      discountTotal: Number(inv.discount_total),
+      grandTotal: Number(inv.grand_total),
+      transportCharges: Number(inv.transport_charges) || 0,
+      notes: inv.notes || '',
+      status: inv.status || 'unpaid',
+      createdAt: inv.created_at,
+      updatedAt: inv.updated_at || inv.created_at,
+      store_id: storeId,
+    }))
+    // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
+    .filter(inv => !(inv.customer.name === 'Deleted Customer' && inv.grandTotal === 0));
 
   localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(invoices));
   return invoices;

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ArrowLeft, Plus, Search, Eye, Pencil, Download, Share2, Trash2, Filter, X, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Invoice } from '../types/invoice';
-import { getInvoices, deleteInvoice, saveInvoice, getStoreInfo, getBrandingSettings } from '../utils/storage';
+import { getInvoices, deleteInvoice, saveInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
@@ -55,8 +55,8 @@ export default function Invoices() {
   };
 
   const handleView = (invoice: Invoice) => {
-    localStorage.setItem('previewInvoice', JSON.stringify(invoice));
-    navigate(`/invoice-preview?return=${encodeURIComponent('/invoices')}`);
+    localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
+    navigate(`/invoice-preview?id=${invoice.id}&return=${encodeURIComponent('/invoices')}`);
   };
 
   // Helper function to parse both DD.MM.YY and ISO (YYYY-MM-DD) date formats

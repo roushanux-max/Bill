@@ -57,26 +57,31 @@ export default function InvoicePreview() {
         setReturnPath(returnTo);
       }
 
-      // First try to load from localStorage previewInvoice (from create page)
+      // 1. Try to load from ID parameter (highest priority - from shared link or direct navigation)
+      const previewInvoiceId = searchParams.get('id');
+      if (previewInvoiceId && previewInvoiceId !== 'sample') {
+        try {
+          const selectedInvoice = await getInvoice(previewInvoiceId);
+          if (selectedInvoice) {
+            console.log('Loaded invoice from ID param:', selectedInvoice.id);
+            setInvoice(selectedInvoice);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to load invoice by ID:', e);
+        }
+      }
+
+      // 2. Try to load from localStorage previewInvoice (from create page or list shortcut)
       const previewData = localStorage.getItem(getUserKey('previewInvoice'));
       if (previewData) {
         try {
           const parsedInvoice = JSON.parse(previewData);
-          console.log('Loaded preview invoice:', parsedInvoice);
+          console.log('Loaded preview invoice from storage:', parsedInvoice.id);
           setInvoice(parsedInvoice);
           return;
         } catch (error) {
           console.error('Error parsing preview invoice:', error);
-        }
-      }
-
-      // Try to load from ID parameter (from invoice list)
-      const previewInvoiceId = searchParams.get('id');
-      if (previewInvoiceId) {
-        const selectedInvoice = await getInvoice(previewInvoiceId);
-        if (selectedInvoice) {
-          setInvoice(selectedInvoice);
-          return;
         }
       }
 
