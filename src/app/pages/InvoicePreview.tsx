@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Download, Share2, Printer, Pencil } from 'lucide-react';
-import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
+import { BrandingSettings } from '../types/branding';
 import InvoiceTemplate from '../components/InvoiceTemplate';
 import { Invoice, StoreInfo } from '../types/invoice';
-import { getInvoices, getInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
+import { getInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { useBranding } from '../contexts/BrandingContext';
 import { toast } from 'sonner';
+import { formatDateForDisplay } from '../utils/dateUtils';
 
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -18,149 +19,154 @@ export default function InvoicePreview() {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(globalStoreInfo);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [returnPath, setReturnPath] = useState('/settings');
 
-  useEffect(() => {
-    const init = async () => {
-      // Load settings and store info (prefer preview overrides saved in localStorage)
-      // Load settings and store info from context
-      setSettings(globalSettings);
-      setStoreInfo(globalStoreInfo);
-
-      // Preview overrides (from Branding Settings preview button)
-      const previewSettingsRaw = localStorage.getItem(getUserKey('previewBrandingSettings'));
-      const previewStoreRaw = localStorage.getItem(getUserKey('previewStoreInfo'));
-
-      if (previewSettingsRaw) {
-        try {
-          const parsed = JSON.parse(previewSettingsRaw);
-          setSettings(parsed);
-        } catch (e) {
-          console.error('Failed to parse previewBrandingSettings', e);
-        }
-      }
-
-      if (previewStoreRaw) {
-        try {
-          const parsed = JSON.parse(previewStoreRaw);
-          setStoreInfo(parsed);
-        } catch (e) {
-          console.error('Failed to parse previewStoreInfo', e);
-        }
-      }
-
-      // Check for return path
-      const returnTo = searchParams.get('return');
-      if (returnTo) {
-        setReturnPath(returnTo);
-      }
-
-      // 1. Try to load from ID parameter (highest priority - from shared link or direct navigation)
+  const loadInvoice = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 1. Try to load from ID parameter (highest priority)
       const previewInvoiceId = searchParams.get('id');
       if (previewInvoiceId && previewInvoiceId !== 'sample') {
         try {
           const selectedInvoice = await getInvoice(previewInvoiceId);
-          // Only use if it actually has items (unless it's a known old one, but fresh is better)
+          // Only use if it actually has items
           if (selectedInvoice && (selectedInvoice.items?.length || 0) > 0) {
-            console.log('Loaded invoice from ID param (with items):', selectedInvoice.id);
+            console.log('Loaded invoice from DB (with items):', selectedInvoice.id);
             setInvoice(selectedInvoice);
             return;
           }
-          // If fetched from DB but NO items, keep as fallback but try storage first if available
+          
           if (selectedInvoice) {
-            console.warn('Fetched invoice from DB but it has 0 items. Checking storage...');
+            console.warn('Fetched invoice from DB but it has 0 items. Checking all storage keys for recovery...');
+            
+            // AGGRESSIVE RECOVERY: Search ALL localStorage keys for this ID/Number
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && (key.includes('previewInvoice') || key.includes('invoiceDraft'))) {
+                try {
+                  const data = JSON.parse(localStorage.getItem(key) || '');
+                  if (data && (data.id === previewInvoiceId || data.invoiceNumber === selectedInvoice.invoiceNumber) && (data.items?.length || 0) > 0) {
+                    console.log('Successfully recovered items from storage key:', key);
+                    // Ensure all items have the required discountAmount property
+                    const fixedItems = data.items.map((it: any) => ({ ...it, discountAmount: it.discountAmount || 0 }));
+                    setInvoice({ ...selectedInvoice, items: fixedItems });
+                    toast.success('Items recovered from local cache');
+                    return;
+                  }
+                } catch (e) {}
+              }
+            }
+            
+            setInvoice(selectedInvoice);
           }
         } catch (e) {
           console.error('Failed to load invoice by ID:', e);
         }
       }
 
-      // 2. Try to load from localStorage previewInvoice (from create page or list shortcut)
-      // This is often more reliable for IMMEDIATE previews before sync is fully confirmed
+      // 2. Try to load from localStorage previewInvoice (standard path)
       const previewData = localStorage.getItem(getUserKey('previewInvoice'));
       if (previewData) {
         try {
           const parsedInvoice = JSON.parse(previewData);
-          console.log('Loaded preview invoice from storage:', parsedInvoice.id);
-          setInvoice(parsedInvoice);
-          return;
+          if (!previewInvoiceId || parsedInvoice.id === previewInvoiceId || previewInvoiceId === 'sample') {
+            console.log('Loaded preview invoice from primary storage:', parsedInvoice.id);
+            setInvoice(parsedInvoice);
+            return;
+          }
         } catch (error) {
           console.error('Error parsing preview invoice:', error);
         }
       }
 
-      // 3. Fallback to the fetched invoice if it was empty but is all we have
-      if (previewInvoiceId && previewInvoiceId !== 'sample') {
-         const selectedInvoice = await getInvoice(previewInvoiceId);
-         if (selectedInvoice) {
-           setInvoice(selectedInvoice);
-           return;
-         }
-      }
-
       // Fallback to sample data
       setInvoice({
         id: 'sample',
-        invoiceNumber: '1060',
-        date: '16.01.26',
-        customerId: 'sample',
+        invoiceNumber: 'INV-2024-001',
+        date: formatDateForDisplay(new Date().toISOString()),
+        customerId: 'cust-1',
         customer: {
-          id: 'sample',
-          name: 'Credit Access India Foundation',
-          gstin: '10DAOPK4311H1Z1',
-          address: 'Jayanagar, Bangalore - 560070',
-          state: 'Karnataka',
-          phone: '+91 98765 12345',
-          email: 'sample@example.com',
+          id: 'cust-1',
+          name: 'Acme Corporation',
+          gstin: '27AABCU1234F1Z5',
+          address: '123 Business Park, Sector 62, Mumbai, MH - 400001',
+          state: 'Maharashtra',
+          phone: '+91 98765 43210',
+          email: 'finance@acme.com',
           createdAt: new Date().toISOString()
         },
         items: [
           {
-            id: '1',
+            id: 'item-1',
             invoice_id: 'sample',
-            product_id: '1',
-            productName: 'Iron Rack Size (6×3.5) with Five Plate',
-            hsn: '9403',
-            quantity: 3,
-            unit: 'pcs',
-            unitPrice: 3550,
+            product_id: 'p-1',
+            productName: 'Professional Web Design Services',
+            quantity: 1,
+            unitPrice: 45000,
+            hsn: '998311',
             taxRate: 18,
-            taxAmount: (3550 * 3 * 18) / 100,
+            taxAmount: 8100,
             discountAmount: 0,
-            totalAmount: 10650,
+            totalAmount: 45000
           },
           {
-            id: '2',
+            id: 'item-2',
             invoice_id: 'sample',
-            product_id: '2',
-            productName: '3 Seater SS Visitor Chair Made Up With 304 Grade 2 Endless and Bottom Connecting (50/100 mm SS Pipe) (6.2 1/4 HW) 34 KG and 600 Gms Seating Size 29 Inches Seating Size',
-            hsn: '9403',
-            quantity: 3,
-            unit: 'pcs',
-            unitPrice: 12450,
+            product_id: 'p-2',
+            productName: 'Premium Hosting (1 Year)',
+            quantity: 1,
+            unitPrice: 3000,
+            hsn: '998313',
             taxRate: 18,
-            taxAmount: (12450 * 3 * 18) / 100,
+            taxAmount: 540,
             discountAmount: 0,
-            totalAmount: 37350,
-          },
+            totalAmount: 3000
+          }
         ],
-        transportCharges: 2500,
+        transportCharges: 0,
         discountTotal: 0,
-        notes: 'All Subject to Arrah Jurisdiction only.\nGoods once sold will not be taken back\nAll works transit will be entertained.',
+        notes: 'Thank you for your business! Please pay within 15 days.',
         subtotal: 48000,
         taxTotal: 8640,
-        grandTotal: 59140,
-        status: 'paid',
+        grandTotal: 56640,
+        status: 'unpaid',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        store_id: 'sample',
+        store_id: ''
       });
+    } catch (e) {
+      console.error('Final fallback error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const init = async () => {
+      setSettings(globalSettings);
+      setStoreInfo(globalStoreInfo);
+
+      const previewSettingsRaw = localStorage.getItem(getUserKey('previewBrandingSettings'));
+      const previewStoreRaw = localStorage.getItem(getUserKey('previewStoreInfo'));
+
+      if (previewSettingsRaw) {
+        try { setSettings(JSON.parse(previewSettingsRaw)); } catch (e) {}
+      }
+      if (previewStoreRaw) {
+        try { setStoreInfo(JSON.parse(previewStoreRaw)); } catch (e) {}
+      }
+
+      const returnTo = searchParams.get('return');
+      if (returnTo) setReturnPath(returnTo);
+
+      await loadInvoice();
     };
 
     init();
-  }, [searchParams]);
+  }, [globalSettings, globalStoreInfo, searchParams, loadInvoice]);
 
   const handleBack = () => {
     navigate(returnPath);

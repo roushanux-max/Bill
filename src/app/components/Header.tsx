@@ -25,7 +25,7 @@ import {
 
 export default function Header() {
     const [scrolled, setScrolled] = useState(false);
-    const { user, signOut } = useAuth();
+    const { user, signOut, isAdmin } = useAuth();
     const { settings, storeInfo } = useBranding();
     const location = useLocation();
 
@@ -38,7 +38,6 @@ export default function Header() {
         { label: 'Settings', icon: SettingsIcon, path: '/settings' },
     ];
 
-    const { isAdmin } = useAuth();
     if (isAdmin) {
         navItems.push({ label: 'Admin', icon: Shield, path: '/admin' });
     }

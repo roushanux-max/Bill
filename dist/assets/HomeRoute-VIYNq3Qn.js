@@ -1,0 +1,1 @@
+import{d as n,u as r,j as o,e as t}from"./index-QSZWfqRm.js";import i from"./Dashboard-3113x3AA.js";import"./card-BHfMFEBR.js";import"./SkeletonLoaders-D4o3KUtA.js";import"./eye-CGmeubcT.js";function f(){const{user:e,loading:a}=n(),{loading:s}=r();return a||s?o.jsx(t,{message:"Loading your business data..."}):o.jsx(i,{})}export{f as default};

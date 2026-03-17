@@ -50,8 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (tokenData) {
             const parsed = JSON.parse(tokenData);
             const userId = parsed?.user?.id;
+            const userEmail = parsed?.user?.email;
             if (userId && !localStorage.getItem('bill_user_id')) {
               localStorage.setItem('bill_user_id', userId);
+              // Proactively log login for discovery
+              logActivity('login_restored', 'user', userId, { email: userEmail });
             }
           }
         }
@@ -247,7 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
     if (!error && data.user) {
-      await logActivity('login', 'user', data.user.id);
+      await logActivity('login', 'user', data.user.id, { email: data.user.email });
     }
     return { error };
   };
@@ -259,6 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
+    // The activity log for Google will happen in the INITIAL_SESSION check or onAuthStateChange
     return { error };
   };
 

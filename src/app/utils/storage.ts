@@ -367,7 +367,17 @@ export const deleteCustomer = async (id: string) => {
 
   // Also attempt to remove from Supabase (best-effort)
   try {
-    await supabase.from('customers').delete().eq('id', id);
+    const { error } = await supabase.from('customers').delete().eq('id', id);
+    if (error) {
+      if (error.code === '23503') { // Foreign key violation
+        console.warn('Customer has linked invoices. Using local-only delete for now.');
+        // This is a "soft-delete" on the client side since we can't easily add is_deleted column
+        // The customer will remain in DB but won't show in the main list because we cleared them from localStorage
+        // and getCustomers returns union/filtered data usually.
+      } else {
+        throw error;
+      }
+    }
   } catch (e) {
     console.warn('Supabase customer delete failed:', e);
   }
@@ -725,14 +735,19 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       // Delete old items and re-insert (best-effort)
       await supabase.from('invoice_items').delete().eq('invoice_id', invId);
 
-      const { error: itemsError } = await supabase
+      const { data: insertData, error: itemsError } = await supabase
         .from('invoice_items')
-        .insert(itemsPayload);
+        .insert(itemsPayload)
+        .select();
 
       if (itemsError) {
         console.error('Invoice items sync failed (Database Error):', itemsError.message, itemsError.details);
+        // Secondary attempt: retry once after 1 second if it was a network glitch
+        setTimeout(async () => {
+           await supabase.from('invoice_items').insert(itemsPayload);
+        }, 1000);
       } else {
-        console.log(`Successfully synced ${itemsPayload.length} items for invoice ${invId}`);
+        console.log(`Successfully synced ${itemsPayload?.length || 0} items for invoice ${invId}`);
       }
     }
 
@@ -828,15 +843,21 @@ export const logActivity = async (action: string, entityType: string, entityId?:
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    const refinedMetadata = {
+      ...metadata,
+      email: user.email, // Always include email for admin discovery
+      user_agent: navigator.userAgent,
+    };
+
     await supabase.from('activity_logs').insert([{
       user_id: user.id,
       action,
       entity_type: entityType,
       entity_id: entityId,
-      metadata: metadata || {}
+      metadata: refinedMetadata
     }]);
   } catch (e) {
-    console.warn('Logging failed:', e);
+    console.warn('Silent log failure:', e);
   }
 };
 
@@ -844,9 +865,9 @@ export const logActivity = async (action: string, entityType: string, entityId?:
 
 export const getAdminStats = async () => {
   try {
-    // 1. Get total users
-    const { data: stores } = await supabase.from('stores').select('user_id');
-    const totalUsers = new Set(stores?.map(s => s.user_id)).size;
+// 1. Get total users from activity logs (more comprehensive)
+    const { data: userLogs } = await supabase.from('activity_logs').select('user_id');
+    const totalUsers = new Set(userLogs?.map(l => l.user_id)).size;
 
     // 2. Get total invoices today
     const startOfDay = new Date();
@@ -860,7 +881,15 @@ export const getAdminStats = async () => {
     const { data: revenueData } = await supabase.from('invoices').select('grand_total');
     const totalRevenue = revenueData?.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0) || 0;
 
-    // 4. Get recent logs
+    // 4. Get live users (active in last 15 minutes)
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: liveLogs } = await supabase
+      .from('activity_logs')
+      .select('user_id')
+      .gte('created_at', fifteenMinsAgo);
+    const liveUsers = new Set(liveLogs?.map(l => l.user_id)).size;
+
+    // 5. Get recent logs
     const { data: recentLogs } = await supabase
       .from('activity_logs')
       .select('*')
@@ -869,6 +898,7 @@ export const getAdminStats = async () => {
 
     return {
       totalUsers,
+      liveUsers: liveUsers || 0,
       invoicesToday: invoicesToday || 0,
       totalRevenue,
       recentLogs: recentLogs || []
@@ -881,13 +911,52 @@ export const getAdminStats = async () => {
 
 export const getAllUsers = async () => {
   try {
-    const { data, error } = await supabase
+    // 1. Get users with stores
+    const { data: stores, error: storeError } = await supabase
       .from('stores')
       .select('*, invoices:invoices(count)')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data;
+    if (storeError) throw storeError;
+
+    // 2. Get unique users from logs to find "Pending" users
+    const { data: logs, error: logError } = await supabase
+      .from('activity_logs')
+      .select('user_id, metadata, created_at')
+      .order('created_at', { ascending: false });
+
+    if (logError) return stores || [];
+
+    // Create a map of user_id -> latest email/info
+    const userMap = new Map();
+    logs?.forEach(log => {
+      if (!userMap.has(log.user_id)) {
+        userMap.set(log.user_id, {
+          email: log.metadata?.email,
+          last_active: log.created_at
+        });
+      }
+    });
+
+    const combinedUsers = [...(stores || [])];
+    const storeUserIds = new Set(stores?.map(s => s.user_id));
+
+    // Add users who don't have stores yet
+    userMap.forEach((info, userId) => {
+      if (!storeUserIds.has(userId)) {
+        combinedUsers.push({
+          user_id: userId,
+          business_name: 'Pending Setup',
+          owner_name: info.email?.split('@')[0] || 'New User',
+          email: info.email || 'Unknown',
+          is_pending: true,
+          created_at: info.last_active,
+          invoices: [{ count: 0 }]
+        });
+      }
+    });
+
+    return combinedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   } catch (e) {
     console.error('Failed to get users:', e);
     return [];
@@ -901,13 +970,36 @@ export const updateUserAccess = async (userId: string, isBlocked: boolean) => {
       .update({ is_blocked: isBlocked })
       .eq('user_id', userId);
 
-    if (error) throw error;
+    if (error) {
+       console.error('DATABASE ERROR updating user access:', error);
+       throw error;
+    }
     
     await logActivity(isBlocked ? 'blocked_user' : 'unblocked_user', 'user', userId);
     return true;
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to update user access:', e);
+    // Log detailed diagnostics for the 400 error
+    if (e.message || e.details) {
+       toast.error(`Admin Error: ${e.message || 'Check console'}`);
+    }
     return false;
+  }
+};
+
+export const getUserActivity = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.error('Failed to get user activity:', e);
+    return [];
   }
 };
 

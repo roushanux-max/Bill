@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ArrowLeft, Plus, Search, Eye, Pencil, Download, Share2, Trash2, Filter, X, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Invoice } from '../types/invoice';
-import { getInvoices, deleteInvoice, saveInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
+import { getInvoices, deleteInvoice, saveInvoice, getInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
@@ -110,10 +110,13 @@ export default function Invoices() {
       );
     }
 
-    // Status filter (for future implementation - currently all are pending)
+    // Status filter
     if (filterStatus !== 'all') {
       filtered = filtered.filter(invoice => {
-        // For future: implement paid/pending status
+        const status = (invoice.status || 'unpaid').toLowerCase();
+        if (filterStatus === 'paid') return status === 'paid';
+        if (filterStatus === 'pending') return status === 'unpaid' || status === 'pending';
+        if (filterStatus === 'overdue') return status === 'overdue';
         return true;
       });
     }
@@ -169,9 +172,11 @@ export default function Invoices() {
         toast.error('Store info not found. Please complete your shop setup.', { id: toastId });
         return;
       }
+      // Always fetch the full invoice with items to prevent empty PDFs
+      const fullInvoice = await getInvoice(invoice.id) || invoice;
       const brandSettings = await getBrandingSettings() || defaultBrandingSettings;
-      const pdf = generateInvoicePDF(invoice, storeInfo, brandSettings);
-      const filename = getInvoiceFilename(invoice);
+      const pdf = generateInvoicePDF(fullInvoice, storeInfo, brandSettings);
+      const filename = getInvoiceFilename(fullInvoice);
       pdf.save(filename);
       toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (error) {
@@ -187,15 +192,17 @@ export default function Invoices() {
     const toastId = toast.loading('Preparing to share...');
     try {
       const storeInfo = await getStoreInfo();
+      // Always fetch the full invoice with items to prevent sharing empty PDFs
+      const fullInvoice = await getInvoice(invoice.id) || invoice;
       const brandSettings = await getBrandingSettings() || defaultBrandingSettings;
-      const pdf = generateInvoicePDF(invoice, storeInfo!, brandSettings);
-      const filename = getInvoiceFilename(invoice);
+      const pdf = generateInvoicePDF(fullInvoice, storeInfo!, brandSettings);
+      const filename = getInvoiceFilename(fullInvoice);
       const pdfBlob = pdf.output('blob');
       const file = new File([pdfBlob], filename, { type: 'application/pdf' });
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
-          title: `Invoice ${invoice.invoiceNumber}`,
-          text: `Invoice for ${invoice.customer?.name || 'Customer'}`,
+          title: `Invoice ${fullInvoice.invoiceNumber}`,
+          text: `Invoice for ${fullInvoice.customer?.name || 'Customer'}`,
           files: [file],
         });
         toast.dismiss(toastId);

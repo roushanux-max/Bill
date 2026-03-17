@@ -4,10 +4,10 @@ export interface Customer {
   store_id?: string;
   name: string;
   phone: string;
+  email?: string;
   gstin: string;
   address: string;
   state: string;
-  email?: string;
   createdAt: string;
   updatedAt?: string;
 }

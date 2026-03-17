@@ -87,8 +87,8 @@ export default function Products() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.hsnCode) {
-      toast.error('Please fill in required fields');
+    if (!formData.name) {
+      toast.error('Please enter product name');
       return;
     }
 
@@ -115,18 +115,24 @@ export default function Products() {
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.hsnCode.includes(searchTerm)
+    (product.hsnCode || '').includes(searchTerm)
   );
 
   // Check which filters are needed
+  const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
   const uniqueGstRates = [...new Set(filteredProducts.map(p => p.gstRate))];
   const showGstFilter = true; // Always show GST filter for clarity
   const showAnyFilter = filteredProducts.length > 0;
 
-  // Apply GST filters directly to search results
-  const filteredByGst = filterGstRate === 'all'
+  // Apply category filter
+  const filteredByCategory = filterCategory === 'all'
     ? filteredProducts
-    : filteredProducts.filter(product => product.gstRate === parseInt(filterGstRate));
+    : filteredProducts.filter(product => product.category === filterCategory);
+
+  // Apply GST filter
+  const filteredByGst = filterGstRate === 'all'
+    ? filteredByCategory
+    : filteredByCategory.filter(product => product.gstRate === parseInt(filterGstRate));
 
   // Apply sorting
   const sortedProducts = filteredByGst.sort((a, b) => {
@@ -147,6 +153,7 @@ export default function Products() {
   };
 
   const hasActiveFilters = filterCategory !== 'all' || filterGstRate !== 'all' || sortBy !== 'date';
+  const showCategoryFilter = uniqueCategories.length > 1;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 sm:pb-8">
@@ -192,13 +199,12 @@ export default function Products() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="hsnCode" className="text-sm">HSN Code *</Label>
+                    <Label htmlFor="hsnCode" className="text-sm">HSN Code</Label>
                     <Input
                       id="hsnCode"
                       value={formData.hsnCode}
                       onChange={(e) => setFormData({ ...formData, hsnCode: e.target.value })}
-                      placeholder="9403"
-                      required
+                      placeholder="9403 (optional)"
                       className="text-sm"
                     />
                   </div>
@@ -307,13 +313,26 @@ export default function Products() {
             {/* Filter Controls */}
             {showFilters && showAnyFilter && (
               <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                {showCategoryFilter && (
+                  <div className="flex-1 space-y-1.5">
+                    <Label htmlFor="filter-cat" className="text-xs font-medium text-slate-700">Category</Label>
+                    <Select value={filterCategory} onValueChange={(e) => setFilterCategory(e)}>
+                      <SelectTrigger className={`w-full h-9 ${filterCategory !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
+                        <SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {uniqueCategories.sort().map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {showGstFilter && (
                   <div className="flex-1 space-y-1.5">
                     <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">GST Rate</Label>
-                    <Select
-                      value={filterGstRate}
-                      onValueChange={(e) => setFilterGstRate(e)}
-                    >
+                    <Select value={filterGstRate} onValueChange={(e) => setFilterGstRate(e)}>
                       <SelectTrigger className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
                         <SelectValue>{filterGstRate === 'all' ? 'All GST Rates' : `${filterGstRate}%`}</SelectValue>
                       </SelectTrigger>
