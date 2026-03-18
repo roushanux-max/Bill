@@ -718,6 +718,8 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     tax_total: invoice.taxTotal,
     discount_total: invoice.discountTotal,
     grand_total: invoice.grandTotal,
+    total: invoice.grandTotal, // Sync with 'total' column for legacy/alternate queries
+    items: invoice.items || [], // Sync with 'items' JSONB column for self-contained record
     transport_charges: invoice.transportCharges || 0,
     notes: invoice.notes || '',
     status: invoice.status || 'unpaid',
