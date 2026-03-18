@@ -1,11 +1,13 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, FileText, Plus, Users, Settings, Package } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Home, FileText, Plus, Users, Settings, Package, Shield } from 'lucide-react';
 import { cn } from './ui/utils';
 import { useBranding } from '../contexts/BrandingContext';
 
 const MobileNav: React.FC = () => {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const { settings } = useBranding();
 
   const navItems = [
@@ -15,6 +17,10 @@ const MobileNav: React.FC = () => {
     { label: 'Clients', icon: Users, path: '/customers' },
     { label: 'Settings', icon: Settings, path: '/settings' },
   ];
+
+  if (isAdmin) {
+    navItems.push({ label: 'Admin', icon: Shield, path: '/admin' });
+  }
 
   // Hidden on setup-shop or other full-screen onboarding pages if needed
   const hideOnPaths = ['/setup-shop', '/invoice-preview', '/login', '/register', '/'];
