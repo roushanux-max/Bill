@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown, Plus } from 'lucide-react';
+import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown, Plus, Trash2, Download, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import Logo from '../components/Logo';
 import { useBranding } from '../contexts/BrandingContext';
+import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
+import { defaultBrandingSettings } from '../types/branding';
+import { supabase } from '../utils/supabase';
 
 // --- Utility: Intersection Observer Hook for scroll animations ---
 function useInView(threshold = 0.15) {
@@ -70,8 +74,17 @@ const stats = [
 export default function LandingPage() {
     const { settings } = useBranding();
     const [scrolled, setScrolled] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    // Demo Invoice State
+    const [demoItems, setDemoItems] = useState([
+        { id: '1', productName: 'Professional Consulting', quantity: 1, unitPrice: 15000, taxRate: 18, totalAmount: 15000 },
+        { id: '2', productName: 'Website Development', quantity: 1, unitPrice: 25000, taxRate: 18, totalAmount: 25000 }
+    ]);
+    const [clientName, setClientName] = useState('John Doe');
 
     useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => setUser(data.user));
         const onScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -266,119 +279,203 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ─── Visual Tour / Mockups ─── */}
-            <section style={{ padding: '100px max(24px, calc((100vw - 1100px)/2))', background: '#f8fafc' }}>
-                <div style={{ textAlign: 'center', marginBottom: 64 }}>
-                    <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1px' }}>
-                        Experience the Interface
+            {/* ─── Interactive Demo / Experience ─── */}
+            <section id="experience" style={{ padding: '120px max(24px, calc((100vw - 1100px)/2))', background: '#fcfdfe', position: 'relative' }}>
+                <div style={{ textAlign: 'center', marginBottom: 80 }}>
+                    <div style={{ 
+                        display: 'inline-flex', padding: '8px 16px', background: '#eef2ff', borderRadius: 100, 
+                        color: '#6366f1', fontSize: 13, fontWeight: 700, marginBottom: 24, letterSpacing: '0.05em'
+                    }}>
+                        LIVE INTERACTIVE DEMO
+                    </div>
+                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
+                        Experience the Speed.
                     </h2>
-                    <p style={{ fontSize: 18, color: '#64748b', marginTop: 16 }}>
-                        Designed to be clean, intuitive, and insanely fast.
+                    <p style={{ fontSize: 20, color: '#64748b', maxWidth: 600, margin: '0 auto' }}>
+                        Don't just take our word for it. Try creating an invoice right here. 
+                        Edit anything and see the magic happen.
                     </p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 32 }} className="grid grid-cols-1 lg:grid-cols-3">
-                    {/* Invoice Mockup */}
-                    <div style={{ background: '#fff', borderRadius: 24, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)' }}>
-                        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', background: '#fcfdfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px' }}>Invoice Screen</div>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff5f57' }} />
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#febc2e' }} />
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#28c840' }} />
-                            </div>
+                <div style={{ 
+                    maxWidth: 900, margin: '0 auto', background: '#fff', borderRadius: 32, 
+                    boxShadow: '0 50px 100px -20px rgba(0,0,0,0.12), 0 30px 60px -30px rgba(0,0,0,0.15)',
+                    border: '1px solid #f1f5f9', overflow: 'hidden', position: 'relative'
+                }}>
+                    {/* Header of Editor */}
+                    <div style={{ padding: '32px 40px', borderBottom: '1px solid #f1f5f9', background: 'linear-gradient(to right, #fcfdfe, #fff)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>BILL TO</div>
+                            <input 
+                                type="text"
+                                value={clientName}
+                                onChange={(e) => setClientName(e.target.value)}
+                                style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', background: 'transparent', border: 'none', padding: 0, outline: 'none', width: '100%' }}
+                                placeholder="Client Name"
+                            />
                         </div>
-                        <div style={{ padding: 24, opacity: 0.9 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-                                <div>
-                                    <div style={{ width: 100, height: 24, background: '#f1f5f9', borderRadius: 4, marginBottom: 8 }} />
-                                    <div style={{ width: 140, height: 12, background: '#f8fafc', borderRadius: 2, marginBottom: 4 }} />
-                                    <div style={{ width: 120, height: 12, background: '#f8fafc', borderRadius: 2 }} />
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>INVOICE #</div>
-                                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>1042</div>
-                                </div>
-                            </div>
-                            <div style={{ marginBottom: 24 }}>
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: i < 3 ? '1px solid #f1f5f9' : 'none' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ width: i === 1 ? '70%' : i === 2 ? '50%' : '80%', height: 12, background: '#f1f5f9', borderRadius: 2, marginBottom: 4 }} />
-                                            <div style={{ width: '30%', height: 8, background: '#f8fafc', borderRadius: 2 }} />
-                                        </div>
-                                        <div style={{ width: 40, height: 12, background: '#f1f5f9', borderRadius: 2 }} />
-                                        <div style={{ width: 60, height: 12, background: '#eef2ff', borderRadius: 2 }} />
-                                    </div>
-                                ))}
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <div style={{ width: 120, textAlign: 'right' }}>
-                                    <div style={{ fontSize: 10, color: '#94a3b8' }}>TOTAL AMOUNT</div>
-                                    <div style={{ fontSize: 20, fontWeight: 800, color: '#6366f1' }}>₹42,500</div>
-                                </div>
-                            </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>INVOICE DATE</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: '#6366f1' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                         </div>
                     </div>
 
-                    {/* Dashboard Mockup */}
-                    <div style={{ background: '#fff', borderRadius: 24, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)' }}>
-                        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', background: '#fcfdfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Smart Dashboard</div>
-                        </div>
-                        <div style={{ padding: 24 }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                                <div style={{ padding: 12, background: '#f0fdf4', borderRadius: 12, border: '1px solid #dcfce7' }}>
-                                    <div style={{ fontSize: 10, color: '#166534', fontWeight: 600 }}>Total Revenue</div>
-                                    <div style={{ fontSize: 16, fontWeight: 800, color: '#14532d' }}>₹1.2M</div>
-                                </div>
-                                <div style={{ padding: 12, background: '#f5f3ff', borderRadius: 12, border: '1px solid #ddd6fe' }}>
-                                    <div style={{ fontSize: 10, color: '#5b21b6', fontWeight: 600 }}>Bills Created</div>
-                                    <div style={{ fontSize: 16, fontWeight: 800, color: '#4c1d95' }}>482</div>
-                                </div>
-                            </div>
-                            <div style={{ minHeight: 120 }}>
-                                {[1, 2, 3, 4].map(i => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', border: '1px solid #e2e8f0' }} />
-                                        <div style={{ flex: 1, height: 8, background: '#e2e8f0', borderRadius: 2, opacity: 1 - (i * 0.15) }} />
-                                        <div style={{ width: 30, height: 8, background: '#f1f5f9', borderRadius: 2 }} />
-                                    </div>
+                    {/* Table Section */}
+                    <div style={{ padding: '0 40px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr>
+                                    <th style={{ textAlign: 'left', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b' }}>ITEM DESCRIPTION</th>
+                                    <th style={{ textAlign: 'right', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b', width: 80 }}>QTY</th>
+                                    <th style={{ textAlign: 'right', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b', width: 120 }}>PRICE</th>
+                                    <th style={{ textAlign: 'right', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b', width: 40 }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {demoItems.map((item, idx) => (
+                                    <tr key={item.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                        <td style={{ padding: '20px 0' }}>
+                                            <input 
+                                                type="text"
+                                                value={item.productName}
+                                                onChange={(e) => {
+                                                    const newItems = [...demoItems];
+                                                    newItems[idx].productName = e.target.value;
+                                                    setDemoItems(newItems);
+                                                }}
+                                                style={{ width: '100%', fontWeight: 600, color: '#334155', border: 'none', outline: 'none', background: 'transparent' }}
+                                            />
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '20px 0' }}>
+                                            <input 
+                                                type="number"
+                                                value={item.quantity}
+                                                onChange={(e) => {
+                                                    const newItems = [...demoItems];
+                                                    newItems[idx].quantity = Number(e.target.value);
+                                                    newItems[idx].totalAmount = newItems[idx].quantity * newItems[idx].unitPrice;
+                                                    setDemoItems(newItems);
+                                                }}
+                                                style={{ width: 60, textAlign: 'right', fontWeight: 600, color: '#334155', border: 'none', outline: 'none', background: 'transparent' }}
+                                            />
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '20px 0' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                                                <span style={{ color: '#94a3b8' }}>₹</span>
+                                                <input 
+                                                    type="number"
+                                                    value={item.unitPrice}
+                                                    onChange={(e) => {
+                                                        const newItems = [...demoItems];
+                                                        newItems[idx].unitPrice = Number(e.target.value);
+                                                        newItems[idx].totalAmount = newItems[idx].quantity * newItems[idx].unitPrice;
+                                                        setDemoItems(newItems);
+                                                    }}
+                                                    style={{ width: 90, textAlign: 'right', fontWeight: 700, color: '#334155', border: 'none', outline: 'none', background: 'transparent' }}
+                                                />
+                                            </div>
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <button 
+                                                onClick={() => setDemoItems(demoItems.filter((_, i) => i !== idx))}
+                                                style={{ color: '#cbd5e1', cursor: 'pointer', border: 'none', background: 'none' }}
+                                                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                                                onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
                                 ))}
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
+                        
+                        <button 
+                            onClick={() => setDemoItems([...demoItems, { id: Math.random().toString(), productName: 'New Item', quantity: 1, unitPrice: 0, taxRate: 18, totalAmount: 0 }])}
+                            style={{ 
+                                display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, padding: '10px 16px', 
+                                background: '#f8fafc', border: '1px dashed #e2e8f0', borderRadius: 12, 
+                                color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#f8fafc'}
+                        >
+                            <Plus size={16} /> Add Item
+                        </button>
                     </div>
 
-                    {/* Mobile View Mockup */}
-                    <div style={{ background: '#fff', borderRadius: 24, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)', position: 'relative' }}>
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', background: '#fcfdfe', display: 'flex', justifyContent: 'center' }}>
-                            <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 10 }} />
+                    {/* Summary and Actions */}
+                    <div style={{ padding: '40px', background: '#fcfdfe', borderTop: '1px solid #f1f5f9', marginTop: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button 
+                                onClick={() => {
+                                    const subtotal = demoItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+                                    const tax = subtotal * 0.18;
+                                    const demoInvoice: any = {
+                                        invoiceNumber: 'DEMO-01',
+                                        date: new Date().toISOString().split('T')[0],
+                                        customer: { name: clientName },
+                                        items: demoItems,
+                                        subtotal,
+                                        taxTotal: tax,
+                                        discountTotal: 0,
+                                        grandTotal: subtotal + tax,
+                                        transportCharges: 0,
+                                        notes: 'Generated via Live Demo'
+                                    };
+                                    const doc = generateInvoicePDF(demoInvoice, { name: 'Sample Business', gstin: '27AAAAA0000A1Z5', address: 'Demo St, Mumbai', phone: '9876543210', email: 'hello@bill.com', state: 'Maharashtra' }, defaultBrandingSettings);
+                                    doc.save(getInvoiceFilename(demoInvoice));
+                                }}
+                                style={{ 
+                                    display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', 
+                                    background: '#1e293b', borderRadius: 12, color: '#fff', 
+                                    fontSize: 14, fontWeight: 700, cursor: 'pointer', border: 'none'
+                                }}
+                            >
+                                <Download size={18} /> Download PDF
+                            </button>
+                            
+                            <button 
+                                onClick={() => {
+                                    if (!user) {
+                                        toast.info("Save & Personalize", {
+                                            description: "To save invoices, customize branding with your logo, and manage real customers, you'll need a free account.",
+                                            action: {
+                                                label: "Login / Register",
+                                                onClick: () => window.location.href = '/register'
+                                            }
+                                        });
+                                    } else {
+                                        toast.success("Ready to save!", {
+                                            description: "Head over to the Dashboard to create and save permanent invoices."
+                                        });
+                                    }
+                                }}
+                                style={{ 
+                                    display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', 
+                                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, 
+                                    color: '#334155', fontSize: 14, fontWeight: 700, cursor: 'pointer'
+                                }}
+                            >
+                                <Shield size={18} /> Save Invoice
+                            </button>
                         </div>
-                        <div style={{ padding: '0 16px', height: 220, position: 'relative', background: '#fff' }}>
-                            <div style={{ paddingTop: 16 }}>
-                                <div style={{ width: '100%', height: 60, background: '#f8fafc', borderRadius: 12, marginBottom: 12, display: 'flex', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
-                                   <div style={{ width: 32, height: 32, borderRadius: 8, background: '#eef2ff', margin: '0 12px' }} />
-                                   <div style={{ flex: 1 }}>
-                                       <div style={{ width: '60%', height: 10, background: '#e2e8f0', borderRadius: 2, marginBottom: 4 }} />
-                                       <div style={{ width: '40%', height: 6, background: '#f1f5f9', borderRadius: 2 }} />
-                                   </div>
-                                </div>
-                                <div style={{ width: '100%', height: 120, background: '#fcfdfe', border: '1px dashed #e2e8f0', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#6366f120', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Plus size={20} color="#6366f1" />
-                                    </div>
-                                </div>
+                        
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 4 }}>ESTIMATED GRAND TOTAL</div>
+                            <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a' }}>
+                                ₹{Math.round(demoItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * 1.18).toLocaleString('en-IN')}
                             </div>
+                            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Inclusive of 18% GST</div>
                         </div>
-                        {/* Fake Mobile Nav */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, background: '#fff', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '0 12px' }}>
-                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#6366f1' }} />
-                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#f1f5f9' }} />
-                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#f1f5f9' }} />
-                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#f1f5f9' }} />
-                        </div>
-                        <div style={{ position: 'absolute', top: 12, left: 12, fontSize: 8, fontWeight: 700, color: '#94a3b8', background: '#f1f5f9', padding: '2px 6px', borderRadius: 100 }}>MOBILE OPTIMIZED</div>
                     </div>
+                </div>
+                
+                {/* Floating Hint */}
+                <div style={{ textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <Zap size={14} color="#6366f1" fill="#6366f1" /> Safe to use — No data is saved to our servers until you login.
+                    </span>
                 </div>
             </section>
 
