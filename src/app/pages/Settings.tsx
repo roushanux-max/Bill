@@ -15,6 +15,7 @@ import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo,
 import { useBranding } from '../contexts/BrandingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import { validateEmail, validatePhone } from '../utils/validation';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -128,6 +129,18 @@ export default function SettingsPage() {
       return;
     }
 
+    if (storeInfo?.phone && !validatePhone(storeInfo.phone)) {
+      setActiveSection('store');
+      toast.error('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    if (storeInfo?.email && !validateEmail(storeInfo.email)) {
+      setActiveSection('store');
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
     setIsSaving(true);
     try {
       await saveBrandingSettings(settings);
@@ -230,13 +243,19 @@ export default function SettingsPage() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all duration-300 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between w-full">
           <div className="flex items-center gap-3 sm:gap-6">
-            <Link 
-              to="/dashboard" 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            <button 
+              onClick={() => {
+                if (window.history.length > 2) {
+                  navigate(-1);
+                } else {
+                  navigate('/dashboard');
+                }
+              }} 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
-            </Link>
+            </button>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
                 Settings
@@ -439,7 +458,12 @@ export default function SettingsPage() {
                         <label className="text-sm font-semibold text-slate-700 block mb-1">Phone Number</label>
                         <Input
                           value={storeInfo.phone}
-                          onChange={(e) => updateStoreDetails('phone', e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            updateStoreDetails('phone', val);
+                          }}
+                          inputMode="tel"
+                          maxLength={10}
                           placeholder="e.g. 8507329056"
                           className="text-sm border-slate-200"
                         />

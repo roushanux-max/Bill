@@ -32,35 +32,16 @@ export default function InvoicePreview() {
       if (previewInvoiceId && previewInvoiceId !== 'sample') {
         try {
           const selectedInvoice = await getInvoice(previewInvoiceId);
-          // Only use if it actually has items
-          if (selectedInvoice && (selectedInvoice.items?.length || 0) > 0) {
-            console.log('Loaded invoice from DB (with items):', selectedInvoice.id);
-            setInvoice(selectedInvoice);
-            return;
-          }
-          
           if (selectedInvoice) {
-            console.warn('Fetched invoice from DB but it has 0 items. Checking all storage keys for recovery...');
-            
-            // AGGRESSIVE RECOVERY: Search ALL localStorage keys for this ID/Number
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && (key.includes('previewInvoice') || key.includes('invoiceDraft'))) {
-                try {
-                  const data = JSON.parse(localStorage.getItem(key) || '');
-                  if (data && (data.id === previewInvoiceId || data.invoiceNumber === selectedInvoice.invoiceNumber) && (data.items?.length || 0) > 0) {
-                    console.log('Successfully recovered items from storage key:', key);
-                    // Ensure all items have the required discountAmount property
-                    const fixedItems = data.items.map((it: any) => ({ ...it, discountAmount: it.discountAmount || 0 }));
-                    setInvoice({ ...selectedInvoice, items: fixedItems });
-                    toast.success('Items recovered from local cache');
-                    return;
-                  }
-                } catch (e) {}
-              }
-            }
-            
+            console.log('Loaded invoice from DB:', selectedInvoice.id);
+            // Even if total is 0, we show what is in DB to maintain consistency with dashboard
             setInvoice(selectedInvoice);
+            
+            if (!selectedInvoice.items || selectedInvoice.items.length === 0) {
+              console.warn('Invoice fetched but has 0 items.');
+              toast.error('This invoice has no items recorded.');
+            }
+            return;
           }
         } catch (e) {
           console.error('Failed to load invoice by ID:', e);
@@ -284,13 +265,13 @@ export default function InvoicePreview() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <Link 
-              to={returnPath} 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            <button 
+              onClick={handleBack} 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
-            </Link>
+            </button>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoice Preview</h1>
           </div>
 

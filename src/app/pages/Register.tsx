@@ -5,6 +5,7 @@ import Logo from '../components/Logo';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
+import { validateEmail, validatePhone } from '../utils/validation';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -48,14 +49,31 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password || !confirmPassword || !name || !mobile || !dob) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
+
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
     }
+
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (!validatePhone(mobile)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
     setLoading(true);
     const { error } = await signUp(email, password, name, mobile, '', dob);
     if (error) {
@@ -151,7 +169,16 @@ export default function Register() {
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Mobile Number</label>
-                        <input type="tel" required value={mobile} onChange={(e) => setMobile(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="9876543210" />
+                        <input 
+                          type="tel" 
+                          required 
+                          value={mobile} 
+                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} 
+                          inputMode="tel"
+                          maxLength={10}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" 
+                          placeholder="9876543210" 
+                        />
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Date of Birth</label>

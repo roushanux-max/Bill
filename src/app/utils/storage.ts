@@ -550,6 +550,31 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
     }
   }
 
+  // 3. One-time Migration: Link orphaned invoices (store_id IS NULL) to activeStoreId
+  // This helps users who had invoices before the multi-store architecture update.
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user;
+  if (user && storeId) {
+    try {
+      const { count, error: countError } = await supabase
+        .from('invoices')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('store_id', null);
+      
+      if (!countError && count && count > 0) {
+        console.log(`Auto-migrating ${count} legacy invoices to store: ${storeId}`);
+        await supabase
+          .from('invoices')
+          .update({ store_id: storeId })
+          .eq('user_id', user.id)
+          .is('store_id', null);
+      }
+    } catch (e) {
+      console.warn('Silent migration failed:', e);
+    }
+  }
+
   if (!storeId) return [];
 
   // Fetch metadata only for the list
@@ -594,30 +619,32 @@ export const getInvoices = async (force = false): Promise<Invoice[]> => {
       store_id: storeId,
     }))
     // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
-    .filter(inv => !(inv.customer.name === 'Deleted Customer' && inv.grandTotal === 0));
+    .filter(inv => {
+      const isDeletedCustomer = inv.customer.name === 'Deleted Customer' || !inv.customer.name;
+      const isZeroTotal = Number(inv.grandTotal) === 0;
+      return !(isDeletedCustomer && isZeroTotal);
+    });
 
   localStorage.setItem(getUserKey('bill_invoices'), JSON.stringify(invoices));
   return invoices;
 };
 
 export const getInvoice = async (id: string): Promise<Invoice | null> => {
+  // Fetch metadata and items in a single atomic join-request
   const { data: inv, error } = await supabase
     .from('invoices')
-    .select('*, customers(*)')
+    .select('*, customers(*), items:invoice_items(*)')
     .eq('id', id)
     .single();
 
-  if (error || !inv) return null;
-
-  // Fetch Items separately
-  const { data: items, error: itemsError } = await supabase
-    .from('invoice_items')
-    .select('*')
-    .eq('invoice_id', id);
-
-  if (itemsError) {
-    console.error('getInvoice: Failed to fetch items:', itemsError.message);
+  if (error || !inv) {
+    if (error && error.code !== 'PGRST116') {
+      console.error('getInvoice: DB Error:', error.message);
+    }
+    return null;
   }
+
+  const items = inv.items || [];
 
   return {
     id: inv.id,
@@ -634,7 +661,7 @@ export const getInvoice = async (id: string): Promise<Invoice | null> => {
       email: inv.customers?.email || '',
       createdAt: inv.customers?.created_at,
     },
-    items: (items || []).map(item => ({
+    items: items.map((item: any) => ({
       id: item.id,
       invoice_id: item.invoice_id,
       product_id: item.product_id,
@@ -697,6 +724,12 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
   };
 
   try {
+    // 1.5 Validation: Don't save if it's a completely empty ghost invoice
+    if (Number(invoice.grandTotal) === 0 && (!invoice.customer?.name || invoice.customer.name === 'Deleted Customer')) {
+      console.warn('Skipping save of ghost invoice');
+      return invoice.id;
+    }
+
     // 2. Upsert Invoice Metadata
     const { data: invData, error: invError } = await supabase
       .from('invoices')
@@ -705,14 +738,14 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       .single();
 
     if (invError) {
-      console.warn('Invoice metadata sync failed (continuing anyway):', invError.message);
+      console.warn('Invoice metadata sync failed:', invError.message);
       return invoice.id;
     }
 
     if (!invData) return invoice.id;
     const invId = invData.id;
 
-    // 3. Upsert Invoice Items (best-effort, don't block)
+    // 3. Upsert Invoice Items
     if (invoice.items && invoice.items.length > 0) {
       const itemsPayload = invoice.items
         .filter(item => (item.productName || (item as any).name))
@@ -732,30 +765,30 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
           total_amount: Number(item.totalAmount || 0),
         }));
 
-      // Delete old items and re-insert (best-effort)
-      await supabase.from('invoice_items').delete().eq('invoice_id', invId);
+      // Delete old items and re-insert to ensure clean state
+      const { error: deleteError } = await supabase.from('invoice_items').delete().eq('invoice_id', invId);
+      if (deleteError) {
+        console.warn('Failed to clean old items:', deleteError.message);
+      }
 
-      const { data: insertData, error: itemsError } = await supabase
+      const { error: itemsError } = await supabase
         .from('invoice_items')
-        .insert(itemsPayload)
-        .select();
+        .insert(itemsPayload);
 
       if (itemsError) {
-        console.error('Invoice items sync failed (Database Error):', itemsError.message, itemsError.details);
-        // Secondary attempt: retry once after 1 second if it was a network glitch
-        setTimeout(async () => {
-           await supabase.from('invoice_items').insert(itemsPayload);
-        }, 1000);
+        console.error('Invoice items sync failed:', itemsError.message);
       } else {
         console.log(`Successfully synced ${itemsPayload?.length || 0} items for invoice ${invId}`);
       }
     }
 
-    // Clear list cache so next getInvoices() fetches fresh data
-    localStorage.removeItem(getUserKey('bill_invoices'));
+    // After successful cloud sync, we CAN clear the list cache to force refresh, 
+    // but often it's better to just leave it and let the next dashboard/list load handle it
+    // localStorage.removeItem(getUserKey('bill_invoices'));
+    
     return invId;
   } catch (e) {
-    console.warn('Supabase invoice sync error (stored locally):', e);
+    console.warn('Supabase invoice sync error:', e);
     return invoice.id;
   }
 };
@@ -843,10 +876,13 @@ export const logActivity = async (action: string, entityType: string, entityId?:
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Use current session's email if possible, or fallback to metadata
+    const userEmail = user.email || metadata?.email;
+
     const refinedMetadata = {
       ...metadata,
-      email: user.email, // Always include email for admin discovery
-      user_agent: navigator.userAgent,
+      email: userEmail,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
     };
 
     await supabase.from('activity_logs').insert([{
@@ -865,9 +901,17 @@ export const logActivity = async (action: string, entityType: string, entityId?:
 
 export const getAdminStats = async () => {
   try {
-// 1. Get total users from activity logs (more comprehensive)
-    const { data: userLogs } = await supabase.from('activity_logs').select('user_id');
-    const totalUsers = new Set(userLogs?.map(l => l.user_id)).size;
+    // 1. Get total users from both stores and activity logs (more comprehensive)
+    const [{ data: userLogs }, { data: storeUsers }] = await Promise.all([
+      supabase.from('activity_logs').select('user_id'),
+      supabase.from('stores').select('user_id')
+    ]);
+    
+    const allUserIds = new Set([
+      ...(userLogs?.map(l => l.user_id) || []),
+      ...(storeUsers?.map(s => s.user_id) || [])
+    ]);
+    const totalUsers = allUserIds.size;
 
     // 2. Get total invoices today
     const startOfDay = new Date();
@@ -887,7 +931,12 @@ export const getAdminStats = async () => {
       .from('activity_logs')
       .select('user_id')
       .gte('created_at', fifteenMinsAgo);
-    const liveUsers = new Set(liveLogs?.map(l => l.user_id)).size;
+    const liveUsers = new Set(liveLogs?.map((l: any) => l.user_id)).size;
+    
+    // 5. Get total invoices count (overall)
+    const { count: totalInvoices } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true });
 
     // 5. Get recent logs
     const { data: recentLogs } = await supabase
@@ -900,6 +949,7 @@ export const getAdminStats = async () => {
       totalUsers,
       liveUsers: liveUsers || 0,
       invoicesToday: invoicesToday || 0,
+      totalInvoices: totalInvoices || 0,
       totalRevenue,
       recentLogs: recentLogs || []
     };
@@ -920,30 +970,51 @@ export const getAllUsers = async () => {
     if (storeError) throw storeError;
 
     // 2. Get unique users from logs to find "Pending" users
+    // Fetch MORE logs to ensure we don't miss those who haven't logged in recently
     const { data: logs, error: logError } = await supabase
       .from('activity_logs')
       .select('user_id, metadata, created_at')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(1000); // Higher limit for user discovery
 
-    if (logError) return stores || [];
+    if (logError && (!stores || stores.length === 0)) return [];
 
     // Create a map of user_id -> latest email/info
     const userMap = new Map();
+    
+    // First, seed with store data to have a baseline
+    stores?.forEach(s => {
+      userMap.set(s.user_id, {
+        email: s.email,
+        last_active: s.updated_at || s.created_at
+      });
+    });
+
+    // Then, overlay with activity logs to find newest/pending users
     logs?.forEach(log => {
-      if (!userMap.has(log.user_id)) {
+      const existing = userMap.get(log.user_id);
+      const logEmail = log.metadata?.email;
+      
+      if (!existing || (logEmail && !existing.email)) {
         userMap.set(log.user_id, {
-          email: log.metadata?.email,
+          email: logEmail || existing?.email,
           last_active: log.created_at
         });
       }
     });
 
-    const combinedUsers = [...(stores || [])];
-    const storeUserIds = new Set(stores?.map(s => s.user_id));
+    const combinedUsers: any[] = [];
+    const storeMap = new Map(stores?.map(s => [s.user_id, s]));
 
-    // Add users who don't have stores yet
     userMap.forEach((info, userId) => {
-      if (!storeUserIds.has(userId)) {
+      const store = storeMap.get(userId);
+      if (store) {
+        combinedUsers.push({
+          ...store,
+          email: store.email || info.email // Prefer store email, fallback to log
+        });
+      } else {
+        // User exists but has no store - "Pending Setup"
         combinedUsers.push({
           user_id: userId,
           business_name: 'Pending Setup',
@@ -959,6 +1030,22 @@ export const getAllUsers = async () => {
     return combinedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   } catch (e) {
     console.error('Failed to get users:', e);
+    return [];
+  }
+};
+
+export const getAllInvoices = async (limit = 100) => {
+  try {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*, customers(name), stores(business_name)')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.error('Failed to get all invoices:', e);
     return [];
   }
 };

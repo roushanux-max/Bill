@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const ADMIN_EMAILS = ['roushan.ux@gmail.com'];
 
   useEffect(() => {
-    if (user?.email && ADMIN_EMAILS.includes(user.email)) {
+    if (user?.email && ADMIN_EMAILS.some(email => email.toLowerCase() === user.email?.toLowerCase())) {
       setIsAdmin(true);
     } else {
       setIsAdmin(false);
@@ -101,8 +101,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        const isNewSession = !localStorage.getItem('bill_user_id');
         localStorage.setItem('bill_user_id', session.user.id);
-        // Don't wait for refresh here, let the useEffect handle it
+        
+        if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && isNewSession)) {
+          logActivity('login', 'user', session.user.id, { 
+            email: session.user.email,
+            method: session.user.app_metadata?.provider || 'password'
+          });
+        }
       } else {
         localStorage.removeItem('bill_user_id');
         setHasStore(null);
@@ -237,6 +244,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
+      if (!error && data?.user) {
+        // Log registration immediately for admin discovery
+        await logActivity('registration', 'user', data.user.id, { 
+          email: data.user.email,
+          name,
+          mobile
+        });
+      }
+
       return { error };
     } catch (error) {
       console.error('Error during signup:', error);
@@ -245,13 +261,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error, data } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (!error && data.user) {
-      await logActivity('login', 'user', data.user.id, { email: data.user.email });
-    }
     return { error };
   };
 

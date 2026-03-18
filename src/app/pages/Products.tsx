@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -16,6 +16,7 @@ const CATEGORIES = ['Furniture', 'Hardware', 'Electronics', 'Other'];
 const UNITS = ['pcs', 'box', 'kg', 'meter', 'set'];
 
 export default function Products() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -160,13 +161,19 @@ export default function Products() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <Link 
-              to="/dashboard" 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            <button 
+              onClick={() => {
+                if (window.history.length > 2) {
+                  navigate(-1);
+                } else {
+                  navigate('/dashboard');
+                }
+              }} 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
-            </Link>
+            </button>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Products</h1>
           </div>
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -216,6 +223,7 @@ export default function Products() {
                         type="number"
                         value={formData.sellingPrice}
                         onChange={(e) => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 })}
+                        inputMode="decimal"
                         placeholder="0"
                         required
                         className="text-sm"

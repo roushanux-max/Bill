@@ -228,13 +228,19 @@ export default function Invoices() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <Link 
-              to="/dashboard" 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            <button 
+              onClick={() => {
+                if (window.history.length > 2) {
+                  navigate(-1);
+                } else {
+                  navigate('/dashboard');
+                }
+              }} 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
-            </Link>
+            </button>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoices</h1>
           </div>
           <Link to="/create-invoice" className="hidden sm:flex">

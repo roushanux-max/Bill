@@ -5,7 +5,8 @@ import {
   getAdminStats, 
   getAllUsers, 
   updateUserAccess, 
-  getUserActivity 
+  getUserActivity,
+  getAllInvoices
 } from '../utils/storage';
 import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,16 +16,18 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'overview' | 'users' | 'revenue' | 'activity'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'users' | 'revenue' | 'activity' | 'invoices'>('overview');
+  const [allInvoices, setAllInvoices] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserActivity, setSelectedUserActivity] = useState<any[]>([]);
 
   const loadData = async () => {
     setIsLoading(true);
-    const [s, u] = await Promise.all([getAdminStats(), getAllUsers()]);
+    const [s, u, inv] = await Promise.all([getAdminStats(), getAllUsers(), getAllInvoices()]);
     setStats(s);
     setUsers(u);
+    setAllInvoices(inv);
     setIsLoading(false);
   };
 
@@ -203,6 +206,23 @@ export default function AdminDashboard() {
                 </div>
                 <div className={`p-3 rounded-xl transition-colors ${activeView === 'revenue' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'}`}>
                   <IndianRupee size={24} />
+                </div>
+              </div>
+            </Card>
+          </button>
+
+          <button 
+            onClick={() => setActiveView('invoices')}
+            className="text-left transition-transform active:scale-95 duration-200 group"
+          >
+            <Card className={`p-6 transition-all duration-300 ${activeView === 'invoices' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 group-hover:text-blue-600 transition-colors">Total Receipts</p>
+                  <h3 className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalInvoices || allInvoices.length}</h3>
+                </div>
+                <div className={`p-3 rounded-xl transition-colors ${activeView === 'invoices' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'}`}>
+                  <FileText size={24} />
                 </div>
               </div>
             </Card>
@@ -535,6 +555,84 @@ export default function AdminDashboard() {
               </div>
             </Card>
           </div>
+        </div>
+      ) : activeView === 'invoices' ? (
+        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
+              <FileText size={20} className="text-blue-600" /> All Platform Invoices
+            </h2>
+            <div className="relative w-full md:w-96">
+              <input
+                type="text"
+                placeholder="Search invoice #, customer or store..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all shadow-sm pl-10"
+              />
+              <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+          
+          <Card className="overflow-hidden shadow-xl border-slate-100">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Invoice #</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Store / Business</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Customer</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Amount</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Date</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {allInvoices.filter(inv => 
+                    inv.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    inv.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    inv.stores?.business_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                  ).map((inv) => (
+                    <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="px-6 py-4 font-mono text-xs font-bold text-slate-900">
+                        {inv.invoiceNumber}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs font-bold text-slate-800 uppercase tracking-tight">
+                          {inv.stores?.business_name || 'Missing Store'}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">{inv.store_id.slice(0, 8)}...</div>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-medium text-slate-600">
+                        {inv.customers?.name || 'Unknown Customer'}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-black text-slate-900">
+                        ₹{inv.grand_total?.toLocaleString('en-IN') || 0}
+                      </td>
+                      <td className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase">
+                        {new Date(inv.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
+                          inv.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 
+                          inv.status === 'unpaid' ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-600'
+                        }`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {allInvoices.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400 italic">
+                        No invoices found across the platform.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
       ) : (
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">

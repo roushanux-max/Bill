@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { Invoice, InvoiceItem, Customer, Product, StoreInfo } from '../types/invoice';
 import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getInvoice, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts, getUserKey } from '../utils/storage';
+import { supabase } from '../utils/supabase';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
 import { useBranding } from '../contexts/BrandingContext';
@@ -20,12 +21,15 @@ import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoice
 import { SearchableSelect } from '../components/SearchableSelect';
 import { SuggestionInput } from '../components/SuggestionInput';
 import { cn } from '../components/ui/utils';
+import { validateEmail, validatePhone } from '../utils/validation';
 
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+  const returnParam = searchParams.get('return');
+  const customerIdParam = searchParams.get('customerId');
   const invoiceRef = useRef<HTMLDivElement>(null);
   const customerCardRef = useRef<HTMLDivElement>(null);
   const itemsCardRef = useRef<HTMLDivElement>(null);
@@ -76,17 +80,15 @@ export default function CreateInvoice() {
   const customerSearchTimeout = useRef<any>(null);
   const productSearchTimeout = useRef<any>(null);
 
-  // Restore form progress - Reduced auto-restoration to ensure clean start
+  // Restore form progress
   useEffect(() => {
-    // Only restore if user hasn't started typing and there's a draft
-    // But per user request "No customer should be selected on default", 
-    // we should let the user start fresh or restore via the main "Draft Restored" dialog.
-    
-    // We'll keep the itemFormDraft restoration if it's not confusing, 
-    // but customer draft should definitely be clean.
+    // Restore item form draft regardless of edit mode if current form is empty
     const savedItem = localStorage.getItem(getUserKey('itemFormDraft'));
-    if (savedItem && newItemData.name === '') {
-      try { setNewItemData(JSON.parse(savedItem)); } catch (e) { }
+    if (savedItem && (!newItemData.name || newItemData.name === '')) {
+      try {
+        const parsed = JSON.parse(savedItem);
+        if (parsed.name) setNewItemData(parsed);
+      } catch (e) { }
     }
   }, []);
 
@@ -148,13 +150,56 @@ export default function CreateInvoice() {
 
   // Load existing data
   useEffect(() => {
+    let isMounted = true;
     const init = async () => {
       await loadData();
+      if (!isMounted) return;
 
       // Check for editing or draft
       if (editId) {
+        // PREVENTION: If we just auto-saved a NEW invoice, localInvoiceId will match editId.
+        // In this case, our local state is already MORE current than the database (which might be still syncing items).
+        // Skipping this fetch prevents the "flashing empty items" or data loss bug.
+        if (editId === localInvoiceId && items.length > 0) {
+          console.log("CreateInvoice: Skipping redundant re-fetch for just-saved invoice");
+          return;
+        }
+
         // Use getInvoice to get full details including items
         let existing = await getInvoice(editId);
+        if (!isMounted) return;
+
+        // CRITICAL FALLBACK: If DB returns 0 items (likely due to save-sync race), 
+        // aggressively check localStorage draft/preview cache for these items.
+        if (!existing || !existing.items || existing.items.length === 0) {
+          try {
+            const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
+            if (draftRaw) {
+              const draft = JSON.parse(draftRaw);
+              // Only use draft if ID matches AND it actually HAS items
+              if (draft && (draft.id === editId || draft.invoiceNumber === editId) && draft.items?.length > 0) {
+                if (!existing) existing = draft;
+                else existing.items = draft.items;
+                console.log("CreateInvoice: Aggressively restored items from local draft (DB result was empty)");
+              }
+            }
+          } catch (e) { }
+        }
+
+        // ADDITIONAL FALLBACK: check previewInvoice cache
+        if (!existing || !existing.items || existing.items.length === 0) {
+          try {
+            const previewRaw = localStorage.getItem(getUserKey('previewInvoice'));
+            if (previewRaw) {
+              const preview = JSON.parse(previewRaw);
+              if (preview && (preview.id === editId || preview.invoiceNumber === editId) && preview.items?.length > 0) {
+                if (!existing) existing = preview;
+                else existing.items = preview.items;
+                console.log("CreateInvoice: Aggressively restored items from preview cache");
+              }
+            }
+          } catch (e) { }
+        }
 
         // FALLBACK: If not found in main database, check the local draft or preview cache
         if (!existing) {
@@ -166,27 +211,16 @@ export default function CreateInvoice() {
             }
           } catch (e) { }
         }
-        if (!existing) {
-          try {
-            const previewRaw = localStorage.getItem(getUserKey('previewInvoice'));
-            if (previewRaw) {
-              const preview = JSON.parse(previewRaw);
-              if (preview && (preview.id === editId || preview.invoiceNumber === editId)) existing = preview;
-            }
-          } catch (e) { }
-        }
 
         if (existing) {
           setInvoiceNumber(existing.invoiceNumber);
           setDate(parseDateFromDisplay(existing.date));
           setSelectedCustomerId(existing.customerId);
           setItems(existing.items || []);
-          setTransportCharges(existing.transportCharges);
+          setTransportCharges(existing.transportCharges || 0);
           setDiscount(existing.discountTotal || 0);
           setNotes(existing.notes || '');
 
-          // Always restore customer form data from the invoice snapshot in edit mode.
-          // The old guard (!selectedCustomerId) was preventing re-population on re-renders.
           if (existing.customer) {
             setNewCustomerData({
               name: existing.customer.name || '',
@@ -199,7 +233,6 @@ export default function CreateInvoice() {
             setSelectedCustomerId(existing.customerId);
             setIsNewCustomer(false);
 
-            // Also set the activeCustomer reference so Smart Save comparisons work correctly
             const matchedCustomer = customers.find(c => c.id === existing.customerId);
             if (matchedCustomer) setActiveCustomer(matchedCustomer);
           }
@@ -210,8 +243,13 @@ export default function CreateInvoice() {
         if (draft) {
           try {
             const parsedDraft = JSON.parse(draft);
-            if (parsedDraft.items?.length > 0 || parsedDraft.customerId) {
-              if (confirm('You have an unsaved draft. Would you like to restore it?')) {
+            const hasData = parsedDraft.items?.length > 0 || parsedDraft.customerId;
+            
+            if (hasData) {
+              // AUTO-RESTORE if current state is empty to avoid annoying confirmation
+              const isCurrentEmpty = items.length === 0 && !selectedCustomerId && !newCustomerData.name;
+              
+              if (isCurrentEmpty || confirm('You have an unsaved draft. Would you like to restore it?')) {
                 const nextNum = await getNextInvoiceNumber();
                 setInvoiceNumber(parsedDraft.invoiceNumber || nextNum);
                 setDate(parseDateFromDisplay(parsedDraft.date) || new Date().toISOString().split('T')[0]);
@@ -224,7 +262,8 @@ export default function CreateInvoice() {
                   setNewCustomerData(parsedDraft.newCustomerData);
                   setIsNewCustomer(parsedDraft.isNewCustomer ?? true);
                 }
-                toast.success('Draft restored!');
+                if (isCurrentEmpty) toast.success('Draft restored automatically');
+                else toast.success('Draft restored!');
               } else {
                 localStorage.removeItem(getUserKey('invoiceDraft'));
                 setInvoiceNumber(await getNextInvoiceNumber());
@@ -242,7 +281,85 @@ export default function CreateInvoice() {
       }
     };
     init();
+    return () => { isMounted = false; };
   }, [editId]);
+
+  // One-time Data Recovery and Cleanup Logic
+  useEffect(() => {
+    const runRecovery = async () => {
+      const storeId = localStorage.getItem(getUserKey('active_store_id'));
+      if (!storeId || storeId.startsWith('offline-')) return;
+      
+      const lastRecovery = localStorage.getItem(getUserKey('last_recovery_run'));
+      const now = new Date().getTime();
+      // Run once every 24 hours just in case, but usually one-off is enough
+      if (lastRecovery && now - parseInt(lastRecovery) < 86400000) return;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        console.log("Starting in-app data recovery...");
+        
+        // 1. Recover Orphaned Invoices (those with user_id but no store_id or different store_id)
+        const { data: orphanedInvoices } = await supabase
+          .from('invoices')
+          .select('id, grand_total, customer_id')
+          .eq('user_id', user.id)
+          .or(`store_id.is.null,store_id.eq.offline-default`);
+
+        let restoredCount = 0;
+        let ghostDeletedCount = 0;
+
+        if (orphanedInvoices && orphanedInvoices.length > 0) {
+          for (const inv of orphanedInvoices) {
+            // If it has value, restore it
+            if (Number(inv.grand_total) > 0) {
+              await supabase.from('invoices').update({ store_id: storeId }).eq('id', inv.id);
+              restoredCount++;
+            } else {
+              // Delete zero-total invoices with no items or deleted customers
+              const { data: items } = await supabase.from('invoice_items').select('id').eq('invoice_id', inv.id).limit(1);
+              if (!items || items.length === 0) {
+                await supabase.from('invoices').delete().eq('id', inv.id);
+                ghostDeletedCount++;
+              }
+            }
+          }
+        }
+
+        // 2. Specialized Cleanup: Remove "Deleted Customer" ghosts with 0 total
+        const { data: currentGhosts } = await supabase
+          .from('invoices')
+          .select('id, customer_id')
+          .eq('store_id', storeId)
+          .eq('grand_total', 0);
+        
+        if (currentGhosts && currentGhosts.length > 0) {
+          for (const inv of currentGhosts) {
+            const { data: cust } = await supabase.from('customers').select('name').eq('id', inv.customer_id).maybeSingle();
+            if (!cust || cust.name === 'Deleted Customer' || cust.name === '') {
+              await supabase.from('invoices').delete().eq('id', inv.id);
+              ghostDeletedCount++;
+            }
+          }
+        }
+
+        if (restoredCount > 0 || ghostDeletedCount > 0) {
+          toast.success(`Data optimization complete: ${restoredCount} records restored, ${ghostDeletedCount} ghost records removed.`);
+          // Force a list refresh if on the dashboard/ledger
+        }
+        
+        localStorage.setItem(getUserKey('last_recovery_run'), now.toString());
+      } catch (err) {
+        console.error("Recovery error:", err);
+      }
+    };
+    
+    // Delay slightly to not interfere with initial load
+    const timer = setTimeout(runRecovery, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Sync default notes from settings when starting a new invoice
   useEffect(() => {
@@ -652,6 +769,18 @@ export default function CreateInvoice() {
       return null;
     }
 
+    if (newCustomerData.phone && !validatePhone(newCustomerData.phone)) {
+      toast.error('Please enter a valid 10-digit phone number');
+      scrollToSection(customerCardRef);
+      return null;
+    }
+
+    if (newCustomerData.email && !validateEmail(newCustomerData.email)) {
+      toast.error('Please enter a valid email address');
+      scrollToSection(customerCardRef);
+      return null;
+    }
+
     // 3. Fallback: if name is entered (new or modification), save/update.
     try {
       const customer: Customer = {
@@ -739,6 +868,9 @@ export default function CreateInvoice() {
 
     try {
       await saveInvoice(invoiceObj);
+      
+      // Delay briefly to allow Supabase insert to settle, avoiding race conditions in InvoicePreview lookup
+      await new Promise(resolve => setTimeout(resolve, 500));
       return invoiceObj;
     } catch (e) {
       console.error('Persistence failed:', e);
@@ -843,6 +975,16 @@ export default function CreateInvoice() {
 
   const { total } = calculateTotals();
 
+  const handleBack = () => {
+    if (returnParam) {
+      navigate(returnParam);
+    } else if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate(editId ? '/invoices' : '/dashboard');
+    }
+  };
+
     const isInvoiceIncomplete = !selectedCustomerId || items.length === 0 || items.some(item => !item.productName?.trim());
 
     return (
@@ -853,7 +995,7 @@ export default function CreateInvoice() {
                         <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleNavigateAway(() => navigate('/invoices'))}
+                            onClick={() => handleNavigateAway(handleBack)}
                             className="h-9 px-2 sm:px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg group"
                         >
                             <ArrowLeft className="h-4 w-4 sm:mr-2 transition-transform group-hover:-translate-x-0.5" />
@@ -960,11 +1102,13 @@ export default function CreateInvoice() {
                       <SuggestionInput
                         id="customerPhone"
                         value={newCustomerData.phone}
-                        onChange={e => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
+                        onChange={e => setNewCustomerData({ ...newCustomerData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                         suggestions={customers}
                         onSuggestionSelect={handleSuggestionSelect}
                         labelKey="phone"
                         subLabelKey="name"
+                        inputMode="tel"
+                        maxLength={10}
                         placeholder={activeCustomer?.phone || "9876543210"}
                         className="text-sm bg-white/50"
                       />
@@ -990,6 +1134,7 @@ export default function CreateInvoice() {
                         type="email"
                         value={newCustomerData.email}
                         onChange={e => setNewCustomerData({ ...newCustomerData, email: e.target.value })}
+                        inputMode="email"
                         placeholder={activeCustomer?.email || "customer@example.com"}
                         className="text-sm bg-white/50"
                       />
@@ -1098,6 +1243,7 @@ export default function CreateInvoice() {
                           }
                         }}
                         onFocus={(e) => e.target.select()}
+                        inputMode="numeric"
                         placeholder="1"
                         className="text-sm bg-white/50"
                       />
@@ -1119,6 +1265,7 @@ export default function CreateInvoice() {
                           }
                         }}
                         onFocus={(e) => e.target.select()}
+                        inputMode="decimal"
                         placeholder="0"
                         className="text-sm bg-white/50"
                       />
@@ -1138,6 +1285,7 @@ export default function CreateInvoice() {
                           }
                         }}
                         onFocus={(e) => e.target.select()}
+                        inputMode="numeric"
                         placeholder="0"
                         className="text-sm bg-white/50"
                       />
@@ -1251,6 +1399,7 @@ export default function CreateInvoice() {
                     value={transportCharges}
                     onChange={(e) => setTransportCharges(e.target.value)}
                     onFocus={(e) => e.target.select()}
+                    inputMode="decimal"
                     placeholder="0"
                     className="text-sm bg-white/50 border-slate-200"
                   />
@@ -1263,6 +1412,7 @@ export default function CreateInvoice() {
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}
                     onFocus={(e) => e.target.select()}
+                    inputMode="decimal"
                     placeholder="0"
                     className="text-sm bg-white/50 border-slate-200"
                   />

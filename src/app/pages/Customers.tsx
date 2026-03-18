@@ -12,6 +12,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, Search, Download, Filter, X, Loader2 }
 import { toast } from 'sonner';
 import { Customer, Invoice } from '../types/invoice';
 import { getCustomers, saveCustomer, deleteCustomer, getInvoices } from '../utils/storage';
+import { validatePhone } from '../utils/validation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { ListSkeleton } from '../components/SkeletonLoaders';
 
@@ -105,6 +106,11 @@ export default function Customers() {
 
     if (!formData.name || !formData.phone) {
       toast.error('Please fill in required fields');
+      return;
+    }
+
+    if (!validatePhone(formData.phone)) {
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
 
@@ -243,13 +249,19 @@ export default function Customers() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <Link 
-              to="/dashboard" 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base"
+            <button 
+              onClick={() => {
+                if (window.history.length > 2) {
+                  navigate(-1);
+                } else {
+                  navigate('/dashboard');
+                }
+              }} 
+              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
-            </Link>
+            </button>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Customers</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -297,8 +309,10 @@ export default function Customers() {
                       <Input
                         id="phone"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+91 98765 43210"
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                        inputMode="tel"
+                        maxLength={10}
+                        placeholder="9876543210"
                         required
                         className="text-sm"
                       />

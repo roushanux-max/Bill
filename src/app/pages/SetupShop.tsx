@@ -8,6 +8,7 @@ import { supabase } from '../utils/supabase';
 import { getUserKey, saveStoreInfo, saveBrandingSettings } from '../utils/storage';
 import { StoreInfo } from '../types/invoice';
 import { defaultBrandingSettings } from '../types/branding';
+import { validateEmail, validatePhone } from '../utils/validation';
 // Helper to determine active step
 const steps = [
   { id: 'welcome', title: 'Welcome' },
@@ -178,8 +179,12 @@ export default function SetupShop() {
         toast.error('Please fill in required fields');
         return;
       }
-      if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+      if (!validatePhone(formData.phone)) {
         toast.error('Please enter a valid 10-digit phone number');
+        return;
+      }
+      if (formData.email && !validateEmail(formData.email)) {
+        toast.error('Please enter a valid email address');
         return;
       }
     } else if (currentStepIndex === 2) { // Location
@@ -344,7 +349,7 @@ export default function SetupShop() {
             name="shopName"
             value={formData.shopName}
             onChange={handleChange}
-            placeholder="e.g. Acme Electronics"
+            placeholder="My Business"
             className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
             autoFocus
           />
@@ -372,7 +377,12 @@ export default function SetupShop() {
               type="tel"
               name="phone"
               value={formData.phone}
-              onChange={handleChange}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                handleChange({ ...e, target: { ...e.target, value: val } } as any);
+              }}
+              inputMode="tel"
+              maxLength={10}
               placeholder="10-digit mobile number"
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all placeholder:text-slate-400"
             />

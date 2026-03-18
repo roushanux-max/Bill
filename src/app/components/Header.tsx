@@ -148,7 +148,7 @@ export default function Header() {
                         </DropdownMenu>
                     )}
 
-                    {!user && (
+                    {!user && !isAuthPage && (
                         <div className="hidden md:flex items-center gap-3">
                             <Link to="/register" style={{
                                 background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', 
