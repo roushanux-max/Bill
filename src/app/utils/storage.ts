@@ -794,7 +794,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
 };
 
 
-export const deleteInvoice = async (id: string) => {
+export const deleteInvoice = async (id: string): Promise<boolean> => {
   // Remove from localStorage first (targeted, don't wipe all invoices)
   const localRaw = localStorage.getItem(getUserKey('bill_invoices'));
   if (localRaw) {
@@ -806,9 +806,12 @@ export const deleteInvoice = async (id: string) => {
   }
   // Best-effort Supabase delete
   try {
-    await supabase.from('invoices').delete().eq('id', id);
+    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    if (error) throw error;
+    return true;
   } catch (e) {
     console.warn('Supabase invoice delete failed:', e);
+    return false;
   }
 };
 

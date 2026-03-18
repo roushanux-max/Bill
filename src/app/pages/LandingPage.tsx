@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown } from 'lucide-react';
+import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown, Plus } from 'lucide-react';
 import Logo from '../components/Logo';
 import { useBranding } from '../contexts/BrandingContext';
 
@@ -263,6 +263,122 @@ export default function LandingPage() {
                             <p style={{ fontSize: 15, color: '#64748b', lineHeight: 1.7, margin: 0 }}>{feature.desc}</p>
                         </div>
                     ))}
+                </div>
+            </section>
+
+            {/* ─── Visual Tour / Mockups ─── */}
+            <section style={{ padding: '100px max(24px, calc((100vw - 1100px)/2))', background: '#f8fafc' }}>
+                <div style={{ textAlign: 'center', marginBottom: 64 }}>
+                    <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1px' }}>
+                        Experience the Interface
+                    </h2>
+                    <p style={{ fontSize: 18, color: '#64748b', marginTop: 16 }}>
+                        Designed to be clean, intuitive, and insanely fast.
+                    </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 32 }} className="grid grid-cols-1 lg:grid-cols-3">
+                    {/* Invoice Mockup */}
+                    <div style={{ background: '#fff', borderRadius: 24, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)' }}>
+                        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', background: '#fcfdfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px' }}>Invoice Screen</div>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff5f57' }} />
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#febc2e' }} />
+                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#28c840' }} />
+                            </div>
+                        </div>
+                        <div style={{ padding: 24, opacity: 0.9 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                                <div>
+                                    <div style={{ width: 100, height: 24, background: '#f1f5f9', borderRadius: 4, marginBottom: 8 }} />
+                                    <div style={{ width: 140, height: 12, background: '#f8fafc', borderRadius: 2, marginBottom: 4 }} />
+                                    <div style={{ width: 120, height: 12, background: '#f8fafc', borderRadius: 2 }} />
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>INVOICE #</div>
+                                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>1042</div>
+                                </div>
+                            </div>
+                            <div style={{ marginBottom: 24 }}>
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: i < 3 ? '1px solid #f1f5f9' : 'none' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ width: i === 1 ? '70%' : i === 2 ? '50%' : '80%', height: 12, background: '#f1f5f9', borderRadius: 2, marginBottom: 4 }} />
+                                            <div style={{ width: '30%', height: 8, background: '#f8fafc', borderRadius: 2 }} />
+                                        </div>
+                                        <div style={{ width: 40, height: 12, background: '#f1f5f9', borderRadius: 2 }} />
+                                        <div style={{ width: 60, height: 12, background: '#eef2ff', borderRadius: 2 }} />
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <div style={{ width: 120, textAlign: 'right' }}>
+                                    <div style={{ fontSize: 10, color: '#94a3b8' }}>TOTAL AMOUNT</div>
+                                    <div style={{ fontSize: 20, fontWeight: 800, color: '#6366f1' }}>₹42,500</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Dashboard Mockup */}
+                    <div style={{ background: '#fff', borderRadius: 24, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)' }}>
+                        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', background: '#fcfdfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Smart Dashboard</div>
+                        </div>
+                        <div style={{ padding: 24 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+                                <div style={{ padding: 12, background: '#f0fdf4', borderRadius: 12, border: '1px solid #dcfce7' }}>
+                                    <div style={{ fontSize: 10, color: '#166534', fontWeight: 600 }}>Total Revenue</div>
+                                    <div style={{ fontSize: 16, fontWeight: 800, color: '#14532d' }}>₹1.2M</div>
+                                </div>
+                                <div style={{ padding: 12, background: '#f5f3ff', borderRadius: 12, border: '1px solid #ddd6fe' }}>
+                                    <div style={{ fontSize: 10, color: '#5b21b6', fontWeight: 600 }}>Bills Created</div>
+                                    <div style={{ fontSize: 16, fontWeight: 800, color: '#4c1d95' }}>482</div>
+                                </div>
+                            </div>
+                            <div style={{ minHeight: 120 }}>
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', border: '1px solid #e2e8f0' }} />
+                                        <div style={{ flex: 1, height: 8, background: '#e2e8f0', borderRadius: 2, opacity: 1 - (i * 0.15) }} />
+                                        <div style={{ width: 30, height: 8, background: '#f1f5f9', borderRadius: 2 }} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile View Mockup */}
+                    <div style={{ background: '#fff', borderRadius: 24, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)', position: 'relative' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', background: '#fcfdfe', display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 10 }} />
+                        </div>
+                        <div style={{ padding: '0 16px', height: 220, position: 'relative', background: '#fff' }}>
+                            <div style={{ paddingTop: 16 }}>
+                                <div style={{ width: '100%', height: 60, background: '#f8fafc', borderRadius: 12, marginBottom: 12, display: 'flex', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
+                                   <div style={{ width: 32, height: 32, borderRadius: 8, background: '#eef2ff', margin: '0 12px' }} />
+                                   <div style={{ flex: 1 }}>
+                                       <div style={{ width: '60%', height: 10, background: '#e2e8f0', borderRadius: 2, marginBottom: 4 }} />
+                                       <div style={{ width: '40%', height: 6, background: '#f1f5f9', borderRadius: 2 }} />
+                                   </div>
+                                </div>
+                                <div style={{ width: '100%', height: 120, background: '#fcfdfe', border: '1px dashed #e2e8f0', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#6366f120', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Plus size={20} color="#6366f1" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Fake Mobile Nav */}
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, background: '#fff', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '0 12px' }}>
+                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#6366f1' }} />
+                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#f1f5f9' }} />
+                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#f1f5f9' }} />
+                            <div style={{ width: 20, height: 20, borderRadius: 4, background: '#f1f5f9' }} />
+                        </div>
+                        <div style={{ position: 'absolute', top: 12, left: 12, fontSize: 8, fontWeight: 700, color: '#94a3b8', background: '#f1f5f9', padding: '2px 6px', borderRadius: 100 }}>MOBILE OPTIMIZED</div>
+                    </div>
                 </div>
             </section>
 

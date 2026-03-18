@@ -6,9 +6,10 @@ import {
   getAllUsers, 
   updateUserAccess, 
   getUserActivity,
-  getAllInvoices
+  getAllInvoices,
+  deleteInvoice
 } from '../utils/storage';
-import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity } from 'lucide-react';
+import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity, Trash2, Eraser } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminDashboard() {
@@ -47,11 +48,48 @@ export default function AdminDashboard() {
     }
   };
 
-  const viewUserDetail = async (u: any) => {
-    setSelectedUser(u);
+  const toggleUserDetail = (user: any) => {
+    setSelectedUser(selectedUser?.user_id === user.user_id ? null : user);
+    if (user) {
+      getUserActivity(user.user_id).then(setSelectedUserActivity);
+    }
+  };
+
+  const handleDeleteInvoice = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
+    
+    const success = await deleteInvoice(id);
+    if (success) {
+      toast.success('Invoice deleted successfully');
+      setAllInvoices(prev => prev.filter(inv => inv.id !== id));
+      // Refresh stats
+      const s = await getAdminStats();
+      setStats(s);
+    } else {
+      toast.error('Failed to delete invoice');
+    }
+  };
+
+  const handleCleanupErrors = async () => {
+    const errorInvoices = allInvoices.filter(inv => !inv.grand_total || inv.grand_total === 0);
+    if (errorInvoices.length === 0) {
+      toast.info('No erroneous invoices (₹0) found.');
+      return;
+    }
+
+    if (!confirm(`Found ${errorInvoices.length} invoices with ₹0 total. Delete all of them?`)) return;
+
     setIsLoading(true);
-    const activity = await getUserActivity(u.user_id);
-    setSelectedUserActivity(activity);
+    let deletedCount = 0;
+    for (const inv of errorInvoices) {
+      const success = await deleteInvoice(inv.id);
+      if (success) deletedCount++;
+    }
+
+    toast.success(`Successfully cleaned up ${deletedCount} erroneous invoices.`);
+    setAllInvoices(prev => prev.filter(inv => inv.grand_total > 0));
+    const s = await getAdminStats();
+    setStats(s);
     setIsLoading(false);
   };
 
@@ -562,15 +600,24 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 uppercase tracking-tighter">
               <FileText size={20} className="text-blue-600" /> All Platform Invoices
             </h2>
-            <div className="relative w-full md:w-96">
-              <input
-                type="text"
-                placeholder="Search invoice #, customer or store..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all shadow-sm pl-10"
-              />
-              <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <div className="flex gap-2 w-full md:w-auto">
+              <button
+                onClick={handleCleanupErrors}
+                className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+              >
+                <Eraser size={14} />
+                Cleanup ₹0 Invoices
+              </button>
+              <div className="relative w-full md:w-80">
+                <input
+                  type="text"
+                  placeholder="Search invoices..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all shadow-sm pl-10"
+                />
+                <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              </div>
             </div>
           </div>
           
@@ -585,6 +632,7 @@ export default function AdminDashboard() {
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Amount</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Date</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -613,12 +661,15 @@ export default function AdminDashboard() {
                         {new Date(inv.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
-                          inv.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 
-                          inv.status === 'unpaid' ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-600'
-                        }`}>
-                          {inv.status}
-                        </span>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleDeleteInvoice(inv.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
