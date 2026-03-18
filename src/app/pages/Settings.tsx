@@ -234,7 +234,6 @@ export default function SettingsPage() {
     { id: 'logo', label: 'Logo & Brand', icon: ImageIcon },
     { id: 'footer', label: 'Footer & Sign', icon: FileSignature },
     { id: 'terms', label: 'Terms & Notes', icon: Sparkles },
-    { id: 'account', label: 'Account', icon: User },
   ];
 
   return (
@@ -827,47 +826,6 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Account Section */}
-            {activeSection === 'account' && (
-              <div className="space-y-6">
-                <Card className="shadow-lg border-0 overflow-hidden">
-                  <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
-                    <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
-                      <User className="h-5 w-5" />
-                      Account Settings
-                    </CardTitle>
-                    <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
-                      Manage your profile and account access
-                    </CardDescription>
-                  </div>
-                  <CardContent className="p-6 space-y-8">
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className="h-16 w-16 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 shadow-sm overflow-hidden">
-                        {user?.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">{user?.email || 'N/A'}</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Logged in via {user?.app_metadata?.provider || 'Email'}</p>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-100">
-                      <Button 
-                        variant="destructive" 
-                        onClick={() => signOut()} 
-                        className="w-full sm:w-auto gap-2 h-11 px-8 rounded-xl font-semibold shadow-lg shadow-red-100"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </Button>
-                      <p className="text-xs text-slate-500 mt-4 italic">
-                        Signing out will securely end your current session.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
           </div>
         </div>
 
