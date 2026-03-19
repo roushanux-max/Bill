@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
-import { saveInvoice, getUserKey, logActivity } from '../utils/storage';
+import { saveInvoice, getUserKey, logActivity, safeGet, safeSet, safeRemove } from '../utils/storage';
 import LoadingScreen from '../components/LoadingScreen';
 
 interface AuthContextType {
@@ -44,15 +44,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // PROACTIVE: Try to extract user ID from Supabase token immediately
       // This stabilizes getUserKey prefixes before getSession() even returns
       try {
-        const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        const authKey = Object.keys(window.localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
         if (authKey) {
-          const tokenData = localStorage.getItem(authKey);
+          const tokenData = safeGet(authKey);
           if (tokenData) {
             const parsed = JSON.parse(tokenData);
             const userId = parsed?.user?.id;
             const userEmail = parsed?.user?.email;
-            if (userId && !localStorage.getItem('bill_user_id')) {
-              localStorage.setItem('bill_user_id', userId);
+            if (userId && !safeGet('bill_user_id')) {
+              safeSet('bill_user_id', userId);
               // Proactively log login for discovery
               logActivity('login_restored', 'user', userId, { email: userEmail });
             }
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
            return;
         }
         if (initialSession?.user) {
-          localStorage.setItem('bill_user_id', initialSession.user.id);
+          safeSet('bill_user_id', initialSession.user.id);
           setLoading(true);
           await refreshHasStore(initialSession.user);
         }
@@ -101,8 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        const isNewSession = !localStorage.getItem('bill_user_id');
-        localStorage.setItem('bill_user_id', session.user.id);
+        const isNewSession = !safeGet('bill_user_id');
+        safeSet('bill_user_id', session.user.id);
         
         if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && isNewSession)) {
           logActivity('login', 'user', session.user.id, { 
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
-        localStorage.removeItem('bill_user_id');
+        safeRemove('bill_user_id');
         setHasStore(null);
       }
       
@@ -136,9 +136,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     isRefreshing.current = true;
     try {
-      // 1. Check local storage first (fastest)
-      const localStoreId = localStorage.getItem(getUserKey('active_store_id'));
-      const localOnboarding = localStorage.getItem(getUserKey('hasCompletedOnboarding')) === 'true';
+      const activeKey = getUserKey('active_store_id');
+      const onboardKey = getUserKey('hasCompletedOnboarding');
+      const localStoreId = activeKey ? safeGet(activeKey) : null;
+      const localOnboarding = onboardKey ? safeGet(onboardKey) === 'true' : false;
       
       if (localStoreId && localOnboarding) {
         setHasStore(true);
@@ -154,9 +155,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!error && stores && stores.length > 0) {
         const storeId = stores[0].id;
-        console.log('AuthContext: Restored store for user:', storeId);
-        localStorage.setItem(getUserKey('active_store_id'), storeId);
-        localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
+        const aKey = getUserKey('active_store_id');
+        const oKey = getUserKey('hasCompletedOnboarding');
+        if (aKey) safeSet(aKey, storeId);
+        if (oKey) safeSet(oKey, 'true');
         
         // Dispatch storage event so other contexts (Branding) update immediately
         window.dispatchEvent(new Event('storage'));
@@ -188,8 +190,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleUserSignIn = async (u: User | null) => {
       if (!u) return;
 
-      // If no active_store_id in localStorage, try to pick the user's first store
-      const activeStoreId = localStorage.getItem(getUserKey('active_store_id'));
+      const asKey = getUserKey('active_store_id');
+      const activeStoreId = asKey ? safeGet(asKey) : null;
       if (!activeStoreId) {
         try {
           const { data: stores, error } = await supabase
@@ -199,7 +201,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .limit(1);
 
           if (!error && stores && stores.length > 0) {
-            localStorage.setItem(getUserKey('active_store_id'), stores[0].id);
+            const setKey = getUserKey('active_store_id');
+            if (setKey) safeSet(setKey, stores[0].id);
           }
         } catch (e) {
           // ignore
@@ -208,16 +211,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If there's a local invoice draft, migrate it to Supabase (once)
       try {
-        const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
+        const dKey = getUserKey('invoiceDraft');
+        const draftRaw = dKey ? safeGet(dKey) : null;
         if (draftRaw) {
           const draft = JSON.parse(draftRaw);
           if (draft && (draft.items?.length > 0 || draft.customerId)) {
             // Ensure active_store_id is present before saving
-            const storeId = localStorage.getItem(getUserKey('active_store_id'));
+            const sKey = getUserKey('active_store_id');
+            const storeId = sKey ? safeGet(sKey) : null;
             if (storeId) {
               // saveInvoice will use active_store_id via storage helpers
               await saveInvoice(draft);
-              localStorage.removeItem(getUserKey('invoiceDraft'));
+              if (dKey) safeRemove(dKey);
             }
           }
         }
@@ -288,7 +293,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ];
     
     // Clear only global/session keys. User-prefixed keys are preserved for instant recall upon same-user re-login.
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach(key => safeRemove(key));
     
     // Dispatch a storage event to immediately update BrandingContext to defaults
     window.dispatchEvent(new Event('storage'));

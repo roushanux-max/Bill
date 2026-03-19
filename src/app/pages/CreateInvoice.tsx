@@ -22,9 +22,10 @@ import { SearchableSelect } from '../components/SearchableSelect';
 import { SuggestionInput } from '../components/SuggestionInput';
 import { cn } from '../components/ui/utils';
 import { validateEmail, validatePhone } from '../utils/validation';
-
+import { useNavigation } from '../contexts/NavigationContext';
 
 export default function CreateInvoice() {
+  const { smartBack } = useNavigation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
@@ -57,7 +58,7 @@ export default function CreateInvoice() {
   const { user } = useAuth();
 
   // New customer form state
-  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
+  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
   const [isNewCustomer, setIsNewCustomer] = useState(true);
 
   // New item form state
@@ -535,7 +536,7 @@ export default function CreateInvoice() {
       setIsCustomerLoading(false);
       // Restore initial subset
       const results = await getCustomers(false, 50);
-      setCustomers(results);
+      setCustomers(results.data || []);
       return;
     }
 
@@ -555,7 +556,7 @@ export default function CreateInvoice() {
   const clearCustomerForm = () => {
     setSelectedCustomerId('');
     setActiveCustomer(null);
-    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
+    setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: 'Bihar' });
     const key = getUserKey('customerFormDraft');
     if (key) safeRemove(key);
   };
@@ -704,7 +705,7 @@ export default function CreateInvoice() {
       setIsProductLoading(false);
       // Restore initial subset
       const results = await getProducts(false, 50);
-      setProducts(results);
+      setProducts(results.data || []);
       return;
     }
 
@@ -1047,7 +1048,7 @@ export default function CreateInvoice() {
   const { total } = calculateTotals();
 
     const handleBack = () => {
-      navigate('/dashboard');
+      smartBack('/dashboard');
     };
 
     const hasPendingItem = !!newItemData.name?.trim() && Number(newItemData.rate) >= 0;

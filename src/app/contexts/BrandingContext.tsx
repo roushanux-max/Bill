@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { StoreInfo } from '../types/invoice';
-import { getBrandingSettings, getStoreInfo, getUserKey, subscribeToStores } from '../utils/storage';
+import { getBrandingSettings, getStoreInfo, getUserKey, subscribeToStores, safeGet, safeSet } from '../utils/storage';
 
 interface BrandingContextType {
   settings: BrandingSettings;
@@ -21,7 +21,8 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<BrandingSettings>(() => {
     try {
-      const saved = localStorage.getItem(getUserKey('bill_branding_settings'));
+      const key = getUserKey('bill_branding_settings');
+      const saved = key ? safeGet(key) : null;
       return saved ? JSON.parse(saved) : defaultBrandingSettings;
     } catch (e) {
       console.error('Error loading initial branding settings:', e);
@@ -30,7 +31,8 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   });
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(() => {
     try {
-      const saved = localStorage.getItem(getUserKey('bill_store_info'));
+      const key = getUserKey('bill_store_info');
+      const saved = key ? safeGet(key) : null;
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       console.error('Error loading initial store info:', e);
@@ -58,12 +60,14 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         setSettings(savedSettings);
         applyBrandingStyles(savedSettings);
         // Sync to local storage for the next instant-load
-        localStorage.setItem(getUserKey('bill_branding_settings'), JSON.stringify(savedSettings));
+        const bKey = getUserKey('bill_branding_settings');
+        if (bKey) safeSet(bKey, JSON.stringify(savedSettings));
       }
 
       if (savedStoreInfo) {
         setStoreInfo(savedStoreInfo);
-        localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(savedStoreInfo));
+        const iKey = getUserKey('bill_store_info');
+        if (iKey) safeSet(iKey, JSON.stringify(savedStoreInfo));
       }
     } catch (e) {
       console.error('Error refreshing branding sync:', e);

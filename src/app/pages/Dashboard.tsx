@@ -42,11 +42,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [invoices, customers, products] = await Promise.all([
+      const [invoicesRes, customersRes, productsRes] = await Promise.all([
         getInvoices(true),
         getCustomers(true),
         getProducts(true)
       ]);
+      const invoices = invoicesRes.data || [];
+      const customers = customersRes.data || [];
+      const products = productsRes.data || [];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

@@ -140,10 +140,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 <th className="py-3 px-2 font-semibold text-center w-16">Qty</th>
                 <th className="py-3 px-2 font-semibold text-right w-24">Rate</th>
                 {isSameState ? (
-                  <>
-                    <th className="py-3 px-2 font-semibold text-right w-20">CGST</th>
-                    <th className="py-3 px-2 font-semibold text-right w-20">SGST</th>
-                  </>
+                  <th className="py-3 px-2 font-semibold text-right w-24">GST</th>
                 ) : (
                   <th className="py-3 px-2 font-semibold text-right w-24">IGST</th>
                 )}
@@ -169,14 +166,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                     <td className="py-4 px-2 text-center align-top">{item.quantity}</td>
                     <td className="py-4 px-2 text-right align-top">{(item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN')}</td>
                     {isSameState ? (
-                      <>
-                        <td className="py-4 px-2 text-right align-top">
-                          {Math.round(cgst).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{(item.taxRate || 18) / 2}%</span>
-                        </td>
-                        <td className="py-4 px-2 text-right align-top">
-                          {Math.round(sgst).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{(item.taxRate || 18) / 2}%</span>
-                        </td>
-                      </>
+                      <td className="py-4 px-2 text-right align-top">
+                        {Math.round(taxAmount).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{item.taxRate || 18}%</span>
+                      </td>
                     ) : (
                       <td className="py-4 px-2 text-right align-top">
                         {Math.round(igst).toLocaleString('en-IN')} <span className="text-xs text-slate-400 block">{item.taxRate || 18}%</span>
@@ -212,16 +204,10 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 Object.entries(taxByRate).map(([rate, amount]) => (
                   <React.Fragment key={rate}>
                     {isSameState ? (
-                      <>
-                        <div className="flex justify-between py-1">
-                          <span>CGST ({Number(rate) / 2}%)</span>
-                          <span className="font-medium text-slate-900">{Math.round(amount / 2).toLocaleString('en-IN')}</span>
-                        </div>
-                        <div className="flex justify-between py-1">
-                          <span>SGST ({Number(rate) / 2}%)</span>
-                          <span className="font-medium text-slate-900">{Math.round(amount / 2).toLocaleString('en-IN')}</span>
-                        </div>
-                      </>
+                      <div className="flex justify-between py-1">
+                        <span>GST ({rate}%)</span>
+                        <span className="font-medium text-slate-900">{Math.round(amount).toLocaleString('en-IN')}</span>
+                      </div>
                     ) : (
                       <div className="flex justify-between py-1">
                         <span>IGST ({rate}%)</span>

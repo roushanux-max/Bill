@@ -10,6 +10,8 @@ export interface Customer {
   state: string;
   createdAt: string;
   updatedAt?: string;
+  isSynced?: boolean;
+  lastSyncedAt?: string;
 }
 
 export interface Product {
@@ -24,6 +26,8 @@ export interface Product {
   unit: string;
   createdAt: string;
   updatedAt?: string;
+  isSynced?: boolean;
+  lastSyncedAt?: string;
 }
 
 export interface InvoiceItem {
@@ -60,6 +64,8 @@ export interface Invoice {
   status: 'unpaid' | 'paid' | 'overdue' | 'cancelled';
   createdAt: string;
   updatedAt: string;
+  isSynced?: boolean;
+  lastSyncedAt?: string;
   // UI Helpers (populated on load)
   items?: InvoiceItem[];
   customer?: Customer;
@@ -101,4 +107,42 @@ export interface StoreInfo {
   email: string;
   authDistributors?: string;
   branding_settings?: any;
+}
+
+export interface CustomerPayload {
+  id?: string;
+  store_id: string;
+  name: string;
+  phone: string;
+  gstin: string;
+  address: string;
+  state: string;
+  email?: string;
+}
+
+export interface ProductPayload {
+  id?: string;
+  store_id: string;
+  name: string;
+  category: string;
+  hsn_code: string;
+  rate: number;
+  tax_percent: number;
+  unit: string;
+}
+
+export interface InvoicePayload {
+  id?: string;
+  user_id: string;
+  store_id: string;
+  customer_id: string;
+  invoice_number: string;
+  date: string;
+  subtotal: number;
+  tax_total: number;
+  discount_total: number;
+  grand_total: number;
+  transport_charges: number;
+  notes: string;
+  status: string;
 }

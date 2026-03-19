@@ -11,7 +11,7 @@ import { ArrowLeft, Eye, Save, Upload, ImageIcon, Palette, LayoutGrid, Type, Fil
 import { getTextColorClass, getDescriptionColorClass, getContrastColor } from '../../utils/colorUtils';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { StoreInfo } from '../types/invoice';
-import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo, getUserKey } from '../utils/storage';
+import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo, getUserKey, safeSet } from '../utils/storage';
 import { useBranding } from '../contexts/BrandingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const [fetchingPincode, setFetchingPincode] = useState(false);
   const location = useLocation();
   const sectionParam = new URLSearchParams(location.search).get('section');
+  const returnParam = new URLSearchParams(location.search).get('return');
 
   // Load saved settings on mount
   useEffect(() => {
@@ -165,10 +166,10 @@ export default function SettingsPage() {
   const handleCancel = () => {
     if (hasChanges) {
       if (confirm('You have unsaved changes. Are you sure you want to leave without saving?')) {
-        navigate('/');
+        navigate('/dashboard');
       }
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
@@ -243,13 +244,7 @@ export default function SettingsPage() {
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between w-full">
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
-              onClick={() => {
-                if (window.history.length > 2) {
-                  navigate(-1);
-                } else {
-                  navigate('/dashboard');
-                }
-              }} 
+              onClick={() => navigate('/dashboard')} 
               className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -312,10 +307,15 @@ export default function SettingsPage() {
                     updatedAt: new Date().toISOString(),
                   };
 
-                  localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(previewInvoice));
-                  localStorage.setItem(getUserKey('previewBrandingSettings'), JSON.stringify(settings));
-                  if (storeInfo) localStorage.setItem(getUserKey('previewStoreInfo'), JSON.stringify(storeInfo));
-                  navigate('/invoice-preview?return=/settings');
+                  const invKey = getUserKey('previewInvoice');
+                  const setKey = getUserKey('previewBrandingSettings');
+                  const storeKey = getUserKey('previewStoreInfo');
+                  
+                  if (invKey) safeSet(invKey, JSON.stringify(previewInvoice));
+                  if (setKey) safeSet(setKey, JSON.stringify(settings));
+                  if (storeInfo && storeKey) safeSet(storeKey, JSON.stringify(storeInfo));
+                  const previewReturn = `/settings?section=${activeSection}${returnParam ? `&return=${encodeURIComponent(returnParam)}` : ''}`;
+                  navigate(`/invoice-preview?id=preview&return=${encodeURIComponent(previewReturn)}`);
                 } catch (e) {
                   console.error('Failed to prepare preview', e);
                   toast.error('Failed to prepare preview');

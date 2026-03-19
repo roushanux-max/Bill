@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
 import { validateEmail, validatePhone } from '../utils/validation';
+import { safeSet } from '../utils/storage';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -32,8 +33,8 @@ export default function Register() {
           if (error) throw error;
 
           if (stores && stores.length > 0) {
-            localStorage.setItem('active_store_id', stores[0].id);
-            localStorage.setItem('hasCompletedOnboarding', 'true');
+            safeSet('active_store_id', stores[0].id);
+            safeSet('hasCompletedOnboarding', 'true');
             navigate('/dashboard');
           } else {
             navigate('/setup-shop');

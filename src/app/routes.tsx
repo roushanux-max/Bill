@@ -28,6 +28,7 @@ const LoadingFallback = () => <LoadingScreen />;
 import MobileNav from "./components/MobileNav";
 import Header from "./components/Header";
 import ErrorPage from "./pages/ErrorPage";
+import { NavigationProvider } from "./contexts/NavigationContext";
 
 const RootLayout = () => {
   useEffect(() => {
@@ -35,16 +36,18 @@ const RootLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
-      <ScrollRestoration />
-      <Header />
-      <Suspense fallback={<LoadingFallback />}>
-        <div className="flex-1 pb-24 md:pb-0">
-          <Outlet />
-        </div>
-      </Suspense>
-      <MobileNav />
-    </div>
+    <NavigationProvider>
+      <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
+        <ScrollRestoration />
+        <Header />
+        <Suspense fallback={<LoadingFallback />}>
+          <div className="flex-1 pb-24 md:pb-0">
+            <Outlet />
+          </div>
+        </Suspense>
+        <MobileNav />
+      </div>
+    </NavigationProvider>
   );
 };
 

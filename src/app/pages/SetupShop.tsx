@@ -5,7 +5,7 @@ import { useBranding } from '../contexts/BrandingContext';
 import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
-import { getUserKey, saveStoreInfo, saveBrandingSettings } from '../utils/storage';
+import { getUserKey, saveStoreInfo, saveBrandingSettings, safeGet, safeSet, safeRemove } from '../utils/storage';
 import { StoreInfo } from '../types/invoice';
 import { defaultBrandingSettings } from '../types/branding';
 import { validateEmail, validatePhone } from '../utils/validation';
@@ -101,7 +101,8 @@ export default function SetupShop() {
         if (data && data.length > 0) {
           setHasExistingStore(true);
           const s = data[0];
-          localStorage.setItem(getUserKey('active_store_id'), s.id);
+          const key = getUserKey('active_store_id');
+          if (key) safeSet(key, s.id);
           setFormData(prev => ({
             ...prev,
             shopName: s.business_name || prev.shopName,
@@ -124,7 +125,8 @@ export default function SetupShop() {
 
   // Restore draft on mount
   useEffect(() => {
-    const draft = localStorage.getItem(getUserKey('shopSetupDraft'));
+    const key = getUserKey('shopSetupDraft');
+    const draft = key ? safeGet(key) : null;
     if (draft) {
       try {
         const parsedDraft = JSON.parse(draft);
@@ -139,7 +141,8 @@ export default function SetupShop() {
     const { name, value } = e.target;
     const newFormData = { ...formData, [name]: value };
     setFormData(newFormData);
-    localStorage.setItem(getUserKey('shopSetupDraft'), JSON.stringify(newFormData));
+    const key = getUserKey('shopSetupDraft');
+    if (key) safeSet(key, JSON.stringify(newFormData));
 
     // Auto-fetch location if pincode is 6 digits
     if (name === 'pincode' && value.length === 6 && /^\d{6}$/.test(value)) {
@@ -160,7 +163,8 @@ export default function SetupShop() {
 
         setFormData(prev => {
           const updated = { ...prev, city, state };
-          localStorage.setItem(getUserKey('shopSetupDraft'), JSON.stringify(updated));
+          const key = getUserKey('shopSetupDraft');
+          if (key) safeSet(key, JSON.stringify(updated));
           return updated;
         });
         toast.success(`Location identified: ${city}, ${state}`);
@@ -237,8 +241,10 @@ export default function SetupShop() {
       await saveBrandingSettings(defaultBrandingSettings);
 
       // Mark onboarding complete and remove draft
-      localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
-      localStorage.removeItem(getUserKey('shopSetupDraft'));
+      const onboardKey = getUserKey('hasCompletedOnboarding');
+      const draftKey = getUserKey('shopSetupDraft');
+      if (onboardKey) safeSet(onboardKey, 'true');
+      if (draftKey) safeRemove(draftKey);
 
       return true;
 
@@ -266,8 +272,9 @@ export default function SetupShop() {
     setSavingLater(true);
 
     // Create a barebones local store to allow user to bypass
-    const existingId = localStorage.getItem(getUserKey('active_store_id')) || `offline-${Date.now()}`;
-    localStorage.setItem(getUserKey('active_store_id'), existingId);
+    const key = getUserKey('active_store_id');
+    const existingId = (key ? safeGet(key) : null) || `offline-${Date.now()}`;
+    if (key) safeSet(key, existingId);
 
     // Just save enough locally to make the app work
     const storeInfo = {
@@ -280,9 +287,12 @@ export default function SetupShop() {
       phone: '',
       email: '',
     };
-    localStorage.setItem(getUserKey('bill_store_info'), JSON.stringify(storeInfo));
-    localStorage.setItem(getUserKey('hasCompletedOnboarding'), 'true');
-    localStorage.removeItem(getUserKey('shopSetupDraft'));
+    const storeKey = getUserKey('bill_store_info');
+    const onboardKey = getUserKey('hasCompletedOnboarding');
+    const draftKey = getUserKey('shopSetupDraft');
+    if (storeKey) safeSet(storeKey, JSON.stringify(storeInfo));
+    if (onboardKey) safeSet(onboardKey, 'true');
+    if (draftKey) safeRemove(draftKey);
 
     // Optionally try to tell Supabase in the background, but never block on it
     if (user) {

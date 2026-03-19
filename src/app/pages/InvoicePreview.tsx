@@ -5,15 +5,17 @@ import { ArrowLeft, Download, Share2, Printer, Pencil } from 'lucide-react';
 import { BrandingSettings } from '../types/branding';
 import InvoiceTemplate from '../components/InvoiceTemplate';
 import { Invoice, StoreInfo } from '../types/invoice';
-import { getInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
+import { getInvoice, getStoreInfo, getBrandingSettings, getUserKey, safeGet } from '../utils/storage';
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { useBranding } from '../contexts/BrandingContext';
 import { toast } from 'sonner';
 import { formatDateForDisplay } from '../utils/dateUtils';
 
 import LoadingScreen from '../components/LoadingScreen';
+import { useNavigation } from '../contexts/NavigationContext';
 
 export default function InvoicePreview() {
+  const { smartBack } = useNavigation();
   const { settings: globalSettings, storeInfo: globalStoreInfo } = useBranding();
   const [settings, setSettings] = useState<BrandingSettings>(globalSettings);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -32,16 +34,14 @@ export default function InvoicePreview() {
       if (previewInvoiceId && previewInvoiceId !== 'sample') {
         try {
           const selectedInvoice = await getInvoice(previewInvoiceId);
-          if (selectedInvoice) {
-            console.log('Loaded invoice from DB:', selectedInvoice.id);
-            // Even if total is 0, we show what is in DB to maintain consistency with dashboard
+          if (selectedInvoice && selectedInvoice.items && selectedInvoice.items.length > 0) {
+            console.log('Loaded complete invoice from DB:', selectedInvoice.id);
             setInvoice(selectedInvoice);
-            
-            if (!selectedInvoice.items || selectedInvoice.items.length === 0) {
-              console.warn('Invoice fetched but has 0 items.');
-              toast.error('This invoice has no items recorded.');
-            }
             return;
+          } else if (selectedInvoice) {
+            console.warn('Invoice fetched from DB but missing items. Attempting local merge...');
+            // Don't return yet, allow it to fall through to local storage check which might have items
+            setInvoice(selectedInvoice);
           }
         } catch (e) {
           console.error('Failed to load invoice by ID:', e);
@@ -49,7 +49,8 @@ export default function InvoicePreview() {
       }
 
       // 2. Try to load from localStorage previewInvoice (standard path)
-      const previewData = localStorage.getItem(getUserKey('previewInvoice'));
+      const invKey = getUserKey('previewInvoice');
+      const previewData = invKey ? safeGet(invKey) : null;
       if (previewData) {
         try {
           const parsedInvoice = JSON.parse(previewData);
@@ -130,8 +131,10 @@ export default function InvoicePreview() {
       setSettings(globalSettings);
       setStoreInfo(globalStoreInfo);
 
-      const previewSettingsRaw = localStorage.getItem(getUserKey('previewBrandingSettings'));
-      const previewStoreRaw = localStorage.getItem(getUserKey('previewStoreInfo'));
+      const setKey = getUserKey('previewBrandingSettings');
+      const storeKey = getUserKey('previewStoreInfo');
+      const previewSettingsRaw = setKey ? safeGet(setKey) : null;
+      const previewStoreRaw = storeKey ? safeGet(storeKey) : null;
 
       if (previewSettingsRaw) {
         try { setSettings(JSON.parse(previewSettingsRaw)); } catch (e) {}
@@ -150,7 +153,7 @@ export default function InvoicePreview() {
   }, [globalSettings, globalStoreInfo, searchParams, loadInvoice]);
 
   const handleBack = () => {
-    navigate(returnPath);
+    smartBack('/dashboard');
   };
 
   const handleDownload = async () => {

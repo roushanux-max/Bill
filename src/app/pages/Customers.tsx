@@ -8,7 +8,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, Download, Filter, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Search, Download, Filter, X, Loader2, Cloud, CloudOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Customer, Invoice } from '../types/invoice';
 import { getCustomers, saveCustomer, deleteCustomer, getInvoices } from '../utils/storage';
@@ -65,8 +65,8 @@ export default function Customers() {
       getCustomers(true),
       getInvoices(true)
     ]);
-    setCustomers(customerData);
-    setInvoices(invoiceData);
+    setCustomers(customerData.data || []);
+    setInvoices(invoiceData.data || []);
     setIsLoading(false);
   };
 
@@ -250,13 +250,7 @@ export default function Customers() {
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
-              onClick={() => {
-                if (window.history.length > 2) {
-                  navigate(-1);
-                } else {
-                  navigate('/dashboard');
-                }
-              }} 
+              onClick={() => navigate('/dashboard')} 
               className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -508,9 +502,14 @@ export default function Customers() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <h3
-                            className="font-semibold text-slate-900 truncate hover:text-[var(--color-primary)]"
+                            className="font-semibold text-slate-900 truncate flex items-center gap-2 hover:text-[var(--color-primary)]"
                           >
                             {customer.name}
+                            {customer.isSynced === false ? (
+                              <span title="Offline changes" className="flex shrink-0"><CloudOff className="h-4 w-4 text-orange-500" /></span>
+                            ) : (
+                              <span title="Synced" className="flex shrink-0"><Cloud className="h-4 w-4 text-green-500" /></span>
+                            )}
                           </h3>
                           {totalSpent > 0 && (
                             <div className="flex-shrink-0 text-right">

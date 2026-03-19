@@ -140,7 +140,7 @@ export default function LandingPage() {
                         <span>Proprietary PWA technology • 100% Free</span>
                     </div>
 
-                    <h1 style={{ fontSize: 'clamp(42px, 7vw, 76px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-2.5px', color: '#0f172a', margin: '0 0 24px' }}>
+                    <h1 style={{ fontSize: 'clamp(36px, 8vw, 76px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-2.5px', color: '#0f172a', margin: '0 0 24px' }}>
                         Invoicing made<br />
                         <span style={{
                             background: 'linear-gradient(135deg, var(--color-primary, #6366f1) 0%, var(--color-primary-hover, #4f46e5) 50%, var(--color-primary-light, #f5f3ff) 100%)',
@@ -298,31 +298,31 @@ export default function LandingPage() {
                 </div>
 
                 <div style={{ 
-                    maxWidth: 900, margin: '0 auto', background: '#fff', borderRadius: 32, 
-                    boxShadow: '0 50px 100px -20px rgba(0,0,0,0.12), 0 30px 60px -30px rgba(0,0,0,0.15)',
+                    maxWidth: 900, margin: '0 auto', background: '#fff', borderRadius: 'clamp(16px, 4vw, 32px)', 
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1), 0 10px 20px -5px rgba(0,0,0,0.05)',
                     border: '1px solid #f1f5f9', overflow: 'hidden', position: 'relative'
                 }}>
                     {/* Header of Editor */}
-                    <div style={{ padding: '32px 40px', borderBottom: '1px solid #f1f5f9', background: 'linear-gradient(to right, #fcfdfe, #fff)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>BILL TO</div>
+                    <div style={{ padding: 'clamp(20px, 5vw, 32px) clamp(16px, 5vw, 40px)', borderBottom: '1px solid #f1f5f9', background: 'linear-gradient(to right, #fcfdfe, #fff)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 6 }}>BILL TO</div>
                             <input 
                                 type="text"
                                 value={clientName}
                                 onChange={(e) => setClientName(e.target.value)}
-                                style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', background: 'transparent', border: 'none', padding: 0, outline: 'none', width: '100%' }}
+                                style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 800, color: '#1e293b', background: 'transparent', border: 'none', padding: 0, outline: 'none', width: '100%' }}
                                 placeholder="Client Name"
                             />
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>INVOICE DATE</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: '#6366f1' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        <div style={{ textAlign: 'left', flex: '0 0 auto' }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 4 }}>INVOICE DATE</div>
+                            <div style={{ fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: 700, color: '#6366f1' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                         </div>
                     </div>
 
                     {/* Table Section */}
-                    <div style={{ padding: '0 40px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <div style={{ padding: '0 clamp(16px, 5vw, 40px)', overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
                             <thead>
                                 <tr>
                                     <th style={{ textAlign: 'left', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b' }}>ITEM DESCRIPTION</th>
@@ -405,8 +405,11 @@ export default function LandingPage() {
                     </div>
 
                     {/* Summary and Actions */}
-                    <div style={{ padding: '40px', background: '#fcfdfe', borderTop: '1px solid #f1f5f9', marginTop: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ 
+                        padding: 'clamp(24px, 5vw, 40px)', background: '#fcfdfe', borderTop: '1px solid #f1f5f9', marginTop: 40, 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap-reverse', gap: 32 
+                    }}>
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                             <button 
                                 onClick={() => {
                                     const subtotal = demoItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
@@ -461,12 +464,12 @@ export default function LandingPage() {
                             </button>
                         </div>
                         
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 4 }}>ESTIMATED GRAND TOTAL</div>
-                            <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a' }}>
+                        <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 4 }}>ESTIMATED GRAND TOTAL</div>
+                            <div style={{ fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 900, color: '#0f172a' }}>
                                 ₹{Math.round(demoItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * 1.18).toLocaleString('en-IN')}
                             </div>
-                            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Inclusive of 18% GST</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Inclusive of 18% GST</div>
                         </div>
                     </div>
                 </div>

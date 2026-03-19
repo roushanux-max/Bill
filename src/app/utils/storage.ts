@@ -1284,31 +1284,32 @@ export const logActivity = async (action: string, entityType: string, entityId?:
 
 export const getAdminStats = async () => {
   try {
-    // 1. Get total users from both stores and activity logs (more comprehensive)
-    const [{ data: userLogs }, { data: storeUsers }] = await Promise.all([
-      supabase.from('activity_logs').select('user_id'),
-      supabase.from('stores').select('user_id')
-    ]);
-    
-    const allUserIds = new Set([
-      ...(userLogs?.map(l => l.user_id) || []),
-      ...(storeUsers?.map(s => s.user_id) || [])
-    ]);
-    const totalUsers = allUserIds.size;
+    // 1. Get total UNIQUE users from stores (primary source of truth)
+    const { data: storeUsers } = await supabase.from('stores').select('user_id');
+    const totalUsers = new Set(storeUsers?.map(s => s.user_id)).size;
 
-    // 2. Get total invoices today
+    // 2. Get total invoices today (with created_at timestamp)
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const { count: invoicesToday } = await supabase
       .from('invoices')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .gte('created_at', startOfDay.toISOString());
 
-    // 3. Get total revenue
-    const { data: revenueData } = await supabase.from('invoices').select('grand_total');
+    // 3. Get total revenue (valid invoices only: grand_total > 0)
+    const { data: revenueData } = await supabase
+      .from('invoices')
+      .select('grand_total')
+      .gt('grand_total', 0);
     const totalRevenue = revenueData?.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0) || 0;
 
-    // 4. Get live users (active in last 15 minutes)
+    // 4. Get total receipts (payments)
+    const { count: totalPaymentsCount, data: paymentsData } = await supabase
+      .from('payments')
+      .select('amount', { count: 'exact' });
+    const totalPaymentsAmount = paymentsData?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+
+    // 5. Get live users (DISTINCT user_id from activity_logs in last 15 minutes)
     const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const { data: liveLogs } = await supabase
       .from('activity_logs')
@@ -1316,17 +1317,17 @@ export const getAdminStats = async () => {
       .gte('created_at', fifteenMinsAgo);
     const liveUsers = new Set(liveLogs?.map((l: any) => l.user_id)).size;
     
-    // 5. Get total invoices count (overall)
+    // 6. Get total invoices count (overall)
     const { count: totalInvoices } = await supabase
       .from('invoices')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
 
-    // 5. Get recent logs
+    // 7. Get recent activity logs
     const { data: recentLogs } = await supabase
       .from('activity_logs')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(50);
 
     return {
       totalUsers,
@@ -1334,6 +1335,8 @@ export const getAdminStats = async () => {
       invoicesToday: invoicesToday || 0,
       totalInvoices: totalInvoices || 0,
       totalRevenue,
+      totalPaymentsCount: totalPaymentsCount || 0,
+      totalPaymentsAmount: totalPaymentsAmount || 0,
       recentLogs: recentLogs || []
     };
   } catch (e) {
@@ -1344,7 +1347,7 @@ export const getAdminStats = async () => {
 
 export const getAllUsers = async () => {
   try {
-    // 1. Get users with stores
+    // 1. Get users with stores (primary info)
     const { data: stores, error: storeError } = await supabase
       .from('stores')
       .select('*, invoices:invoices(count)')
@@ -1352,65 +1355,61 @@ export const getAllUsers = async () => {
 
     if (storeError) throw storeError;
 
-    // 2. Get unique users from logs to find "Pending" users
-    // Fetch MORE logs to ensure we don't miss those who haven't logged in recently
+    // 2. Discover users from activity logs (find those who started but didn't finish setup)
     const { data: logs, error: logError } = await supabase
       .from('activity_logs')
       .select('user_id, metadata, created_at')
       .order('created_at', { ascending: false })
-      .limit(1000); // Higher limit for user discovery
+      .limit(2000); 
 
     if (logError && (!stores || stores.length === 0)) return [];
 
-    // Create a map of user_id -> latest email/info
     const userMap = new Map();
     
-    // First, seed with store data to have a baseline
+    // Process stores first - stores have authoritative registration timestamps (created_at)
     stores?.forEach(s => {
       userMap.set(s.user_id, {
-        email: s.email,
-        last_active: s.updated_at || s.created_at
+        ...s,
+        registration_date: s.created_at,
+        last_active: s.updated_at || s.created_at,
+        is_pending: false,
+        source: 'store'
       });
     });
 
-    // Then, overlay with activity logs to find newest/pending users
+    // Process logs to find potential users not in stores table
     logs?.forEach(log => {
       const existing = userMap.get(log.user_id);
-      const logEmail = log.metadata?.email;
-      
-      if (!existing || (logEmail && !existing.email)) {
+      if (!existing) {
+        // This is a user with activity but no store setup yet
+        const logEmail = log.metadata?.email || 'Unknown';
         userMap.set(log.user_id, {
-          email: logEmail || existing?.email,
-          last_active: log.created_at
-        });
-      }
-    });
-
-    const combinedUsers: any[] = [];
-    const storeMap = new Map(stores?.map(s => [s.user_id, s]));
-
-    userMap.forEach((info, userId) => {
-      const store = storeMap.get(userId);
-      if (store) {
-        combinedUsers.push({
-          ...store,
-          email: store.email || info.email // Prefer store email, fallback to log
+          user_id: log.user_id,
+          business_name: 'Pending Setup',
+          owner_name: logEmail.split('@')[0] || 'New User',
+          email: logEmail,
+          registration_date: log.created_at,
+          last_active: log.created_at,
+          is_pending: true,
+          invoices: [{ count: 0 }],
+          source: 'log'
         });
       } else {
-        // User exists but has no store - "Pending Setup"
-        combinedUsers.push({
-          user_id: userId,
-          business_name: 'Pending Setup',
-          owner_name: info.email?.split('@')[0] || 'New User',
-          email: info.email || 'Unknown',
-          is_pending: true,
-          created_at: info.last_active,
-          invoices: [{ count: 0 }]
-        });
+        // Update last_active if log is newer
+        const logDate = new Date(log.created_at).getTime();
+        const existingDate = new Date(existing.last_active).getTime();
+        if (logDate > existingDate) {
+          existing.last_active = log.created_at;
+        }
+        // Also capture email from logs if store doesn't have it
+        if (!existing.email && log.metadata?.email) {
+          existing.email = log.metadata.email;
+        }
       }
     });
 
-    return combinedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return Array.from(userMap.values())
+      .sort((a, b) => new Date(b.registration_date).getTime() - new Date(a.registration_date).getTime());
   } catch (e) {
     console.error('Failed to get users:', e);
     return [];
@@ -1419,9 +1418,34 @@ export const getAllUsers = async () => {
 
 export const getAllInvoices = async (limit = 100) => {
   try {
+    // Explicitly select all required fields to ensure completeness
     const { data, error } = await supabase
       .from('invoices')
-      .select('*, customers(name), stores(business_name)')
+      .select(`
+        id,
+        invoice_number,
+        user_id,
+        store_id,
+        created_at,
+        customer_id,
+        subtotal,
+        tax_total,
+        discount_total,
+        grand_total,
+        status,
+        date,
+        customers (
+          id,
+          name,
+          email,
+          phone
+        ),
+        stores (
+          id,
+          business_name,
+          owner_name
+        )
+      `)
       .order('created_at', { ascending: false })
       .limit(limit);
 

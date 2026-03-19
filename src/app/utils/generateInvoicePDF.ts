@@ -197,10 +197,9 @@ export function generateInvoicePDF(
     ];
 
     if (isSameState) {
-        baseCols.push({ label: 'CGST', w: 16, align: 'right' });
-        baseCols.push({ label: 'SGST', w: 16, align: 'right' });
+        baseCols.push({ label: 'GST', w: 20, align: 'right' });
     } else {
-        baseCols.push({ label: 'IGST', w: 16, align: 'right' });
+        baseCols.push({ label: 'IGST', w: 20, align: 'right' });
     }
     baseCols.push({ label: 'Amount', w: 33, align: 'right' });
 
@@ -299,8 +298,7 @@ export function generateInvoicePDF(
         rowVals.push((item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'));
         
         if (isSameState) {
-            rowVals.push(Math.round(cgst).toLocaleString('en-IN'));
-            rowVals.push(Math.round(sgst).toLocaleString('en-IN'));
+            rowVals.push(Math.round(taxAmount).toLocaleString('en-IN'));
         } else {
             rowVals.push(Math.round(igst).toLocaleString('en-IN'));
         }
@@ -323,11 +321,10 @@ export function generateInvoicePDF(
                 if (ci === 0) setFont('normal', 8, textLight);
                 pdf.text(val as string, textX, y + 4, { align: col.align as any });
                 
-                // Tax rates subtext
-                const taxColIndex = hasAnyHSN ? (isSameState ? [5, 6] : [5]) : (isSameState ? [4, 5] : [4]);
+                const taxColIndex = hasAnyHSN ? [5] : [4];
                 if (taxColIndex.includes(ci)) {
                     setFont('normal', 7, textLight);
-                    const label = isSameState ? `${(item.taxRate || 0) / 2}%` : `${item.taxRate || 0}%`;
+                    const label = `${item.taxRate || 0}%`;
                     pdf.text(label, textX, y + 7.5, { align: 'right' });
                 }
             }
@@ -369,8 +366,7 @@ export function generateInvoicePDF(
     if (invoice.taxTotal > 0 || (calculatedGrandTotal > (amountTotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0)))) {
         if (invoice.items && invoice.items.length > 0) {
             if (isSameState) {
-                drawSummaryRow('CGST Total', Math.round(cgstTotal).toLocaleString('en-IN'));
-                drawSummaryRow('SGST Total', Math.round(sgstTotal).toLocaleString('en-IN'));
+                drawSummaryRow('GST Total', Math.round(cgstTotal + sgstTotal).toLocaleString('en-IN'));
             } else {
                 drawSummaryRow('IGST Total', Math.round(igstTotal).toLocaleString('en-IN'));
             }

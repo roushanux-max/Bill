@@ -5,6 +5,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../utils/supabase';
 import { useBranding } from '../contexts/BrandingContext';
+import { safeGet, safeSet, safeRemove } from '../utils/storage';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -31,8 +32,8 @@ export default function Login() {
 
   // Load saved credentials on mount
   useEffect(() => {
-    const savedEmail = localStorage.getItem('bill_saved_email');
-    const isRemembered = localStorage.getItem('bill_remember_me') === 'true';
+    const savedEmail = safeGet('bill_saved_email');
+    const isRemembered = safeGet('bill_remember_me') === 'true';
 
     if (savedEmail && isRemembered) {
       setEmail(savedEmail);
@@ -54,12 +55,12 @@ export default function Login() {
 
     // Save credentials if "Remember Me" is checked
     if (rememberMe) {
-      localStorage.setItem('bill_saved_email', email);
-      localStorage.setItem('bill_remember_me', 'true');
+      safeSet('bill_saved_email', email);
+      safeSet('bill_remember_me', 'true');
     } else {
       // Clear saved credentials if unchecked
-      localStorage.removeItem('bill_saved_email');
-      localStorage.removeItem('bill_remember_me');
+      safeRemove('bill_saved_email');
+      safeRemove('bill_remember_me');
     }
 
     const { error } = await signIn(email, password);

@@ -5,10 +5,10 @@ import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, Plus, Search, Eye, Pencil, Download, Share2, Trash2, Filter, X, UserPlus } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Eye, Pencil, Download, Share2, Trash2, Filter, X, UserPlus, Cloud, CloudOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Invoice } from '../types/invoice';
-import { getInvoices, deleteInvoice, saveInvoice, getInvoice, getStoreInfo, getBrandingSettings, getUserKey } from '../utils/storage';
+import { getInvoices, deleteInvoice, saveInvoice, getInvoice, getStoreInfo, getBrandingSettings, getUserKey, safeRemove } from '../utils/storage';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
@@ -29,8 +29,8 @@ export default function Invoices() {
   }, []);
 
   const loadInvoices = async (force = true) => {
-    const data = await getInvoices(force);
-    setInvoices(data);
+    const { data } = await getInvoices(force);
+    setInvoices(data || []);
   };
 
   const handleDelete = async (id: string) => {
@@ -56,7 +56,8 @@ export default function Invoices() {
 
   const handleView = (invoice: Invoice) => {
     // Clear any stale preview data to force a fresh fetch by ID
-    localStorage.removeItem(getUserKey('previewInvoice'));
+    const key = getUserKey('previewInvoice');
+    if (key) safeRemove(key);
     navigate(`/invoice-preview?id=${invoice.id}&return=${encodeURIComponent('/invoices')}`);
   };
 
@@ -229,13 +230,7 @@ export default function Invoices() {
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
-              onClick={() => {
-                if (window.history.length > 2) {
-                  navigate(-1);
-                } else {
-                  navigate('/dashboard');
-                }
-              }} 
+              onClick={() => navigate('/dashboard')} 
               className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -419,6 +414,11 @@ export default function Invoices() {
                         <Badge variant="secondary" className="text-xs">
                           {formatDate(invoice.date)} • {new Date(invoice.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Badge>
+                        {invoice.isSynced === false ? (
+                          <span title="Offline changes" className="flex shrink-0 ml-1"><CloudOff className="h-4 w-4 text-orange-500" /></span>
+                        ) : (
+                          <span title="Synced" className="flex shrink-0 ml-1"><Cloud className="h-4 w-4 text-green-500" /></span>
+                        )}
                       </div>
 
                       {/* Customer details */}

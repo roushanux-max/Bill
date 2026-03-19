@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
 import { Button } from './ui/button';
+import { safeGet, safeSet, safeRemove } from '../utils/storage';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -20,7 +21,7 @@ export function PWAInstallPrompt() {
     }
 
     // Check if user dismissed before
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
+    const dismissed = safeGet('pwa-install-dismissed');
     if (dismissed) {
       const dismissedDate = new Date(dismissed);
       const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
@@ -44,7 +45,7 @@ export function PWAInstallPrompt() {
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
       setShowPrompt(false);
-      localStorage.removeItem('pwa-install-dismissed');
+      safeRemove('pwa-install-dismissed');
     });
 
     return () => {
@@ -68,7 +69,7 @@ export function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', new Date().toISOString());
+    safeSet('pwa-install-dismissed', new Date().toISOString());
   };
 
   if (isInstalled || !showPrompt) return null;
@@ -141,7 +142,7 @@ export function IOSInstallInstructions() {
     if (isIOS && !isInstalled) {
       // Show instructions after 1 minute for iOS users
       setTimeout(() => {
-        const dismissed = localStorage.getItem('ios-install-dismissed');
+        const dismissed = safeGet('ios-install-dismissed');
         if (!dismissed) {
           setShowInstructions(true);
         }
@@ -151,7 +152,7 @@ export function IOSInstallInstructions() {
 
   const handleDismiss = () => {
     setShowInstructions(false);
-    localStorage.setItem('ios-install-dismissed', 'true');
+    safeSet('ios-install-dismissed', 'true');
   };
 
   if (!showInstructions) return null;

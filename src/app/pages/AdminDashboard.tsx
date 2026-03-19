@@ -134,7 +134,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="flex justify-between items-end">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-2">
@@ -257,7 +257,7 @@ export default function AdminDashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-500 group-hover:text-blue-600 transition-colors">Total Receipts</p>
-                  <h3 className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalInvoices || allInvoices.length}</h3>
+                  <h3 className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalPaymentsCount || 0}</h3>
                 </div>
                 <div className={`p-3 rounded-xl transition-colors ${activeView === 'invoices' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'}`}>
                   <FileText size={24} />
@@ -401,7 +401,7 @@ export default function AdminDashboard() {
                   <tbody className="divide-y divide-slate-100">
                     {users.slice(0, 5).map((u) => (
                       <tr key={u.id} className="hover:bg-slate-50/30 transition-colors group">
-                        <td className="px-6 py-4 cursor-pointer" onClick={() => viewUserDetail(u)}>
+                        <td className="px-6 py-4 cursor-pointer" onClick={() => toggleUserDetail(u)}>
                           <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase text-sm tracking-tight flex items-center gap-2">
                             {u.business_name || 'Unnamed Store'}
                             {u.is_pending && (
@@ -409,6 +409,7 @@ export default function AdminDashboard() {
                             )}
                           </div>
                           <div className="text-xs text-slate-500 lowercase opacity-80">{u.owner_name} • {u.email}</div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">Joined: {new Date(u.registration_date).toLocaleDateString()}</div>
                         </td>
                         <td className="px-6 py-4 text-sm font-medium text-slate-600">
                           {u.invoices?.[0]?.count || 0}
@@ -517,7 +518,7 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 cursor-pointer" onClick={() => viewUserDetail(u)}>
+                      <td className="px-6 py-4 cursor-pointer" onClick={() => toggleUserDetail(u)}>
                         <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight flex items-center gap-2">
                           {u.business_name || 'Unset Business Name'}
                           {u.is_pending && (
@@ -582,7 +583,7 @@ export default function AdminDashboard() {
               <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Top Revenue Stores</h4>
               <div className="space-y-4">
                 {users.sort((a, b) => (b.invoices?.[0]?.count || 0) - (a.invoices?.[0]?.count || 0)).slice(0, 5).map((u, i) => (
-                  <div key={u.id} className="flex items-center justify-between group cursor-pointer" onClick={() => viewUserDetail(u)}>
+                  <div key={u.id} className="flex items-center justify-between group cursor-pointer" onClick={() => toggleUserDetail(u)}>
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-black text-slate-300 group-hover:text-amber-500 transition-colors">0{i+1}</span>
                       <p className="text-sm font-bold text-slate-800 uppercase tracking-tight group-hover:text-indigo-600">{u.business_name}</p>
@@ -649,7 +650,7 @@ export default function AdminDashboard() {
                         <div className="text-xs font-bold text-slate-800 uppercase tracking-tight">
                           {inv.stores?.business_name || 'Missing Store'}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono">{inv.store_id.slice(0, 8)}...</div>
+                        <div className="text-[10px] text-slate-400 font-mono">ID: {inv.store_id?.slice(0, 8)}...</div>
                       </td>
                       <td className="px-6 py-4 text-xs font-medium text-slate-600">
                         {inv.customers?.name || 'Unknown Customer'}
