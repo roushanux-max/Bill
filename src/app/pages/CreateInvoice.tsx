@@ -11,7 +11,7 @@ import { ArrowLeft, Eye, Download, Printer, Share2, Trash2, Save, Pencil, Filter
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Invoice, InvoiceItem, Customer, Product, StoreInfo } from '../types/invoice';
-import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getInvoice, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts, getUserKey } from '../utils/storage';
+import { getCustomers, saveCustomer, getProducts, saveProduct, saveInvoice, getInvoices, getInvoice, getStoreInfo, getBrandingSettings, getNextInvoiceNumber, searchCustomers, searchProducts, getUserKey, safeGet, safeSet, safeRemove } from '../utils/storage';
 import { supabase } from '../utils/supabase';
 import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
 import { formatDateForDisplay, parseDateFromDisplay } from '../utils/dateUtils';
@@ -79,11 +79,13 @@ export default function CreateInvoice() {
   const [isProductLoading, setIsProductLoading] = useState(false);
   const customerSearchTimeout = useRef<any>(null);
   const productSearchTimeout = useRef<any>(null);
+  const isSavingRef = useRef(false);
 
   // Restore form progress
   useEffect(() => {
     // Restore item form draft regardless of edit mode if current form is empty
-    const savedItem = localStorage.getItem(getUserKey('itemFormDraft'));
+    const iKey = getUserKey('itemFormDraft');
+    const savedItem = iKey ? safeGet(iKey) : null;
     if (savedItem && (!newItemData.name || newItemData.name === '')) {
       try {
         const parsed = JSON.parse(savedItem);
@@ -95,13 +97,15 @@ export default function CreateInvoice() {
 
   useEffect(() => {
     if (newItemData.name || newItemData.rate) {
-      localStorage.setItem(getUserKey('itemFormDraft'), JSON.stringify(newItemData));
+      const key = getUserKey('itemFormDraft');
+      if (key) safeSet(key, JSON.stringify(newItemData));
     }
   }, [newItemData]);
 
   useEffect(() => {
     if (newCustomerData.name || newCustomerData.phone || newCustomerData.address) {
-      localStorage.setItem(getUserKey('customerFormDraft'), JSON.stringify(newCustomerData));
+      const key = getUserKey('customerFormDraft');
+      if (key) safeSet(key, JSON.stringify(newCustomerData));
       
       // Debounced auto-save to database
       if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
@@ -173,7 +177,8 @@ export default function CreateInvoice() {
         // aggressively check localStorage draft/preview cache for these items.
         if (!existing || !existing.items || existing.items.length === 0) {
           try {
-            const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
+            const dKey = getUserKey('invoiceDraft');
+            const draftRaw = dKey ? safeGet(dKey) : null;
             if (draftRaw) {
               const draft = JSON.parse(draftRaw);
               // Only use draft if ID matches AND it actually HAS items
@@ -189,7 +194,8 @@ export default function CreateInvoice() {
         // ADDITIONAL FALLBACK: check previewInvoice cache
         if (!existing || !existing.items || existing.items.length === 0) {
           try {
-            const previewRaw = localStorage.getItem(getUserKey('previewInvoice'));
+            const pKey = getUserKey('previewInvoice');
+            const previewRaw = pKey ? safeGet(pKey) : null;
             if (previewRaw) {
               const preview = JSON.parse(previewRaw);
               if (preview && (preview.id === editId || preview.invoiceNumber === editId) && preview.items?.length > 0) {
@@ -204,7 +210,8 @@ export default function CreateInvoice() {
         // FALLBACK: If not found in main database, check the local draft or preview cache
         if (!existing) {
           try {
-            const draftRaw = localStorage.getItem(getUserKey('invoiceDraft'));
+            const dKey2 = getUserKey('invoiceDraft');
+            const draftRaw = dKey2 ? safeGet(dKey2) : null;
             if (draftRaw) {
               const draft = JSON.parse(draftRaw);
               if (draft && (draft.id === editId || draft.id === 'sample')) existing = draft;
@@ -239,7 +246,8 @@ export default function CreateInvoice() {
         }
       } else {
         // Not editing, check for draft
-        const draft = localStorage.getItem(getUserKey('invoiceDraft'));
+        const invKey = getUserKey('invoiceDraft');
+        const draft = invKey ? safeGet(invKey) : null;
         if (draft) {
           try {
             const parsedDraft = JSON.parse(draft);
@@ -265,7 +273,8 @@ export default function CreateInvoice() {
                 if (isCurrentEmpty) toast.success('Draft restored automatically');
                 else toast.success('Draft restored!');
               } else {
-                localStorage.removeItem(getUserKey('invoiceDraft'));
+                const dKey = getUserKey('invoiceDraft');
+                if (dKey) safeRemove(dKey);
                 setInvoiceNumber(await getNextInvoiceNumber());
               }
             } else {
@@ -287,10 +296,12 @@ export default function CreateInvoice() {
   // One-time Data Recovery and Cleanup Logic
   useEffect(() => {
     const runRecovery = async () => {
-      const storeId = localStorage.getItem(getUserKey('active_store_id'));
+      const sKey = getUserKey('active_store_id');
+      const storeId = sKey ? safeGet(sKey) : null;
       if (!storeId || storeId.startsWith('offline-')) return;
       
-      const lastRecovery = localStorage.getItem(getUserKey('last_recovery_run'));
+      const rKey = getUserKey('last_recovery_run');
+      const lastRecovery = rKey ? safeGet(rKey) : null;
       const now = new Date().getTime();
       // Run once every 24 hours just in case, but usually one-off is enough
       if (lastRecovery && now - parseInt(lastRecovery) < 86400000) return;
@@ -350,7 +361,8 @@ export default function CreateInvoice() {
           // Force a list refresh if on the dashboard/ledger
         }
         
-        localStorage.setItem(getUserKey('last_recovery_run'), now.toString());
+        const key = getUserKey('last_recovery_run');
+        if (key) safeSet(key, now.toString());
       } catch (err) {
         console.error("Recovery error:", err);
       }
@@ -384,7 +396,8 @@ export default function CreateInvoice() {
         isNewCustomer,
         updatedAt: new Date().toISOString()
       };
-      localStorage.setItem(getUserKey('invoiceDraft'), JSON.stringify(currentDraft));
+      const key = getUserKey('invoiceDraft');
+      if (key) safeSet(key, JSON.stringify(currentDraft));
 
       // 2. Try to auto-save to Supabase if mandatory fields are present
       if (!selectedCustomerId || items.length === 0) return;
@@ -394,8 +407,8 @@ export default function CreateInvoice() {
 
       const { subtotal, totalTax, total } = calculateTotals();
 
-      const invoices = await getInvoices();
-      const existingInvoice = editId ? invoices.find(inv => inv.id === editId) : null;
+      const { data: invoices } = await getInvoices();
+      const existingInvoice = editId ? (invoices || []).find(inv => inv.id === editId) : null;
 
       const invoice: Invoice = {
         id: editId || localInvoiceId, 
@@ -425,13 +438,18 @@ export default function CreateInvoice() {
         store_id: storeInfo?.id || '',
       };
 
+      if (isSavingRef.current) return;
+      
       try {
+        isSavingRef.current = true;
         const savedId = await saveInvoice(invoice);
         if (savedId && !editId) {
           navigate(`/create-invoice?edit=${savedId}`, { replace: true });
         }
       } catch (e) {
         console.error('Supabase auto-save failed:', e);
+      } finally {
+        isSavingRef.current = false;
       }
     }, 1500); // 1.5s debounce for local + remote auto-save
 
@@ -443,15 +461,15 @@ export default function CreateInvoice() {
       getCustomers(false, 50),
       getProducts(false, 50)
     ]);
-    setCustomers(customerData);
-    setProducts(productData);
+    setCustomers(customerData.data || []);
+    setProducts(productData.data || []);
   };
 
-  const calculateTotals = () => {
+  const calculateTotals = (customItems?: InvoiceItem[]) => {
     let itemSubtotal = 0;
     let totalTax = 0;
 
-    items.forEach(item => {
+    (customItems || items).forEach(item => {
       const rate = Number(item.unitPrice || (item as any).rate) || 0;
       const qty = Number(item.quantity) || 0;
       const tax = Number(item.taxRate) || 0;
@@ -538,7 +556,8 @@ export default function CreateInvoice() {
     setSelectedCustomerId('');
     setActiveCustomer(null);
     setNewCustomerData({ name: '', phone: '', email: '', gstin: '', address: '', state: '' });
-    localStorage.removeItem(getUserKey('customerFormDraft'));
+    const key = getUserKey('customerFormDraft');
+    if (key) safeRemove(key);
   };
   
   const handleAddItem = async () => {
@@ -627,7 +646,8 @@ export default function CreateInvoice() {
 
     setNewItemData({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
     setSelectedProductId('');
-    localStorage.removeItem(getUserKey('itemFormDraft'));
+    const key = getUserKey('itemFormDraft');
+    if (key) safeRemove(key);
     
     // Scroll to items list on mobile to show it was added
     if (window.innerWidth < 768) {
@@ -735,7 +755,8 @@ export default function CreateInvoice() {
 
     try {
       // Also save to draft for persistence if they edit and come back
-      localStorage.setItem(getUserKey('invoiceDraft'), JSON.stringify({
+      const dKey = getUserKey('invoiceDraft');
+      if (dKey) safeSet(dKey, JSON.stringify({
         ...invoice,
         // Store raw items/customer for form restoration
         items: items,
@@ -743,7 +764,8 @@ export default function CreateInvoice() {
         date: date,
       }));
 
-      localStorage.setItem(getUserKey('previewInvoice'), JSON.stringify(invoice));
+      const pKey = getUserKey('previewInvoice');
+      if (pKey) safeSet(pKey, JSON.stringify(invoice));
 
       // Navigate to preview with a return path that includes the ID
       const finalId = editId || invoice.id;
@@ -803,18 +825,67 @@ export default function CreateInvoice() {
   };
 
   const buildInvoiceObject = async (resolvedCustomerId: string): Promise<Invoice | null> => {
+    let finalItems = [...items];
+
+    // Auto-add pending item into finalItems
+    if (newItemData.name?.trim() && Number(newItemData.rate) >= 0) {
+      const qty = Number(newItemData.quantity) || 1;
+      const rate = Number(newItemData.rate) || 0;
+      const taxRate = Number(newItemData.taxRate) || 0;
+      
+      const item: InvoiceItem = {
+        id: crypto.randomUUID(),
+        invoice_id: editId || localInvoiceId,
+        product_id: selectedProductId || crypto.randomUUID(),
+        productName: newItemData.name.trim(),
+        unitPrice: rate,
+        quantity: qty,
+        hsn: newItemData.hsn,
+        unit: 'pcs',
+        taxRate: taxRate,
+        taxAmount: (rate * qty * taxRate) / 100,
+        discountAmount: 0,
+        totalAmount: rate * qty,
+      };
+      
+      finalItems.push(item);
+      
+      // Auto-save the product if it doesn't exist
+      if (!selectedProductId) {
+         try {
+           const newProduct: Product = {
+             id: item.product_id as string,
+             name: newItemData.name.trim(),
+             category: 'Other',
+             hsnCode: newItemData.hsn || '',
+             sellingPrice: rate,
+             gstRate: taxRate,
+             unit: 'pcs',
+             createdAt: new Date().toISOString(),
+           };
+           await saveProduct(newProduct);
+         } catch (e) {
+           console.error('Failed to auto-save pending product:', e);
+         }
+      }
+      
+      setItems(finalItems);
+      setNewItemData({ name: '', hsn: '', quantity: 1, rate: 0, taxRate: 0, amount: 0 });
+      setSelectedProductId('');
+    }
+
     if (!newCustomerData.name && !resolvedCustomerId) {
       toast.error('Please enter or select a customer');
       scrollToSection(customerCardRef);
       return null;
     }
-    if (items.length === 0) {
+    if (finalItems.length === 0) {
       toast.error('Please add at least one item');
       scrollToSection(itemsCardRef);
       return null;
     }
 
-    const { subtotal, totalTax, total } = calculateTotals();
+    const { subtotal, totalTax, total } = calculateTotals(finalItems);
     
     // Ensure we use the actual text from input fields, not stale database names
     const customerDetails = {
@@ -826,8 +897,8 @@ export default function CreateInvoice() {
       email: newCustomerData.email || activeCustomer?.email || '',
     };
 
-    const invoices = await getInvoices();
-    const existingInvoice = editId ? invoices.find(inv => inv.id === editId) : null;
+    const { data: invoices } = await getInvoices();
+    const existingInvoice = editId ? (invoices || []).find(inv => inv.id === editId) : null;
 
     return {
       id: editId || localInvoiceId,
@@ -844,7 +915,7 @@ export default function CreateInvoice() {
         email: newCustomerData.email || activeCustomer?.email || '',
         createdAt: activeCustomer?.createdAt || new Date().toISOString(),
       },
-      items,
+      items: finalItems,
       transportCharges: Number(transportCharges) || 0,
       discountTotal: Number(discount) || 0,
       notes: notes || settings.invoiceNotes || (settings as any).termsAndConditions || '',
@@ -975,17 +1046,13 @@ export default function CreateInvoice() {
 
   const { total } = calculateTotals();
 
-  const handleBack = () => {
-    if (returnParam) {
-      navigate(returnParam);
-    } else if (window.history.length > 2) {
-      navigate(-1);
-    } else {
-      navigate(editId ? '/invoices' : '/dashboard');
-    }
-  };
+    const handleBack = () => {
+      navigate('/dashboard');
+    };
 
-    const isInvoiceIncomplete = !selectedCustomerId || items.length === 0 || items.some(item => !item.productName?.trim());
+    const hasPendingItem = !!newItemData.name?.trim() && Number(newItemData.rate) >= 0;
+    const hasActiveItems = items.length > 0 || hasPendingItem;
+    const isInvoiceIncomplete = !selectedCustomerId || !hasActiveItems || items.some(item => !item.productName?.trim());
 
     return (
         <div className="min-h-screen bg-slate-50 pb-12 sm:pb-8">
@@ -1420,7 +1487,7 @@ export default function CreateInvoice() {
               </div>
               <div className="mt-6 pt-6 border-t border-slate-100">
                 <p className="text-xs text-slate-500 italic">
-                  Notes and Terms are now managed globally in <Link to="/settings?section=terms" className="text-indigo-600 hover:underline font-medium">Branding Settings</Link>.
+                  Notes and Terms are now managed globally in <Link to={`/settings?section=terms&return=${encodeURIComponent(location.pathname + location.search)}`} className="text-indigo-600 hover:underline font-medium">Branding Settings</Link>.
                 </p>
               </div>
             </CardContent>
