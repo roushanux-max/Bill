@@ -75,13 +75,15 @@ export default function Dashboard() {
         return new Date(dateStr);
       };
 
-      const todayInvoices = invoices.filter(inv => {
+      const validInvoices = invoices.filter(inv => (inv.grandTotal || 0) > 0);
+
+      const todayInvoices = validInvoices.filter(inv => {
         const invDate = parseDateString(inv.date);
         invDate.setHours(0, 0, 0, 0);
         return invDate.getTime() === today.getTime();
       });
 
-      const monthInvoices = invoices.filter(inv => {
+      const monthInvoices = validInvoices.filter(inv => {
         const invDate = parseDateString(inv.date);
         return invDate >= thisMonth;
       });
@@ -91,8 +93,8 @@ export default function Dashboard() {
         todayCount: todayInvoices.length,
         monthSales: monthInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0),
         monthCount: monthInvoices.length,
-        totalInvoices: invoices.length,
-        totalRevenue: invoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0),
+        totalInvoices: validInvoices.length,
+        totalRevenue: validInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0),
         totalCustomers: customers.length,
         totalProducts: products.length,
       });

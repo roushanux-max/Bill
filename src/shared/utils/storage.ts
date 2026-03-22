@@ -879,10 +879,14 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
         store_id: storeId,
       }))
       // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
+      // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
       .filter(inv => {
         const isDeletedCustomer = inv.customer.name === 'Deleted Customer' || !inv.customer.name;
         const isZeroTotal = Number(inv.grandTotal) === 0;
-        return !(isDeletedCustomer && isZeroTotal);
+        const hasNoItems = (inv.items?.length || 0) === 0;
+        
+        // If it's 0-total and (no items OR no customer), it's a ghost
+        return !(isZeroTotal && (hasNoItems || isDeletedCustomer));
       });
 
     if (key) safeSet(key, JSON.stringify(invoices));

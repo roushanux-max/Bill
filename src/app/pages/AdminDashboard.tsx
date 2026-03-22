@@ -9,8 +9,12 @@ import {
   getAllInvoices,
   deleteInvoice
 } from '@/shared/utils/storage';
-import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity, Trash2, Eraser } from 'lucide-react';
+import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity, Trash2, Eraser, Eye, X, Package, MapPin, Phone, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/components/ui/dialog';
+import { Badge } from '@/shared/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
+import { getInvoice } from '@/shared/utils/storage';
 
 export default function AdminDashboard() {
   const { user, isAdmin } = useAuth();
@@ -22,6 +26,8 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedUserActivity, setSelectedUserActivity] = useState<any[]>([]);
+  const [viewingInvoice, setViewingInvoice] = useState<any>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -69,7 +75,17 @@ export default function AdminDashboard() {
       toast.error('Failed to delete invoice');
     }
   };
-
+  const handleViewInvoiceDetail = async (id: string) => {
+    setIsDetailLoading(true);
+    try {
+      const fullInvoice = await getInvoice(id);
+      setViewingInvoice(fullInvoice);
+    } catch (error) {
+      toast.error('Failed to load invoice details');
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
   const handleCleanupErrors = async () => {
     const errorInvoices = allInvoices.filter(inv => !inv.grand_total || inv.grand_total === 0);
     if (errorInvoices.length === 0) {
@@ -664,6 +680,13 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
                           <button
+                            onClick={() => handleViewInvoiceDetail(inv.id)}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="View Details"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
                             onClick={() => handleDeleteInvoice(inv.id)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                             title="Delete Invoice"
@@ -733,6 +756,170 @@ export default function AdminDashboard() {
           </Card>
         </div>
       )}
+      {/* Invoice Detail Modal */}
+      <Dialog open={!!viewingInvoice} onOpenChange={(open) => !open && setViewingInvoice(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2">
+                  <FileText className="text-indigo-600" />
+                  Invoice #{viewingInvoice?.invoiceNumber}
+                </DialogTitle>
+                <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                  Issued on {viewingInvoice?.date}
+                </DialogDescription>
+              </div>
+              <Badge className={`${viewingInvoice?.status === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'} text-white border-none px-3 py-1 font-black uppercase tracking-widest text-[10px]`}>
+                {viewingInvoice?.status}
+              </Badge>
+            </div>
+          </DialogHeader>
+
+          {viewingInvoice && (
+            <div className="mt-8 space-y-8">
+              {/* Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Customer Section */}
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <Users size={14} className="text-indigo-600" /> Billed To
+                  </h4>
+                  <div className="space-y-3">
+                    <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{viewingInvoice.customer?.name}</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                        <MapPin size={12} className="mt-0.5 shrink-0 opacity-40" />
+                        <span>{viewingInvoice.customer?.address || 'No address provided'}</span>
+                      </div>
+                      {viewingInvoice.customer?.phone && (
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                          <Phone size={12} className="shrink-0 opacity-40" />
+                          <span>{viewingInvoice.customer?.phone}</span>
+                        </div>
+                      )}
+                      {viewingInvoice.customer?.email && (
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                          <Mail size={12} className="shrink-0 opacity-40" />
+                          <span>{viewingInvoice.customer?.email}</span>
+                        </div>
+                      )}
+                      {viewingInvoice.customer?.gstin && (
+                        <div className="mt-2 inline-block px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-indigo-600">
+                          GSTIN: {viewingInvoice.customer?.gstin}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Meta Section */}
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                   <div className="flex justify-between items-center py-3 border-b border-slate-200/50">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Store Owner</span>
+                      <span className="text-xs font-black text-slate-900 uppercase">{viewingInvoice.stores?.owner_name || 'Admin'}</span>
+                   </div>
+                   <div className="flex justify-between items-center py-3 border-b border-slate-200/50">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Store ID</span>
+                      <span className="text-[10px] font-mono text-slate-400">{viewingInvoice.store_id}</span>
+                   </div>
+                   <div className="flex justify-between items-center py-3">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Created At</span>
+                      <span className="text-xs font-black text-slate-900">{new Date(viewingInvoice.createdAt).toLocaleString()}</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <Package size={14} className="text-indigo-600" /> Product Breakdown
+                </h4>
+                <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                  <Table>
+                    <TableHeader className="bg-slate-50/50">
+                      <TableRow className="border-slate-100 hover:bg-transparent">
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 w-[40%]">Product</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-center">HSN</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-center">Qty</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">Rate</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">Tax</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {viewingInvoice.items?.map((item: any, idx: number) => (
+                        <TableRow key={idx} className="border-slate-50">
+                          <TableCell className="font-bold text-slate-900 py-4 uppercase text-xs tracking-tight">
+                            {item.productName}
+                          </TableCell>
+                          <TableCell className="text-center font-mono text-[10px] text-slate-400">
+                            {item.hsn || '-'}
+                          </TableCell>
+                          <TableCell className="text-center font-black text-slate-900 text-xs">
+                            {item.quantity} {item.unit}
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-slate-600 text-xs">
+                            ₹{item.unitPrice?.toLocaleString('en-IN')}
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-slate-500 text-[10px]">
+                            {item.taxRate}%
+                          </TableCell>
+                          <TableCell className="text-right font-black text-slate-900 text-xs">
+                            ₹{item.totalAmount?.toLocaleString('en-IN')}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Totals Section */}
+              <div className="flex justify-end p-6 bg-slate-900 rounded-2xl shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10 text-white">
+                  <FileText size={100} />
+                </div>
+                <div className="w-full md:w-80 space-y-4 relative z-10">
+                  <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <span>Subtotal</span>
+                    <span className="text-white">₹{viewingInvoice.subtotal?.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <span>Total Tax</span>
+                    <span className="text-white">₹{viewingInvoice.taxTotal?.toLocaleString('en-IN')}</span>
+                  </div>
+                  {viewingInvoice.transportCharges > 0 && (
+                    <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                      <span>Transport</span>
+                      <span className="text-white">₹{viewingInvoice.transportCharges?.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {viewingInvoice.discountTotal > 0 && (
+                    <div className="flex justify-between text-[10px] font-black text-rose-400 uppercase tracking-[0.2em]">
+                      <span>Discount</span>
+                      <span className="text-rose-400">-₹{viewingInvoice.discountTotal?.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  <div className="pt-4 border-t border-white/10 flex justify-between items-end">
+                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">Grand Total</span>
+                    <span className="text-3xl font-black text-white tracking-tighter">
+                      ₹{viewingInvoice.grandTotal?.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {viewingInvoice.notes && (
+                <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                  <h5 className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Admin Note / Remarks</h5>
+                  <p className="text-xs font-bold text-amber-900/70">{viewingInvoice.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
