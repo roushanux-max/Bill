@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './routes';
-import { PWAInstallPrompt, IOSInstallInstructions } from './components/PWAInstallPrompt';
-import { AuthProvider } from './contexts/AuthContext';
-import { BrandingProvider } from './contexts/BrandingContext';
+import { PWAInstallPrompt, IOSInstallInstructions } from '@/shared/components/PWAInstallPrompt';
+import { AuthProvider } from '@/shared/contexts/AuthContext';
+import { BrandingProvider } from '@/shared/contexts/BrandingContext';
 import { Toaster } from 'sonner';
-import { SyncIndicator } from './components/SyncIndicator';
-import { processSyncQueue } from './utils/storage';
+import { SyncIndicator } from '@/shared/components/SyncIndicator';
+import { processSyncQueue } from '@/shared/utils/storage';
 
 export default function App() {
   useEffect(() => {

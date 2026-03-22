@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase } from '@/shared/utils/supabase';
 
 export default function StressTest() {
   const [logs, setLogs] = useState<string[]>([]);

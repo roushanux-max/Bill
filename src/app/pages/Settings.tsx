@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { Input } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Switch } from '../components/ui/switch';
-import { Textarea } from '../components/ui/textarea';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Label } from '@/shared/components/ui/label';
+import { Input } from '@/shared/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Switch } from '@/shared/components/ui/switch';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { ArrowLeft, Eye, Save, Upload, ImageIcon, Palette, LayoutGrid, Type, FileSignature, Sparkles, CheckCircle2, X, Building2, User, LogOut } from 'lucide-react';
-import { getTextColorClass, getDescriptionColorClass, getContrastColor } from '../../utils/colorUtils';
-import { BrandingSettings, defaultBrandingSettings } from '../types/branding';
-import { StoreInfo } from '../types/invoice';
-import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo, getUserKey, safeSet } from '../utils/storage';
-import { useBranding } from '../contexts/BrandingContext';
-import { useAuth } from '../contexts/AuthContext';
+import { getTextColorClass, getDescriptionColorClass, getContrastColor } from '@/shared/utils/colorUtils';
+import { BrandingSettings, defaultBrandingSettings } from '@/shared/types/branding';
+import { StoreInfo } from '@/features/invoices/types/invoice';
+import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo, getUserKey, safeSet } from '@/shared/utils/storage';
+import { useBranding } from '@/shared/contexts/BrandingContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { toast } from 'sonner';
-import { validateEmail, validatePhone } from '../utils/validation';
+import { validateEmail, validatePhone } from '@/shared/utils/validation';
 
 export default function SettingsPage() {
   const navigate = useNavigate();

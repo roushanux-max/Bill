@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { useAuth } from '../contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { 
   getAdminStats, 
   getAllUsers, 
@@ -8,7 +8,7 @@ import {
   getUserActivity,
   getAllInvoices,
   deleteInvoice
-} from '../utils/storage';
+} from '@/shared/utils/storage';
 import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity, Trash2, Eraser } from 'lucide-react';
 import { toast } from 'sonner';
 

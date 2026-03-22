@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '../utils/supabase';
-import { useBranding } from '../contexts/BrandingContext';
-import { safeGet, safeSet, safeRemove } from '../utils/storage';
+import { supabase } from '@/shared/utils/supabase';
+import { useBranding } from '@/shared/contexts/BrandingContext';
+import { safeGet, safeSet, safeRemove } from '@/shared/utils/storage';
 
 export default function Login() {
   const navigate = useNavigate();

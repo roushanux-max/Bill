@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useRouteError, isRouteErrorResponse } from 'react-router-dom';
-import { Button } from '../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Home, RefreshCw, ChevronLeft, AlertCircle, Search, Settings, Link2Off, Bug, ShieldAlert, Cpu, Globe, Database } from 'lucide-react';
 
 interface ErrorPageProps {

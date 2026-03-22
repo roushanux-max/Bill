@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { FileText, IndianRupee, Users, Package, Eye, EyeOff, UserPlus, Plus } from 'lucide-react';
-import { getInvoices, getCustomers, getProducts, subscribeToInvoices, subscribeToProducts, subscribeToCustomers } from '../utils/storage';
-import { Invoice } from '../types/invoice';
-import { useAuth } from '../contexts/AuthContext';
-import { useBranding } from '../contexts/BrandingContext';
+import { getInvoices, getCustomers, getProducts, subscribeToInvoices, subscribeToProducts, subscribeToCustomers } from '@/shared/utils/storage';
+import { Invoice } from '@/features/invoices/types/invoice';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useBranding } from '@/shared/contexts/BrandingContext';
 import { toast } from 'sonner';
-import { StatSkeleton, ListSkeleton } from '../components/SkeletonLoaders';
-import Header from '../components/Header';
+import { StatSkeleton, ListSkeleton } from '@/shared/components/SkeletonLoaders';
+import Header from '@/shared/components/Header';
 
 export default function Dashboard() {
   const navigate = useNavigate();

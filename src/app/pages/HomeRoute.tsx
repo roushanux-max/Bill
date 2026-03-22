@@ -1,7 +1,7 @@
-import { useAuth } from '../contexts/AuthContext';
-import { useBranding } from '../contexts/BrandingContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useBranding } from '@/shared/contexts/BrandingContext';
 import Dashboard from './Dashboard';
-import LoadingScreen from '../components/LoadingScreen';
+import LoadingScreen from '@/shared/components/LoadingScreen';
 
 export default function HomeRoute() {
     const { user, loading: authLoading } = useAuth();

@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import PublicRoute from "./components/PublicRoute";
-import LoadingScreen from "./components/LoadingScreen";
+import ProtectedRoute from "@/shared/components/ProtectedRoute";
+import PublicRoute from "@/shared/components/PublicRoute";
+import LoadingScreen from "@/shared/components/LoadingScreen";
 import { useEffect } from "react";
 import { useLocation, ScrollRestoration } from "react-router-dom";
-import { lazyWithRetry, clearLazyRetryFlag } from "./utils/lazyRetry";
+import { lazyWithRetry, clearLazyRetryFlag } from "@/shared/utils/lazyRetry";
 
 // Lazy load pages for performance
 const LandingPage = lazyWithRetry(() => import("./pages/LandingPage"));
@@ -15,20 +15,20 @@ const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
 const HomeRoute = lazyWithRetry(() => import("./pages/HomeRoute"));
 const SetupShop = lazyWithRetry(() => import("./pages/SetupShop"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
-const Invoices = lazyWithRetry(() => import("./pages/Invoices"));
-const CreateInvoice = lazyWithRetry(() => import("./pages/CreateInvoice"));
-const InvoicePreview = lazyWithRetry(() => import("./pages/InvoicePreview"));
-const Customers = lazyWithRetry(() => import("./pages/Customers"));
-const Products = lazyWithRetry(() => import("./pages/Products"));
+const Invoices = lazyWithRetry(() => import("@/features/invoices/pages/Invoices"));
+const CreateInvoice = lazyWithRetry(() => import("@/features/invoices/pages/CreateInvoice"));
+const InvoicePreview = lazyWithRetry(() => import("@/features/invoices/pages/InvoicePreview"));
+const Customers = lazyWithRetry(() => import("@/features/customers/pages/Customers"));
+const Products = lazyWithRetry(() => import("@/features/products/pages/Products"));
 const StressTest = lazyWithRetry(() => import("./pages/StressTest"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 
 const LoadingFallback = () => <LoadingScreen />;
 
-import MobileNav from "./components/MobileNav";
-import Header from "./components/Header";
+import MobileNav from "@/shared/components/MobileNav";
+import Header from "@/shared/components/Header";
 import ErrorPage from "./pages/ErrorPage";
-import { NavigationProvider } from "./contexts/NavigationContext";
+import { NavigationProvider } from "@/shared/contexts/NavigationContext";
 
 const RootLayout = () => {
   useEffect(() => {

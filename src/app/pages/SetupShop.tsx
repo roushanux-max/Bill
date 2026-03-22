@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuth } from '../contexts/AuthContext';
-import { useBranding } from '../contexts/BrandingContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import { useBranding } from '@/shared/contexts/BrandingContext';
 import { ArrowRight, ArrowLeft, Store, CheckCircle2, Loader2, Building2, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '../utils/supabase';
-import { getUserKey, saveStoreInfo, saveBrandingSettings, safeGet, safeSet, safeRemove } from '../utils/storage';
-import { StoreInfo } from '../types/invoice';
-import { defaultBrandingSettings } from '../types/branding';
-import { validateEmail, validatePhone } from '../utils/validation';
+import { supabase } from '@/shared/utils/supabase';
+import { getUserKey, saveStoreInfo, saveBrandingSettings, safeGet, safeSet, safeRemove } from '@/shared/utils/storage';
+import { StoreInfo } from '@/features/invoices/types/invoice';
+import { defaultBrandingSettings } from '@/shared/types/branding';
+import { validateEmail, validatePhone } from '@/shared/utils/validation';
 // Helper to determine active step
 const steps = [
   { id: 'welcome', title: 'Welcome' },

@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown, Plus, Trash2, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import Logo from '../components/Logo';
-import { useBranding } from '../contexts/BrandingContext';
-import { generateInvoicePDF, getInvoiceFilename } from '../utils/generateInvoicePDF';
-import { defaultBrandingSettings } from '../types/branding';
-import { supabase } from '../utils/supabase';
+import Logo from '@/shared/components/Logo';
+import { useBranding } from '@/shared/contexts/BrandingContext';
+import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
+import { defaultBrandingSettings } from '@/shared/types/branding';
+import { supabase } from '@/shared/utils/supabase';
 
 // --- Utility: Intersection Observer Hook for scroll animations ---
 function useInView(threshold = 0.15) {
@@ -84,7 +84,7 @@ export default function LandingPage() {
     const [clientName, setClientName] = useState('John Doe');
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => setUser(data.user));
+        supabase.auth.getUser().then(({ data }: { data: any }) => setUser(data.user));
         const onScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', onScroll, { passive: true });
 

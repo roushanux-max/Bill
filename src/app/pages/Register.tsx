@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import Logo from '../components/Logo';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import Logo from '@/shared/components/Logo';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '../utils/supabase';
-import { validateEmail, validatePhone } from '../utils/validation';
-import { safeSet } from '../utils/storage';
+import { supabase } from '@/shared/utils/supabase';
+import { validateEmail, validatePhone } from '@/shared/utils/validation';
+import { safeSet } from '@/shared/utils/storage';
 
 export default function Register() {
   const navigate = useNavigate();
