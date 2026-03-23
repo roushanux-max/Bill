@@ -873,43 +873,51 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
     }
 
     const invoices = (data || [])
-      .map(inv => ({
-        id: inv.id,
-        invoiceNumber: inv.invoice_number,
-        date: inv.date,
-        customerId: inv.customer_id,
-        customer: {
-          id: inv.customers?.id,
-          name: inv.customers?.name || `Missing Customer (${inv.customer_id?.slice(0,8)})`,
-          gstin: inv.customers?.gstin || '',
-          address: inv.customers?.address || '',
-          state: inv.customers?.state || '',
-          phone: inv.customers?.phone || '',
-          email: inv.customers?.email || '',
-          createdAt: inv.customers?.created_at,
-        },
-        // For listing, we just need the count, but we'll mock an empty array or length-only for UI compatibility
-        items: new Array(inv.items?.[0]?.count || 0).fill({}) as any[],
-        subtotal: Number(inv.subtotal),
-        taxTotal: Number(inv.tax_total),
-        discountTotal: Number(inv.discount_total),
-        grandTotal: Number(inv.grand_total),
-        transportCharges: Number(inv.transport_charges) || 0,
-        notes: inv.notes || '',
-        status: inv.status || 'unpaid',
-        createdAt: inv.created_at,
-        updatedAt: inv.updated_at || inv.created_at,
-        store_id: storeId,
-      }))
-      // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
-      // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
+      .map(inv => {
+        // Prefer live customer join; fall back to snapshot stored in invoice row.
+        // This ensures names are always correct even if the customer was edited,
+        // soft-deleted, or became inaccessible across users/RLS.
+        const liveCustomerName = inv.customers?.name;
+        const snapshotName = (inv as any).customer_name;
+        const snapshotPhone = (inv as any).customer_phone;
+        const resolvedName = liveCustomerName || snapshotName || 'Walk-in Customer';
+        const resolvedPhone = inv.customers?.phone || snapshotPhone || '';
+
+        return {
+          id: inv.id,
+          invoiceNumber: inv.invoice_number,
+          date: inv.date,
+          customerId: inv.customer_id,
+          customer: {
+            id: inv.customers?.id || inv.customer_id,
+            name: resolvedName,
+            gstin: inv.customers?.gstin || '',
+            address: inv.customers?.address || '',
+            state: inv.customers?.state || '',
+            phone: resolvedPhone,
+            email: inv.customers?.email || '',
+            createdAt: inv.customers?.created_at,
+          },
+          // For listing we use the count; actual items are fetched in getInvoice()
+          items: new Array(inv.items?.[0]?.count || 0).fill({}) as any[],
+          subtotal: Number(inv.subtotal),
+          taxTotal: Number(inv.tax_total),
+          discountTotal: Number(inv.discount_total),
+          grandTotal: Number(inv.grand_total),
+          transportCharges: Number(inv.transport_charges) || 0,
+          notes: inv.notes || '',
+          status: inv.status || 'unpaid',
+          createdAt: inv.created_at,
+          updatedAt: inv.updated_at || inv.created_at,
+          store_id: storeId,
+        };
+      })
+      // Only hide TRUE ghost invoices: absolutely zero total AND zero items.
+      // Never hide an invoice just because the customer join failed.
       .filter(inv => {
-        const isDeletedCustomer = !inv.customer?.name || inv.customer.name.includes('Missing Customer');
         const isZeroTotal = Number(inv.grandTotal) === 0;
         const hasNoItems = (inv.items?.length || 0) === 0;
-        
-        // If it's 0-total and (no items OR no customer), it's a ghost
-        return !(isZeroTotal && (hasNoItems || isDeletedCustomer));
+        return !(isZeroTotal && hasNoItems);
       });
 
     if (key) safeSet(key, JSON.stringify(invoices));
@@ -946,12 +954,12 @@ export const getInvoice = async (id: string): Promise<Invoice | null> => {
     date: inv.date,
     customerId: inv.customer_id,
     customer: {
-      id: inv.customers?.id,
-      name: inv.customers?.name || `Missing Customer (${inv.customer_id?.slice(0,8)})`,
+      id: inv.customers?.id || inv.customer_id,
+      name: inv.customers?.name || (inv as any).customer_name || 'Walk-in Customer',
       gstin: inv.customers?.gstin || '',
       address: inv.customers?.address || '',
       state: inv.customers?.state || '',
-      phone: inv.customers?.phone || '',
+      phone: inv.customers?.phone || (inv as any).customer_phone || '',
       email: inv.customers?.email || '',
       createdAt: inv.customers?.created_at,
     },
@@ -1045,6 +1053,10 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       notes: invoice.notes || '',
       status: invoice.status || 'unpaid',
       local_invoice_id: invoice.id,
+      // Customer snapshot — prevents showing wrong/missing customer if the
+      // customer record is later deleted or becomes inaccessible via RLS.
+      customer_name: invoice.customer?.name || '',
+      customer_phone: invoice.customer?.phone || '',
     };
 
     // 1.5 Validation: Don't save if it's a completely empty ghost invoice

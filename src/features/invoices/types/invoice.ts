@@ -148,4 +148,6 @@ export interface InvoicePayload {
   notes: string;
   status: string;
   local_invoice_id?: string;
+  customer_name?: string;
+  customer_phone?: string;
 }
