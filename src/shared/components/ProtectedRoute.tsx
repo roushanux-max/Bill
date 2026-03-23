@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import LoadingScreen from '@/shared/components/LoadingScreen';
 import UserThemeProvider from './UserThemeProvider';
 import { supabase } from '@/shared/utils/supabase';
+import { isGuestMode } from '@/shared/utils/storage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,18 +13,19 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading, hasStore, isAdmin } = useAuth();
   const location = useLocation();
+  const isGuest = isGuestMode();
 
   if (loading || (user && hasStore === null)) {
     return <LoadingScreen message="Verifying security..." />;
   }
 
-  if (!user) {
+  if (!user && !isGuest) {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect new users to setup, but NOT if already there, and NOT if they are an admin
-  if (hasStore === false && location.pathname !== '/setup-shop' && !isAdmin) {
-    return <Navigate to="/setup-shop" replace />;
+  // Redirect to dashboard normally
+  if (!isGuest && hasStore === false && location.pathname === '/setup-shop') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

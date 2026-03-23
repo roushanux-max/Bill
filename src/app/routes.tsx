@@ -13,7 +13,6 @@ const Login = lazyWithRetry(() => import("./pages/Login"));
 const Register = lazyWithRetry(() => import("./pages/Register"));
 const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
 const HomeRoute = lazyWithRetry(() => import("./pages/HomeRoute"));
-const SetupShop = lazyWithRetry(() => import("./pages/SetupShop"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
 const Invoices = lazyWithRetry(() => import("@/features/invoices/pages/Invoices"));
 const CreateInvoice = lazyWithRetry(() => import("@/features/invoices/pages/CreateInvoice"));
@@ -92,10 +91,6 @@ export const router = createBrowserRouter([
           {
             path: "/dashboard",
             element: <HomeRoute />,
-          },
-          {
-            path: "/setup-shop",
-            element: <SetupShop />,
           },
           {
             path: "/stress-test",

@@ -555,16 +555,14 @@ export default function SettingsPage() {
                     <Building2 className="mx-auto h-10 w-10 text-slate-700" />
                   </div>
                   <h3 className="text-lg font-semibold">No Store Found</h3>
-                  <p className="text-sm text-slate-500 mt-2">You haven't set up your store yet. Store details are required for invoices and professional documents.</p>
+                  <p className="text-sm text-slate-500 mt-2">Business details are required for professional documents. Please fill them in below.</p>
                   <div className="mt-4 flex justify-center gap-2">
-                    <Button onClick={() => navigate('/setup-shop')}>Setup Shop</Button>
-                    <Button variant="outline" onClick={async () => {
-                      // Try reloading store info from backend
-                      const si = await getStoreInfo();
-                      setStoreInfo(si);
-                      if (si) updateGlobalStoreInfo(si);
-                      if (!si) toast('No store found. Please complete setup.');
-                    }}>Reload</Button>
+                    <Button onClick={() => {
+                        const emptyStore: StoreInfo = { id: 'new', name: 'My Business', ownerName: user?.email?.split('@')[0] || '', phone: '', email: user?.email || '', address: '', state: 'Bihar', gstin: '' };
+                        setStoreInfo(emptyStore);
+                        updateGlobalStoreInfo(emptyStore);
+                        setHasChanges(true);
+                    }}>Start Setup</Button>
                   </div>
                 </Card>
               )

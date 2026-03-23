@@ -37,7 +37,7 @@ export default function Register() {
             safeSet('hasCompletedOnboarding', 'true');
             navigate('/dashboard');
           } else {
-            navigate('/setup-shop');
+            navigate('/dashboard');
           }
         } catch (err) {
           console.error('Routing check error:', err);

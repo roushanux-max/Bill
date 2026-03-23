@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { FileText, IndianRupee, Users, Package, Eye, EyeOff, UserPlus, Plus } from 'lucide-react';
-import { getInvoices, getCustomers, getProducts, subscribeToInvoices, subscribeToProducts, subscribeToCustomers } from '@/shared/utils/storage';
+import { getInvoices, getCustomers, getProducts, subscribeToInvoices, subscribeToProducts, subscribeToCustomers, hasGuestDataToMigrate, migrateGuestDataToDatabase } from '@/shared/utils/storage';
 import { Invoice } from '@/features/invoices/types/invoice';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from '@/shared/components/ui/alert-dialog';
 import { StatSkeleton, ListSkeleton } from '@/shared/components/SkeletonLoaders';
 import Header from '@/shared/components/Header';
 
@@ -28,6 +29,8 @@ export default function Dashboard() {
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const [showRevenue, setShowRevenue] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [showMigrationPrompt, setShowMigrationPrompt] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -101,6 +104,10 @@ export default function Dashboard() {
       // Keep a short list of recent invoices for dashboard quick view
       setRecentInvoices(invoices.slice(0, 6));
       setIsInitialLoading(false);
+      
+      if (hasGuestDataToMigrate()) {
+        setShowMigrationPrompt(true);
+      }
     };
 
     fetchStats();
@@ -243,6 +250,47 @@ export default function Dashboard() {
           }
         </div>
       </main>
+
+      {/* Migration Prompt Modal */}
+      <AlertDialog open={showMigrationPrompt} onOpenChange={setShowMigrationPrompt}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Temporary Unsaved Data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              We found invoices tracking activity from when you were exploring Bill as a Guest. Would you like to save these invoices permanently to your new account?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMigrating} onClick={() => {
+              // Discard 
+              Object.keys(window.sessionStorage).forEach(k => k.startsWith('guest_mode_') && window.sessionStorage.removeItem(k));
+              window.sessionStorage.removeItem('bill_guest_mode');
+              setShowMigrationPrompt(false);
+            }}>
+              Discard
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMigrating}
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsMigrating(true);
+                const toastId = toast.loading('Saving guest data to your account...');
+                const success = await migrateGuestDataToDatabase();
+                setIsMigrating(false);
+                setShowMigrationPrompt(false);
+                if (success) {
+                  toast.success('Successfully saved your temporary invoices to your account!', { id: toastId });
+                  setTimeout(() => window.location.reload(), 1000);
+                } else {
+                  toast.error('Failed to migrate some data. Check console logs.', { id: toastId });
+                }
+              }}
+            >
+              {isMigrating ? 'Saving...' : 'Save Permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

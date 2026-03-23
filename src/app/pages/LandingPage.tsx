@@ -4,9 +4,9 @@ import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown, Plus, T
 import { toast } from 'sonner';
 import Logo from '@/shared/components/Logo';
 import { useBranding } from '@/shared/contexts/BrandingContext';
-import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
 import { defaultBrandingSettings } from '@/shared/types/branding';
 import { supabase } from '@/shared/utils/supabase';
+import UnifiedInvoiceBuilder from '@/features/invoices/components/UnifiedInvoiceBuilder';
 
 // --- Utility: Intersection Observer Hook for scroll animations ---
 function useInView(threshold = 0.15) {
@@ -41,30 +41,6 @@ function AnimatedSection({ children, className = '', delay = 0 }: { children: Re
     );
 }
 
-const features = [
-    {
-        icon: Zap,
-        title: 'Lightning Fast',
-        description: 'Create and send a professional invoice in under 60 seconds. Designed for speed.',
-        color: '#f59e0b',
-        bg: '#fffbeb',
-    },
-    {
-        icon: Shield,
-        title: 'Secure by Design',
-        description: 'Your data is isolated and encrypted. Built on enterprise-grade cloud infrastructure.',
-        color: '#10b981',
-        bg: '#f0fdf4',
-    },
-    {
-        icon: FileText,
-        title: 'GST Compliant',
-        description: 'Full CGST, SGST, and IGST support. Every invoice is ready for Indian tax compliance.',
-        color: '#6366f1',
-        bg: '#eef2ff',
-    },
-];
-
 const stats = [
     { value: '60s', label: 'To create an invoice' },
     { value: '100%', label: 'GST compliant' },
@@ -76,12 +52,9 @@ export default function LandingPage() {
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState<any>(null);
 
-    // Demo Invoice State
-    const [demoItems, setDemoItems] = useState([
-        { id: '1', productName: 'Professional Consulting', quantity: 1, unitPrice: 15000, taxRate: 18, totalAmount: 15000 },
-        { id: '2', productName: 'Website Development', quantity: 1, unitPrice: 25000, taxRate: 18, totalAmount: 25000 }
-    ]);
-    const [clientName, setClientName] = useState('John Doe');
+    // Guest Mode Modal State
+    const [showGuestModal, setShowGuestModal] = useState(false);
+    const [guestBranding, setGuestBranding] = useState({ businessName: '', email: '', phone: '', address: '', logoUrl: '' });
 
     useEffect(() => {
         supabase.auth.getUser().then(({ data }: { data: any }) => setUser(data.user));
@@ -111,11 +84,9 @@ export default function LandingPage() {
     return (
         <div style={{ fontFamily: `var(--font-family, ${settings.fontFamily}), 'Google Sans', 'Inter', system-ui, sans-serif`, background: '#fff', color: '#1a1a2e', minHeight: '100vh', position: 'relative' }}>
 
-
-
             {/* ─── Hero ─── */}
             <header style={{
-                paddingTop: 140, paddingBottom: 100, textAlign: 'center', padding: '140px max(24px, calc((100vw - 800px)/2)) 100px', position: 'relative', overflow: 'hidden', zIndex: 2
+                paddingTop: 140, paddingBottom: 60, textAlign: 'center', padding: '140px max(24px, calc((100vw - 800px)/2)) 60px', position: 'relative', overflow: 'hidden', zIndex: 2
             }}>
                 {/* Gradient orbs */}
                 <div style={{
@@ -154,7 +125,7 @@ export default function LandingPage() {
                         Generate GST-compliant bills in seconds. Built for speed, precision, and simplicity. No hidden costs. No clutter.
                     </p>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 80 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 40 }}>
                         <Link to="/register" style={{
                             fontSize: 18, fontWeight: 700, color: 'white', textDecoration: 'none',
                             background: 'linear-gradient(135deg, var(--color-primary, #6366f1), var(--color-primary-hover, #4f46e5))',
@@ -168,17 +139,17 @@ export default function LandingPage() {
                         >
                             Start Billing Now <ArrowRight size={20} />
                         </Link>
-                        <a href="#features" style={{
+                        <button onClick={() => setShowGuestModal(true)} style={{
                             fontSize: 18, fontWeight: 700, color: '#0f172a', textDecoration: 'none',
-                            background: '#fff', border: '1.5px solid #e2e8f0',
+                            background: '#fff', border: '1.5px solid #e2e8f0', cursor: 'pointer',
                             padding: '16px 36px', borderRadius: 16,
                             transition: 'all 0.2s',
                         }}
                             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = '#f8fafc'; }}
                             onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; }}
                         >
-                            Explore Features
-                        </a>
+                            Try Guest Mode
+                        </button>
                     </div>
 
                     {/* Scroll hint */}
@@ -188,6 +159,29 @@ export default function LandingPage() {
                     </div>
                 </div>
             </header>
+
+            {/* ─── Interactive Demo / Experience ─── */}
+            <section id="experience" style={{ padding: '80px max(24px, calc((100vw - 1100px)/2)) 120px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
+                <div style={{ textAlign: 'center', marginBottom: 60 }}>
+                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
+                        Experience the Speed.
+                    </h2>
+                    <p style={{ fontSize: 20, color: '#64748b', maxWidth: 660, margin: '0 auto 32px' }}>
+                        Create, customize, and download a professional GST invoice in real-time. 
+                        No registration required to try.
+                    </p>
+
+                    {/* Prominent Guest Message */}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 20px', background: '#f0f9ff', borderRadius: 100, border: '1px solid #bae6fd', color: '#0369a1', fontSize: 14, fontWeight: 600 }}>
+                        <Shield size={18} fill="#0ea5e9" color="#fff" />
+                        <span>Privacy-First: No data is saved to our servers until you login.</span>
+                    </div>
+                </div>
+
+                <div className="max-w-[1000px] mx-auto px-2">
+                    <UnifiedInvoiceBuilder />
+                </div>
+            </section>
 
             {/* ─── Stats ─── */}
             <section style={{ padding: '0 max(24px, calc((100vw - 1100px)/2)) 80px', position: 'relative', zIndex: 2 }}>
@@ -213,7 +207,8 @@ export default function LandingPage() {
                 </AnimatedSection>
             </section>
 
-            <section id="features" style={{ padding: '200px max(24px, calc((100vw - 1100px)/2))', position: 'relative', zIndex: 2 }}>
+            {/* ─── Features ─── */}
+            <section id="features" style={{ padding: '120px max(24px, calc((100vw - 1100px)/2))', position: 'relative', zIndex: 2 }}>
                 <div style={{ textAlign: 'center', marginBottom: 100 }}>
                     <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1.5px', marginBottom: 24 }}>
                         Engineered for modern business.
@@ -279,210 +274,6 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ─── Interactive Demo / Experience ─── */}
-            <section id="experience" style={{ padding: '120px max(24px, calc((100vw - 1100px)/2))', background: '#fcfdfe', position: 'relative' }}>
-                <div style={{ textAlign: 'center', marginBottom: 80 }}>
-                    <div style={{ 
-                        display: 'inline-flex', padding: '8px 16px', background: '#eef2ff', borderRadius: 100, 
-                        color: '#6366f1', fontSize: 13, fontWeight: 700, marginBottom: 24, letterSpacing: '0.05em'
-                    }}>
-                        LIVE INTERACTIVE DEMO
-                    </div>
-                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
-                        Experience the Speed.
-                    </h2>
-                    <p style={{ fontSize: 20, color: '#64748b', maxWidth: 600, margin: '0 auto' }}>
-                        Don't just take our word for it. Try creating an invoice right here. 
-                        Edit anything and see the magic happen.
-                    </p>
-                </div>
-
-                <div style={{ 
-                    maxWidth: 900, margin: '0 auto', background: '#fff', borderRadius: 'clamp(16px, 4vw, 32px)', 
-                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1), 0 10px 20px -5px rgba(0,0,0,0.05)',
-                    border: '1px solid #f1f5f9', overflow: 'hidden', position: 'relative'
-                }}>
-                    {/* Header of Editor */}
-                    <div style={{ padding: 'clamp(20px, 5vw, 32px) clamp(16px, 5vw, 40px)', borderBottom: '1px solid #f1f5f9', background: 'linear-gradient(to right, #fcfdfe, #fff)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-                        <div style={{ flex: 1, minWidth: 200 }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 6 }}>BILL TO</div>
-                            <input 
-                                type="text"
-                                value={clientName}
-                                onChange={(e) => setClientName(e.target.value)}
-                                style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 800, color: '#1e293b', background: 'transparent', border: 'none', padding: 0, outline: 'none', width: '100%' }}
-                                placeholder="Client Name"
-                            />
-                        </div>
-                        <div style={{ textAlign: 'left', flex: '0 0 auto' }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 4 }}>INVOICE DATE</div>
-                            <div style={{ fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: 700, color: '#6366f1' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                        </div>
-                    </div>
-
-                    {/* Table Section */}
-                    <div style={{ padding: '0 clamp(16px, 5vw, 40px)', overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
-                            <thead>
-                                <tr>
-                                    <th style={{ textAlign: 'left', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b' }}>ITEM DESCRIPTION</th>
-                                    <th style={{ textAlign: 'right', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b', width: 80 }}>QTY</th>
-                                    <th style={{ textAlign: 'right', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b', width: 120 }}>PRICE</th>
-                                    <th style={{ textAlign: 'right', padding: '24px 0 12px', fontSize: 12, fontWeight: 700, color: '#64748b', width: 40 }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {demoItems.map((item, idx) => (
-                                    <tr key={item.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                        <td style={{ padding: '20px 0' }}>
-                                            <input 
-                                                type="text"
-                                                value={item.productName}
-                                                onChange={(e) => {
-                                                    const newItems = [...demoItems];
-                                                    newItems[idx].productName = e.target.value;
-                                                    setDemoItems(newItems);
-                                                }}
-                                                style={{ width: '100%', fontWeight: 600, color: '#334155', border: 'none', outline: 'none', background: 'transparent' }}
-                                            />
-                                        </td>
-                                        <td style={{ textAlign: 'right', padding: '20px 0' }}>
-                                            <input 
-                                                type="number"
-                                                value={item.quantity}
-                                                onChange={(e) => {
-                                                    const newItems = [...demoItems];
-                                                    newItems[idx].quantity = Number(e.target.value);
-                                                    newItems[idx].totalAmount = newItems[idx].quantity * newItems[idx].unitPrice;
-                                                    setDemoItems(newItems);
-                                                }}
-                                                style={{ width: 60, textAlign: 'right', fontWeight: 600, color: '#334155', border: 'none', outline: 'none', background: 'transparent' }}
-                                            />
-                                        </td>
-                                        <td style={{ textAlign: 'right', padding: '20px 0' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-                                                <span style={{ color: '#94a3b8' }}>₹</span>
-                                                <input 
-                                                    type="number"
-                                                    value={item.unitPrice}
-                                                    onChange={(e) => {
-                                                        const newItems = [...demoItems];
-                                                        newItems[idx].unitPrice = Number(e.target.value);
-                                                        newItems[idx].totalAmount = newItems[idx].quantity * newItems[idx].unitPrice;
-                                                        setDemoItems(newItems);
-                                                    }}
-                                                    style={{ width: 90, textAlign: 'right', fontWeight: 700, color: '#334155', border: 'none', outline: 'none', background: 'transparent' }}
-                                                />
-                                            </div>
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <button 
-                                                onClick={() => setDemoItems(demoItems.filter((_, i) => i !== idx))}
-                                                style={{ color: '#cbd5e1', cursor: 'pointer', border: 'none', background: 'none' }}
-                                                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
-                                                onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        
-                        <button 
-                            onClick={() => setDemoItems([...demoItems, { id: Math.random().toString(), productName: 'New Item', quantity: 1, unitPrice: 0, taxRate: 18, totalAmount: 0 }])}
-                            style={{ 
-                                display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, padding: '10px 16px', 
-                                background: '#f8fafc', border: '1px dashed #e2e8f0', borderRadius: 12, 
-                                color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = '#f8fafc'}
-                        >
-                            <Plus size={16} /> Add Item
-                        </button>
-                    </div>
-
-                    {/* Summary and Actions */}
-                    <div style={{ 
-                        padding: 'clamp(24px, 5vw, 40px)', background: '#fcfdfe', borderTop: '1px solid #f1f5f9', marginTop: 40, 
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap-reverse', gap: 32 
-                    }}>
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                            <button 
-                                onClick={() => {
-                                    const subtotal = demoItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-                                    const tax = subtotal * 0.18;
-                                    const demoInvoice: any = {
-                                        invoiceNumber: 'DEMO-01',
-                                        date: new Date().toISOString().split('T')[0],
-                                        customer: { name: clientName },
-                                        items: demoItems,
-                                        subtotal,
-                                        taxTotal: tax,
-                                        discountTotal: 0,
-                                        grandTotal: subtotal + tax,
-                                        transportCharges: 0,
-                                        notes: 'Generated via Live Demo'
-                                    };
-                                    const doc = generateInvoicePDF(demoInvoice, { name: 'Sample Business', gstin: '27AAAAA0000A1Z5', address: 'Demo St, Mumbai', phone: '9876543210', email: 'hello@bill.com', state: 'Maharashtra' }, defaultBrandingSettings);
-                                    doc.save(getInvoiceFilename(demoInvoice));
-                                }}
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', 
-                                    background: '#1e293b', borderRadius: 12, color: '#fff', 
-                                    fontSize: 14, fontWeight: 700, cursor: 'pointer', border: 'none'
-                                }}
-                            >
-                                <Download size={18} /> Download PDF
-                            </button>
-                            
-                            <button 
-                                onClick={() => {
-                                    if (!user) {
-                                        toast.info("Save & Personalize", {
-                                            description: "To save invoices, customize branding with your logo, and manage real customers, you'll need a free account.",
-                                            action: {
-                                                label: "Login / Register",
-                                                onClick: () => window.location.href = '/register'
-                                            }
-                                        });
-                                    } else {
-                                        toast.success("Ready to save!", {
-                                            description: "Head over to the Dashboard to create and save permanent invoices."
-                                        });
-                                    }
-                                }}
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', 
-                                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, 
-                                    color: '#334155', fontSize: 14, fontWeight: 700, cursor: 'pointer'
-                                }}
-                            >
-                                <Shield size={18} /> Save Invoice
-                            </button>
-                        </div>
-                        
-                        <div style={{ textAlign: 'right', flex: '1 1 auto' }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 4 }}>ESTIMATED GRAND TOTAL</div>
-                            <div style={{ fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 900, color: '#0f172a' }}>
-                                ₹{Math.round(demoItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * 1.18).toLocaleString('en-IN')}
-                            </div>
-                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Inclusive of 18% GST</div>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Floating Hint */}
-                <div style={{ textAlign: 'center', marginTop: 40, color: '#94a3b8', fontSize: 14, fontWeight: 500 }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <Zap size={14} color="#6366f1" fill="#6366f1" /> Safe to use — No data is saved to our servers until you login.
-                    </span>
-                </div>
-            </section>
-
-
             {/* ─── Footer ─── */}
             <footer style={{
                 borderTop: '1px solid #f1f5f9',
@@ -528,6 +319,95 @@ export default function LandingPage() {
                 </div>
             </footer>
 
+            {/* Guest Mode Modal */}
+            {showGuestModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)',
+                    zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
+                }}>
+                    <div style={{
+                        background: '#fff', borderRadius: 24, padding: 40, width: '100%', maxWidth: 500,
+                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+                    }}>
+                        <h3 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Quick Setup</h3>
+                        <p style={{ color: '#64748b', marginBottom: 24, lineHeight: 1.5 }}>
+                            Enter your branding details to start making invoices immediately. This data is temporary and will be cleared when you close the tab.
+                        </p>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <input 
+                                type="text"
+                                placeholder="Business Name"
+                                value={guestBranding.businessName}
+                                onChange={e => setGuestBranding({...guestBranding, businessName: e.target.value})}
+                                style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', width: '100%', fontSize: 16 }}
+                            />
+                            <input 
+                                type="text"
+                                placeholder="Email"
+                                value={guestBranding.email}
+                                onChange={e => setGuestBranding({...guestBranding, email: e.target.value})}
+                                style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', width: '100%', fontSize: 16 }}
+                            />
+                            <input 
+                                type="text"
+                                placeholder="Phone"
+                                value={guestBranding.phone}
+                                onChange={e => setGuestBranding({...guestBranding, phone: e.target.value})}
+                                style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', width: '100%', fontSize: 16 }}
+                            />
+                            <textarea 
+                                placeholder="Address"
+                                value={guestBranding.address}
+                                onChange={e => setGuestBranding({...guestBranding, address: e.target.value})}
+                                style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', width: '100%', fontSize: 16, minHeight: 80 }}
+                            />
+                            <input 
+                                type="text"
+                                placeholder="GSTIN (Optional)"
+                                value={(guestBranding as any).gstin || ''}
+                                onChange={e => setGuestBranding({...guestBranding, gstin: e.target.value} as any)}
+                                style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', width: '100%', fontSize: 16 }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
+                            <button 
+                                onClick={() => setShowGuestModal(false)}
+                                style={{ flex: 1, padding: 14, background: '#f1f5f9', color: '#475569', borderRadius: 12, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    sessionStorage.setItem('bill_guest_mode', 'true');
+                                    
+                                    // Branding Settings handles visual configs
+                                    let settings = { ...defaultBrandingSettings, businessName: guestBranding.businessName || 'Guest Business' };
+                                    
+                                    // Store Info handles actual contact data
+                                    let storeInfo = {
+                                      id: 'guest',
+                                      name: guestBranding.businessName || 'Guest Business',
+                                      phone: guestBranding.phone || '',
+                                      email: guestBranding.email || '',
+                                      address: guestBranding.address || '',
+                                      gstin: (guestBranding as any).gstin || '',
+                                      state: 'Bihar'
+                                    };
+                                    
+                                    sessionStorage.setItem('guest_mode_bill_branding_settings', JSON.stringify(settings));
+                                    sessionStorage.setItem('guest_mode_bill_store_info', JSON.stringify(storeInfo));
+                                    window.location.href = '/create-invoice';
+                                }}
+                                style={{ flex: 1, padding: 14, background: 'var(--color-primary, #6366f1)', color: '#fff', borderRadius: 12, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+                                Start Billing
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style>{`
                 html {
                     scroll-behavior: smooth;
@@ -544,6 +424,6 @@ export default function LandingPage() {
                     box-sizing: border-box;
                 }
             `}</style>
-        </div >
+        </div>
     );
 }

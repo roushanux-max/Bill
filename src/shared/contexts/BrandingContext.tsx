@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { BrandingSettings, defaultBrandingSettings } from '@/shared/types/branding';
 import { StoreInfo } from '@/features/invoices/types/invoice';
-import { getBrandingSettings, getStoreInfo, getUserKey, subscribeToStores, safeGet, safeSet } from '@/shared/utils/storage';
+import { getBrandingSettings, getStoreInfo, getUserKey, subscribeToStores, safeGet, safeSet, saveStoreInfo, saveBrandingSettings } from '@/shared/utils/storage';
 
 interface BrandingContextType {
   settings: BrandingSettings;
@@ -123,13 +123,15 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const updateSettings = (newSettings: BrandingSettings) => {
+  const updateSettings = async (newSettings: BrandingSettings) => {
     setSettings(newSettings);
     applyBrandingStyles(newSettings);
+    if (user) await saveBrandingSettings(newSettings);
   };
 
-  const updateStoreInfo = (info: StoreInfo) => {
+  const updateStoreInfo = async (info: StoreInfo) => {
     setStoreInfo(info);
+    if (user) await saveStoreInfo(info);
   };
 
   return (

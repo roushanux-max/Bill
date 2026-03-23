@@ -4,38 +4,99 @@ import { toast } from 'sonner';
 import { supabase } from '@/shared/utils/supabase';
 import { parseDateFromDisplay } from '@/shared/utils/dateUtils';
 
-// ─── Safe localStorage Wrappers ──────────────────────────────────────────────
-// Guards against SSR (window undefined), JSON errors, and storage quota errors.
+export const isGuestMode = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return window.sessionStorage.getItem('bill_guest_mode') === 'true';
+};
 
-/** Read a string value from localStorage. Returns null if unavailable or on error. */
+/** Read a string value from localStorage or sessionStorage. Returns null if unavailable or on error. */
 export const safeGet = (key: string): string | null => {
   try {
     if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(key);
+    return isGuestMode() ? window.sessionStorage.getItem(key) : window.localStorage.getItem(key);
   } catch (e) {
     console.warn(`[storage] safeGet failed for key "${key}":`, e);
     return null;
   }
 };
 
-/** Write a value to localStorage. Silently fails on error (quota, SSR, etc). */
+/** Write a value to localStorage or sessionStorage. Silently fails on error (quota, SSR, etc). */
 export const safeSet = (key: string, value: string): void => {
   try {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(key, value);
+    if (isGuestMode()) {
+      window.sessionStorage.setItem(key, value);
+    } else {
+      window.localStorage.setItem(key, value);
+    }
   } catch (e) {
     console.warn(`[storage] safeSet failed for key "${key}":`, e);
   }
 };
 
-/** Remove a key from localStorage. Silently fails on error. */
+/** Remove a key from localStorage or sessionStorage. Silently fails on error. */
 export const safeRemove = (key: string): void => {
   try {
     if (typeof window === 'undefined') return;
-    window.localStorage.removeItem(key);
+    if (isGuestMode()) {
+      window.sessionStorage.removeItem(key);
+    } else {
+      window.localStorage.removeItem(key);
+    }
   } catch (e) {
     console.warn(`[storage] safeRemove failed for key "${key}":`, e);
   }
+};
+
+export const hasGuestDataToMigrate = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return !!window.sessionStorage.getItem('guest_mode_bill_invoices');
+};
+
+export const migrateGuestDataToDatabase = async (): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+  
+  // Temporarily disable guest mode so functions write to real DB
+  window.sessionStorage.removeItem('bill_guest_mode');
+  let success = true;
+
+  try {
+    const custRaw = window.sessionStorage.getItem('guest_mode_bill_customers');
+    const prodRaw = window.sessionStorage.getItem('guest_mode_bill_products');
+    const invRaw = window.sessionStorage.getItem('guest_mode_bill_invoices');
+    const brandingRaw = window.sessionStorage.getItem('guest_mode_bill_branding_settings');
+
+    if (custRaw) {
+      const customers = JSON.parse(custRaw);
+      for (const c of customers) await saveCustomer(c);
+    }
+    if (prodRaw) {
+      const products = JSON.parse(prodRaw);
+      for (const p of products) await saveProduct(p);
+    }
+    if (invRaw) {
+      const invoices = JSON.parse(invRaw);
+      for (const inv of invoices) await saveInvoice(inv);
+    }
+    if (brandingRaw) {
+      try {
+        const bs = JSON.parse(brandingRaw);
+        await saveBrandingSettings(bs);
+      } catch (e) {}
+    }
+
+    // Clean up session storage matching 'guest_mode_'
+    Object.keys(window.sessionStorage).forEach(key => {
+      if (key.startsWith('guest_mode_')) window.sessionStorage.removeItem(key);
+    });
+
+    window.dispatchEvent(new Event('storage'));
+  } catch (e) {
+    console.error('Guest migration failed:', e);
+    success = false;
+  }
+  
+  return success;
 };
 
 // ─── ID Generation ───────────────────────────────────────────────────────────
@@ -228,6 +289,10 @@ export const emitSyncEnd = (success = true) => {
 export const getUserKey = (key: string): string | null => {
   if (typeof window === 'undefined') return null;
 
+  if (isGuestMode()) {
+    return `guest_mode_${key}`;
+  }
+
   // 1. Try immediate recall from our manual cache
   let storedUser = safeGet('bill_user_id');
 
@@ -277,6 +342,10 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
   }
 
   let storeId = getActiveStoreId();
+
+  if (isGuestMode()) {
+     return null; // Local parsing happens above; if not found, return null
+  }
 
   // If no storeId, we MUST try to fetch by user_id to restore persistence
   if (!storeId || storeId.startsWith('offline-')) {
@@ -442,6 +511,12 @@ export const saveBrandingSettings = async (brandingSettings: BrandingSettings) =
   const key = getUserKey('bill_branding_settings');
   if (key) safeSet(key, JSON.stringify(brandingSettings));
 
+  if (isGuestMode()) {
+    // Notify application to re-render
+    window.dispatchEvent(new Event('storage'));
+    return;
+  }
+
   if (!storeId) return;
 
   await supabase
@@ -561,15 +636,21 @@ export const saveCustomer = async (customer: Customer) => {
   if (key) safeSet(key, JSON.stringify(updatedCustomers));
 
   const storeId = getActiveStoreId();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !storeId) {
+  if (!storeId && !isGuestMode()) {
     emitSyncEnd(false);
     return;
   }
 
+  if (isGuestMode()) {
+    emitSyncEnd(true);
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
   const customerData: CustomerPayload = {
-    user_id: user.id,
-    store_id: storeId,
+    user_id: user!.id,
+    store_id: storeId!,
     name: customer.name,
     phone: customer.phone,
     gstin: customer.gstin,
@@ -613,6 +694,7 @@ export const deleteCustomer = async (id: string) => {
 
   // Also attempt to remove from Supabase (best-effort)
   try {
+    if (isGuestMode()) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase.from('customers').delete().eq('id', id).eq('user_id', user.id);
@@ -734,15 +816,21 @@ export const saveProduct = async (product: Product) => {
   if (key) safeSet(key, JSON.stringify(updatedProducts));
 
   const storeId = getActiveStoreId();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !storeId) {
+  if (!storeId && !isGuestMode()) {
     emitSyncEnd(false);
     return;
   }
 
+  if (isGuestMode()) {
+    emitSyncEnd(true);
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
   const productData: ProductPayload = {
-    user_id: user.id,
-    store_id: storeId,
+    user_id: user!.id,
+    store_id: storeId!,
     name: product.name,
     category: product.category,
     hsn_code: product.hsnCode,
@@ -784,8 +872,8 @@ export const deleteProduct = async (id: string) => {
 
   await logActivity('delete_product', 'product', id);
 
-  // Also attempt to remove from Supabase (best-effort)
   try {
+    if (isGuestMode()) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     await supabase.from('products').delete().eq('id', id).eq('user_id', user.id);
@@ -813,6 +901,8 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
         const cached = getCachedData<Invoice[]>(key, []);
         if (cached.length > 0) return { data: cached.filter(inv => inv && inv.id), loading: false, error: null };
       }
+      
+      if (isGuestMode()) return { data: [], loading: false, error: null };
       
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -928,6 +1018,16 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
 };
 
 export const getInvoice = async (id: string): Promise<Invoice | null> => {
+  if (isGuestMode()) {
+    const key = getUserKey('bill_invoices');
+    if (key) {
+      const cached = getCachedData<Invoice[]>(key, []);
+      const found = cached.find(inv => inv.id === id);
+      if (found) return found;
+    }
+    return null;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -1028,8 +1128,13 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     }
 
     const storeId = getActiveStoreId();
-    if (!storeId) {
+    if (!storeId && !isGuestMode()) {
       emitSyncEnd(false);
+      return invoice.id;
+    }
+
+    if (isGuestMode()) {
+      emitSyncEnd(true);
       return invoice.id;
     }
 
@@ -1040,8 +1145,8 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     }
 
     metadata = {
-      user_id: user.id,
-      store_id: storeId,
+      user_id: user!.id,
+      store_id: storeId!,
       customer_id: invoice.customerId,
       invoice_number: invoice.invoiceNumber,
       date: parseDateFromDisplay(invoice.date),

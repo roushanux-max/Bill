@@ -22,7 +22,7 @@ const MobileNav: React.FC = () => {
     ? [...baseItems, { label: 'Admin', icon: Shield, path: '/admin' }]
     : baseItems;
 
-  const hideOnPaths = ['/setup-shop', '/invoice-preview', '/login', '/register', '/'];
+  const hideOnPaths = ['/invoice-preview', '/login', '/register', '/'];
   if (hideOnPaths.some(p => location.pathname === p || location.pathname.startsWith('/invoice-preview'))) {
     return null;
   }
