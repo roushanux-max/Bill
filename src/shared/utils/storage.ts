@@ -189,11 +189,14 @@ export const processSyncQueue = async () => {
         }
         
       } else if (op.type === 'customer_delete') {
-         await supabase.from('customers').delete().eq('id', op.payload.id);
+         const { data: { user } } = await supabase.auth.getUser();
+         if (user) await supabase.from('customers').delete().eq('id', op.payload.id).eq('user_id', user.id);
       } else if (op.type === 'product_delete') {
-         await supabase.from('products').delete().eq('id', op.payload.id);
+         const { data: { user } } = await supabase.auth.getUser();
+         if (user) await supabase.from('products').delete().eq('id', op.payload.id).eq('user_id', user.id);
       } else if (op.type === 'invoice_delete') {
-         await supabase.from('invoices').delete().eq('id', op.payload.id);
+         const { data: { user } } = await supabase.auth.getUser();
+         if (user) await supabase.from('invoices').delete().eq('id', op.payload.id).eq('user_id', user.id);
       }
     } catch (e) {
       console.warn(`Sync queue operation [${op.type}] failed:`, e);
@@ -456,7 +459,7 @@ export interface ApiResult<T> {
   error: string | null;
 }
 
-export const getCustomers = async (force = false, limit = 50): Promise<ApiResult<Customer[]>> => {
+export const getCustomers = async (force = false, limit = 1000): Promise<ApiResult<Customer[]>> => {
   try {
     // Try local first for performance and offline resilience
     const key = getUserKey('bill_customers');
@@ -465,10 +468,10 @@ export const getCustomers = async (force = false, limit = 50): Promise<ApiResult
       if (cached.length > 0) return { data: cached, loading: false, error: null };
     }
 
-    let storeId = getActiveStoreId();
-
-    if (!storeId) {
-      // If we have local data but no storeId, return the local data anyway
+    const storeId = getActiveStoreId();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !storeId) {
+      // If we have local data but no storeId or user, return the local data anyway
       return { data: key ? getCachedData<Customer[]>(key, []) : [], loading: false, error: null };
     }
 
@@ -476,6 +479,7 @@ export const getCustomers = async (force = false, limit = 50): Promise<ApiResult
       .from('customers')
       .select('*')
       .eq('store_id', storeId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -501,7 +505,8 @@ export const getCustomers = async (force = false, limit = 50): Promise<ApiResult
 
 export const searchCustomers = async (query: string): Promise<Customer[]> => {
   const storeId = getActiveStoreId();
-  if (!storeId || !query.trim()) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !storeId || !query.trim()) {
     const { data } = await getCustomers();
     return data || [];
   }
@@ -512,6 +517,7 @@ export const searchCustomers = async (query: string): Promise<Customer[]> => {
     .from('customers')
     .select('*')
     .eq('store_id', storeId)
+    .eq('user_id', user.id)
     .or(`name.ilike.${searchQuery},phone.ilike.${searchQuery},state.ilike.${searchQuery}`)
     .limit(20);
 
@@ -549,18 +555,20 @@ export const saveCustomer = async (customer: Customer) => {
   const index = (currentCustomers || []).findIndex(c => c.id === customer.id);
   let updatedCustomers = index >= 0
     ? (currentCustomers || []).map((c, i) => i === index ? customer : c)
-    : [customer, ...(currentCustomers || [])].slice(0, 50);
+    : [customer, ...(currentCustomers || [])];
 
   const key = getUserKey('bill_customers');
   if (key) safeSet(key, JSON.stringify(updatedCustomers));
 
   const storeId = getActiveStoreId();
-  if (!storeId) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !storeId) {
     emitSyncEnd(false);
     return;
   }
 
   const customerData: CustomerPayload = {
+    user_id: user.id,
     store_id: storeId,
     name: customer.name,
     phone: customer.phone,
@@ -601,9 +609,13 @@ export const deleteCustomer = async (id: string) => {
     }
   }
 
+  await logActivity('delete_customer', 'customer', id);
+
   // Also attempt to remove from Supabase (best-effort)
   try {
-    const { error } = await supabase.from('customers').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from('customers').delete().eq('id', id).eq('user_id', user.id);
     if (error) {
       if (error.code === '23503') { // Foreign key violation
         console.warn('Customer has linked invoices. Using local-only delete for now.');
@@ -621,7 +633,7 @@ export const deleteCustomer = async (id: string) => {
 };
 
 // Products
-export const getProducts = async (force = false, limit = 50): Promise<ApiResult<Product[]>> => {
+export const getProducts = async (force = false, limit = 1000): Promise<ApiResult<Product[]>> => {
   try {
     // Try local first
     const key = getUserKey('bill_products');
@@ -630,10 +642,10 @@ export const getProducts = async (force = false, limit = 50): Promise<ApiResult<
       if (cached.length > 0) return { data: cached, loading: false, error: null };
     }
 
-    let storeId = getActiveStoreId();
-
-    if (!storeId) {
-      // Return local data if available even if storeId is missing
+    const storeId = getActiveStoreId();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !storeId) {
+      // Return local data if available even if storeId or user is missing
       return { data: key ? getCachedData<Product[]>(key, []) : [], loading: false, error: null };
     }
 
@@ -641,6 +653,7 @@ export const getProducts = async (force = false, limit = 50): Promise<ApiResult<
       .from('products')
       .select('*')
       .eq('store_id', storeId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -666,7 +679,8 @@ export const getProducts = async (force = false, limit = 50): Promise<ApiResult<
 
 export const searchProducts = async (query: string): Promise<Product[]> => {
   const storeId = getActiveStoreId();
-  if (!storeId || !query.trim()) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !storeId || !query.trim()) {
     const { data } = await getProducts();
     return data || [];
   }
@@ -677,6 +691,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
     .from('products')
     .select('*')
     .eq('store_id', storeId)
+    .eq('user_id', user.id)
     .or(`name.ilike.${searchQuery},category.ilike.${searchQuery}`)
     .limit(20);
 
@@ -713,18 +728,20 @@ export const saveProduct = async (product: Product) => {
   const index = (currentProducts || []).findIndex(p => p.id === product.id);
   let updatedProducts = index >= 0
     ? (currentProducts || []).map((p, i) => i === index ? product : p)
-    : [product, ...(currentProducts || [])].slice(0, 50);
+    : [product, ...(currentProducts || [])];
 
   const key = getUserKey('bill_products');
   if (key) safeSet(key, JSON.stringify(updatedProducts));
 
   const storeId = getActiveStoreId();
-  if (!storeId) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !storeId) {
     emitSyncEnd(false);
     return;
   }
 
   const productData: ProductPayload = {
+    user_id: user.id,
     store_id: storeId,
     name: product.name,
     category: product.category,
@@ -765,9 +782,13 @@ export const deleteProduct = async (id: string) => {
     }
   }
 
+  await logActivity('delete_product', 'product', id);
+
   // Also attempt to remove from Supabase (best-effort)
   try {
-    await supabase.from('products').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('products').delete().eq('id', id).eq('user_id', user.id);
   } catch (e) {
     console.warn('Supabase product delete failed:', e);
     addToSyncQueue('product_delete', { id });
@@ -835,13 +856,15 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
       }
     }
 
-    if (!storeId) return { data: [], loading: false, error: null };
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !storeId) return { data: [], loading: false, error: null };
 
     // Fetch metadata only for the list
     const { data, error } = await supabase
       .from('invoices')
       .select('*, customers(*), items:invoice_items(count)')
       .eq('store_id', storeId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -857,7 +880,7 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
         customerId: inv.customer_id,
         customer: {
           id: inv.customers?.id,
-          name: inv.customers?.name || 'Deleted Customer',
+          name: inv.customers?.name || `Missing Customer (${inv.customer_id?.slice(0,8)})`,
           gstin: inv.customers?.gstin || '',
           address: inv.customers?.address || '',
           state: inv.customers?.state || '',
@@ -881,7 +904,7 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
       // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
       // Filter out "ghost" invoices (usually duplicates or artifacts of deleted customers with 0 total)
       .filter(inv => {
-        const isDeletedCustomer = inv.customer.name === 'Deleted Customer' || !inv.customer.name;
+        const isDeletedCustomer = !inv.customer?.name || inv.customer.name.includes('Missing Customer');
         const isZeroTotal = Number(inv.grandTotal) === 0;
         const hasNoItems = (inv.items?.length || 0) === 0;
         
@@ -897,11 +920,15 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
 };
 
 export const getInvoice = async (id: string): Promise<Invoice | null> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
   // Fetch metadata and items in a single atomic join-request
   const { data: inv, error } = await supabase
     .from('invoices')
     .select('*, customers(*), items:invoice_items(*)')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single();
 
   if (error || !inv) {
@@ -920,7 +947,7 @@ export const getInvoice = async (id: string): Promise<Invoice | null> => {
     customerId: inv.customer_id,
     customer: {
       id: inv.customers?.id,
-      name: inv.customers?.name || 'Deleted Customer',
+      name: inv.customers?.name || `Missing Customer (${inv.customer_id?.slice(0,8)})`,
       gstin: inv.customers?.gstin || '',
       address: inv.customers?.address || '',
       state: inv.customers?.state || '',
@@ -1017,10 +1044,11 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       transport_charges: invoice.transportCharges || 0,
       notes: invoice.notes || '',
       status: invoice.status || 'unpaid',
+      local_invoice_id: invoice.id,
     };
 
     // 1.5 Validation: Don't save if it's a completely empty ghost invoice
-    if (Number(invoice.grandTotal) === 0 && (!invoice.customer?.name || invoice.customer.name === 'Deleted Customer')) {
+    if (Number(invoice.grandTotal) === 0 && (!invoice.customer?.name || invoice.customer.name.includes('Missing Customer'))) {
       console.warn('Skipping save of ghost invoice');
       emitSyncEnd(true);
       return invoice.id;
@@ -1034,6 +1062,9 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       .single();
 
     if (invError) {
+      if (invError.code === '23505') {
+        return invoice.id; // Treat as success (already exists)
+      }
       console.warn('Invoice metadata sync failed:', invError.message);
       emitSyncEnd(false);
       return invoice.id;
@@ -1151,9 +1182,14 @@ export const deleteInvoice = async (id: string): Promise<boolean> => {
       setCachedData(key, local.filter(inv => inv.id !== id));
     }
   }
+
+  await logActivity('delete_invoice', 'invoice', id);
+
   // Best-effort Supabase delete
   try {
-    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { error } = await supabase.from('invoices').delete().eq('id', id).eq('user_id', user.id);
     if (error) throw error;
     return true;
   } catch (e) {
@@ -1183,11 +1219,13 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
 
     // Actively query DB for authoritative sequence regardless of local trimming
     const storeId = getActiveStoreId();
-    if (storeId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (storeId && user) {
       const { data, error } = await supabase
         .from('invoices')
         .select('invoice_number')
         .eq('store_id', storeId)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
         
@@ -1226,7 +1264,10 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
 };
 
 export const getPayments = async (invoiceId?: string): Promise<Payment[]> => {
-  let query = supabase.from('payments').select('*');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  let query = supabase.from('payments').select('*').eq('user_id', user.id);
   if (invoiceId) query = query.eq('invoice_id', invoiceId);
   
   const { data, error } = await query.order('payment_date', { ascending: false });

@@ -111,6 +111,7 @@ export interface StoreInfo {
 
 export interface CustomerPayload {
   id?: string;
+  user_id: string;
   store_id: string;
   name: string;
   phone: string;
@@ -122,6 +123,7 @@ export interface CustomerPayload {
 
 export interface ProductPayload {
   id?: string;
+  user_id: string;
   store_id: string;
   name: string;
   category: string;
@@ -145,4 +147,5 @@ export interface InvoicePayload {
   transport_charges: number;
   notes: string;
   status: string;
+  local_invoice_id?: string;
 }

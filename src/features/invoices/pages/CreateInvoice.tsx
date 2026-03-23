@@ -17,6 +17,7 @@ import { BrandingSettings, defaultBrandingSettings } from '@/shared/types/brandi
 import { formatDateForDisplay, parseDateFromDisplay } from '@/shared/utils/dateUtils';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import InvoiceTemplate from '@/features/invoices/components/InvoiceTemplate';
+import { calculateTotals } from '../utils/calculations';
 import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
 import { SearchableSelect } from '@/shared/components/SearchableSelect';
 import { SuggestionInput } from '@/shared/components/SuggestionInput';
@@ -321,7 +322,6 @@ export default function CreateInvoice() {
           .or(`store_id.is.null,store_id.eq.offline-default`);
 
         let restoredCount = 0;
-        let ghostDeletedCount = 0;
 
         if (orphanedInvoices && orphanedInvoices.length > 0) {
           for (const inv of orphanedInvoices) {
@@ -329,37 +329,16 @@ export default function CreateInvoice() {
             if (Number(inv.grand_total) > 0) {
               await supabase.from('invoices').update({ store_id: storeId }).eq('id', inv.id);
               restoredCount++;
-            } else {
-              // Delete zero-total invoices with no items or deleted customers
-              const { data: items } = await supabase.from('invoice_items').select('id').eq('invoice_id', inv.id).limit(1);
-              if (!items || items.length === 0) {
-                await supabase.from('invoices').delete().eq('id', inv.id);
-                ghostDeletedCount++;
-              }
             }
+            // MODIFICATION: Removed automatic deletion of zero-total invoices to prevent accidental data loss.
           }
         }
 
-        // 2. Specialized Cleanup: Remove "Deleted Customer" ghosts with 0 total
-        const { data: currentGhosts } = await supabase
-          .from('invoices')
-          .select('id, customer_id')
-          .eq('store_id', storeId)
-          .eq('grand_total', 0);
-        
-        if (currentGhosts && currentGhosts.length > 0) {
-          for (const inv of currentGhosts) {
-            const { data: cust } = await supabase.from('customers').select('name').eq('id', inv.customer_id).maybeSingle();
-            if (!cust || cust.name === 'Deleted Customer' || cust.name === '') {
-              await supabase.from('invoices').delete().eq('id', inv.id);
-              ghostDeletedCount++;
-            }
-          }
-        }
+        // MODIFICATION: Removed specialized cleanup of "Deleted Customer" ghosts.
+        // The system should never delete data automatically without user confirmation.
 
-        if (restoredCount > 0 || ghostDeletedCount > 0) {
-          toast.success(`Data optimization complete: ${restoredCount} records restored, ${ghostDeletedCount} ghost records removed.`);
-          // Force a list refresh if on the dashboard/ledger
+        if (restoredCount > 0) {
+          toast.success(`Data recovery complete: ${restoredCount} records restored.`);
         }
         
         const key = getUserKey('last_recovery_run');
@@ -406,7 +385,7 @@ export default function CreateInvoice() {
       const customer = customers.find(c => c.id === selectedCustomerId);
       if (!customer) return;
 
-      const { subtotal, totalTax, total } = calculateTotals();
+      const { subtotal, totalTax, total } = calculateTotals(items, Number(transportCharges) || 0, Number(discount) || 0);
 
       const { data: invoices } = await getInvoices();
       const existingInvoice = editId ? (invoices || []).find(inv => inv.id === editId) : null;
@@ -466,26 +445,6 @@ export default function CreateInvoice() {
     setProducts(productData.data || []);
   };
 
-  const calculateTotals = (customItems?: InvoiceItem[]) => {
-    let itemSubtotal = 0;
-    let totalTax = 0;
-
-    (customItems || items).forEach(item => {
-      const rate = Number(item.unitPrice || (item as any).rate) || 0;
-      const qty = Number(item.quantity) || 0;
-      const tax = Number(item.taxRate) || 0;
-      itemSubtotal += rate * qty;
-      totalTax += (rate * qty * tax) / 100;
-    });
-
-    const transport = Number(transportCharges) || 0;
-    const disc = Number(discount) || 0;
-
-    const grossTotal = itemSubtotal + totalTax + transport;
-    const total = Math.round(grossTotal - disc);
-
-    return { subtotal: itemSubtotal, totalTax, total };
-  };
 
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
@@ -1045,7 +1004,7 @@ export default function CreateInvoice() {
     }
   };
 
-  const { total } = calculateTotals();
+  const { total } = calculateTotals(items, Number(transportCharges) || 0, Number(discount) || 0);
 
     const handleBack = () => {
       smartBack('/dashboard');
