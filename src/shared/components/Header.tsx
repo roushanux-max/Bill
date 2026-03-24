@@ -149,7 +149,7 @@ export default function Header() {
                     )}
 
                     {!user && !isAuthPage && (
-                        <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-3">
                             <Link to="/register" style={{
                                 background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', 
                                 color: getContrastColor(primaryColor), 

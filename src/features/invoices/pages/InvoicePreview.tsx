@@ -24,7 +24,7 @@ export default function InvoicePreview() {
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [returnPath, setReturnPath] = useState('/settings');
+  const [returnPath, setReturnPath] = useState('/dashboard');
 
   const loadInvoice = useCallback(async () => {
     setLoading(true);
@@ -153,7 +153,7 @@ export default function InvoicePreview() {
   }, [globalSettings, globalStoreInfo, searchParams, loadInvoice]);
 
   const handleBack = () => {
-    smartBack('/dashboard');
+    smartBack(returnPath);
   };
 
   const handleDownload = async () => {

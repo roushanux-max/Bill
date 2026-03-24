@@ -150,6 +150,17 @@ export default function LandingPage() {
                         >
                             Try Guest Mode
                         </button>
+                        <a href="#experience" style={{
+                            fontSize: 18, fontWeight: 700, color: '#6366f1', textDecoration: 'none',
+                            background: '#f5f3ff', border: '1.5px solid #6366f1', cursor: 'pointer',
+                            padding: '16px 36px', borderRadius: 16,
+                            transition: 'all 0.2s',
+                        }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#ede9fe'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = '#f5f3ff'; }}
+                        >
+                            Try Live Demo
+                        </a>
                     </div>
 
                     {/* Scroll hint */}
@@ -161,7 +172,7 @@ export default function LandingPage() {
             </header>
 
             {/* ─── Interactive Demo / Experience ─── */}
-            <section id="experience" style={{ padding: '100px max(24px, calc((100vw - 1100px)/2)) 120px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
+            <section id="experience" style={{ padding: '60px max(20px, calc((100vw - 1100px)/2)) 80px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
                 <div style={{ textAlign: 'center', marginBottom: 60 }}>
                     <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
                         Experience the Speed.
@@ -178,7 +189,7 @@ export default function LandingPage() {
                     </div>
                 </div>
 
-                <div className="max-w-[1000px] mx-auto px-2 mt-12 mb-12">
+                <div className="max-w-[1100px] mx-auto px-6 py-12 md:py-24 my-24 md:my-40">
                     <UnifiedInvoiceBuilder />
                 </div>
             </section>

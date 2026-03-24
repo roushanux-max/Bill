@@ -45,6 +45,13 @@ export function generateInvoicePDF(
     const textLight: [number, number, number] = [148, 163, 184]; // slate-400
     const borderLight: [number, number, number] = [226, 232, 240]; // slate-200
     const borderDark: [number, number, number] = [15, 23, 42]; // slate-900
+    const accentColorRgb: [number, number, number] = hexToRgb(settings.primaryColor);
+    // Create a light version (approx 8% opacity on white)
+    const tanAccent: [number, number, number] = [
+        Math.round(255 - (255 - accentColorRgb[0]) * 0.08),
+        Math.round(255 - (255 - accentColorRgb[1]) * 0.08),
+        Math.round(255 - (255 - accentColorRgb[2]) * 0.08)
+    ];
 
     const fontMap: Record<string, string> = {
         inter: 'helvetica',
@@ -65,415 +72,295 @@ export function generateInvoicePDF(
 
     // ── Header Section ──────────────────────────────────────────────
     
-    const logoSizeMap: Record<string, number> = {
-        small: 15,
-        medium: 20,
-        large: 28
-    };
-    const maxLogoH = logoSizeMap[settings.logoSize] || 20;
-    let rightHeaderY = y;
+    // Modern Dark Header Banner for "INVOICE"
+    const bannerW = 100;
+    const bannerH = 25;
+    pdf.setFillColor(...primary);
+    pdf.roundedRect(margin + contentW - bannerW + 10, y, bannerW, bannerH, 10, 10, 'F');
     
-    // Right side text (Invoice Title & Logo)
-    setFont('normal', 24, [203, 213, 225]); // slate-300 light title
-    pdf.text(storeInfo.gstin ? 'TAX INVOICE' : 'INVOICE', margin + contentW, rightHeaderY + 6, { align: 'right' });
-    rightHeaderY += 12;
+    setFont('bold', 34, [255, 255, 255]);
+    // 2. HEADER BANNER - DARK & ASYMMETRICAL
+    // Draw main dark blue banner
+    pdf.setFillColor(...primary);
+    // Main rectangle - stretched left
+    pdf.rect(120, 0, 95, 40, 'F');
+    // Simulate asymmetrical rounded corner (bottom-left)
+    pdf.setFillColor(...primary);
+    pdf.roundedRect(110, 0, 105, 35, 15, 15, 'F'); // More rounded
+    
+    // Header Text
+    setFont('bold', 28, [255, 255, 255]);
+    pdf.text('INVOICE', 135, 22, { charSpace: 2 });
+    
+    // Corner Accent (The Tan Triangle from the UI)
+    pdf.setFillColor(...tanAccent);
+    pdf.triangle(210, 0, 210, 15, 195, 0, 'F');
 
+    // 3. INVOICE META (Number, Dates)
+    setFont('bold', 8, [255, 255, 255]);
+    const metaX = 135;
+    pdf.text(`No: ${invoice.invoiceNumber}`, metaX, 32);
+    pdf.text(`Date: ${formatDateForDisplay(invoice.date)}`, metaX + 35, 32);
+
+    // 4. BOTTOM-LEFT ACCENT (Circle)
+    pdf.setDrawColor(...primary);
+    pdf.setLineWidth(3);
+    pdf.circle(15, 282, 10, 'D'); 
+
+    // Reset for content
+    setFont('normal', 10, textDark);
+    
+    // Logo and Store Info (Left Side)
+    let leftY = y + 2; 
+    const maxLogoH = settings.logoSize === 'large' ? 28 : settings.logoSize === 'medium' ? 20 : 15;
     if (settings.logo) {
         try {
             const imgProps = pdf.getImageProperties(settings.logo);
             const imgRatio = imgProps.width / imgProps.height;
-            const maxLogoW = 50;
-            
+            const maxLogoW = 40;
             let finalH = maxLogoH;
             let finalW = finalH * imgRatio;
-            
             if (finalW > maxLogoW) {
                 finalW = maxLogoW;
                 finalH = finalW / imgRatio;
             }
-            
-            pdf.addImage(settings.logo, 'PNG', margin + contentW - finalW, rightHeaderY, finalW, finalH, undefined, 'FAST');
-            rightHeaderY += finalH + 5;
-        } catch (e) {
-            console.error('Error adding logo to PDF:', e);
-        }
+            pdf.addImage(settings.logo, 'PNG', margin, leftY, finalW, finalH, undefined, 'FAST');
+            leftY += finalH + 6;
+        } catch (e) {}
     }
 
-    // Invoice Meta (No, Date)
-    setFont('normal', 9, textMid);
-    pdf.text('Invoice No:', margin + contentW - 25, rightHeaderY, { align: 'right' });
-    pdf.text('Date:', margin + contentW - 25, rightHeaderY + 5, { align: 'right' });
-    
-    setFont('bold', 9, textDark);
-    pdf.text(invoice.invoiceNumber, margin + contentW, rightHeaderY, { align: 'right' });
-    pdf.text(formatDateForDisplay(invoice.date), margin + contentW, rightHeaderY + 5, { align: 'right' });
-    
-    const rightSideBottomY = rightHeaderY + 10;
-
-    // Left side text (Store Info)
-    let leftY = y + 6;
     if (storeInfo.name) {
-        setFont('bold', 18, primary);
-        const storeName = storeInfo.name.toUpperCase();
-        const storeNameLines = pdf.splitTextToSize(storeName, contentW * 0.5);
-        pdf.text(storeNameLines, margin, leftY);
-        leftY += storeNameLines.length * 7;
+        setFont('bold', 18, textDark);
+        pdf.text(storeInfo.name.toUpperCase(), margin, leftY + 2);
+        leftY += 8;
     }
-
-    setFont('normal', 9, textMid);
-    if (storeInfo.address) {
-        const addressLines = pdf.splitTextToSize(storeInfo.address, contentW * 0.5);
-        pdf.text(addressLines, margin, leftY);
-        leftY += addressLines.length * 4;
-    }
-
-    if (storeInfo.phone) {
-        pdf.text(`Phone: ${storeInfo.phone}`, margin, leftY);
-        leftY += 4;
-    }
-    if (storeInfo.email) {
-        pdf.text(`Email: ${storeInfo.email}`, margin, leftY);
-        leftY += 4;
-    }
-    if (storeInfo.gstin) {
-        setFont('bold', 9, textDark);
-        pdf.text(`GSTIN: ${storeInfo.gstin}`, margin, leftY + 1);
+    
+    if (settings.tagline) {
+        setFont('normal', 8, textLight);
+        pdf.text((settings.tagline || '').toUpperCase(), margin, leftY);
         leftY += 5;
     }
-    if (storeInfo.authDistributors) {
-        setFont('italic', 8, textDark);
-        const authLines = pdf.splitTextToSize(storeInfo.authDistributors, contentW * 0.5);
-        pdf.text(authLines, margin, leftY + 1);
-        leftY += authLines.length * 3 + 1;
-    }
 
-    y = Math.max(leftY, rightSideBottomY) + 5;
-
-    // Separator
-    pdf.setDrawColor(...borderLight);
-    pdf.setLineWidth(0.3);
-    pdf.line(margin, y, margin + contentW, y);
-    y += 8;
+    // Invoice Meta Info (Right side, below banner)
+    let rightY = y + bannerH + 12;
+    setFont('bold', 7, textLight);
+    pdf.text('BILL TO.', margin, rightY + 12); // Re-labeling or spacing
+    
+    y = Math.max(leftY + 15, rightY + 15);
 
     // ── Bill To Section ───────────────────────────────────────────
     if (invoice.customer?.name) {
-        setFont('bold', 7.5, textLight);
-        pdf.text('BILL TO', margin, y);
-        y += 5;
+        setFont('bold', 24, textDark);
+        const custNameLines = pdf.splitTextToSize(invoice.customer.name, contentW * 0.7);
+        pdf.text(custNameLines, margin, y + 2);
+        y += custNameLines.length * 10;
 
-        setFont('bold', 12, textDark);
-        const custNameLines = pdf.splitTextToSize(invoice.customer.name, contentW * 0.6);
-        pdf.text(custNameLines, margin, y);
-        y += custNameLines.length * 5;
-
-        setFont('normal', 9, textMid);
-        if (invoice.customer?.address) {
-            const custAddrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
-            pdf.text(custAddrLines, margin, y);
-            y += custAddrLines.length * 4;
+        setFont('normal', 10, textMid);
+        const contactInfo = [invoice.customer.phone, (invoice.customer as any).email].filter(Boolean).join('  •  ');
+        if (contactInfo) {
+            pdf.text(contactInfo, margin, y);
+            y += 6;
         }
-        if (invoice.customer?.phone) {
-            pdf.text(`Phone: ${invoice.customer.phone}`, margin, y);
-            y += 4;
+        
+        if (invoice.customer.address) {
+            const addrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
+            pdf.text(addrLines, margin, y);
+            y += addrLines.length * 5;
         }
-        if (invoice.customer?.gstin) {
-            setFont('bold', 9, textDark);
-            pdf.text(`GSTIN: ${invoice.customer.gstin}`, margin, y + 1);
-            y += 5;
-        }
-        y += 5;
+        y += 12;
     }
 
-    // ── Items Table Header ────────────────────────────────────────
+    // ── Items Table ───────────────────────────────────────────────
+    const activeDomain = settings.domain || 'general';
     const isSameState = storeInfo.state === invoice.customer?.state;
     const hasAnyHSN = (invoice.items || []).some(item => item.hsn && item.hsn.trim() !== '' && item.hsn !== '-');
     
-    let baseCols = [
-        { label: '#', w: 8, align: 'center' },
-        { label: 'Item Description', w: 62, align: 'left', id: 'desc' },
+    let cols = [
+        { label: 'QTY', w: 12, align: 'center' },
+        { label: 'ITEM DESCRIPTION', w: 60, align: 'left', id: 'desc' },
         { label: 'HSN', w: 15, align: 'center', id: 'hsn' },
-        { label: 'Qty', w: 10, align: 'center' },
-        { label: 'Rate', w: 20, align: 'right' },
+        { label: 'PRICE', w: 25, align: 'right' },
+        { label: 'TOTAL', w: 30, align: 'right' },
     ];
 
-    if (isSameState) {
-        baseCols.push({ label: 'GST', w: 20, align: 'right' });
-    } else {
-        baseCols.push({ label: 'IGST', w: 20, align: 'right' });
+    if (activeDomain === 'clothing') {
+        cols.splice(2, 0, { label: 'SIZE', w: 12, align: 'center', id: 'size' });
+        cols.splice(3, 0, { label: 'COLOR', w: 12, align: 'center', id: 'color' });
+    } else if (activeDomain === 'furniture') {
+        cols.splice(2, 0, { label: 'MATERIAL', w: 24, align: 'center', id: 'material' });
     }
-    baseCols.push({ label: 'Amount', w: 33, align: 'right' });
 
-    // Filter out HSN column if not needed
-    let cols = hasAnyHSN ? baseCols : baseCols.filter(c => c.id !== 'hsn');
-    
-    // Adjust Description width if HSN is hidden
     if (!hasAnyHSN) {
-        const descCol = cols.find(c => c.id === 'desc');
-        if (descCol) descCol.w += 15;
+        cols = cols.filter(c => c.id !== 'hsn');
     }
 
-    // Scale to contentW
     const totalColsW = cols.reduce((sum, c) => sum + c.w, 0);
     const scaleFactor = contentW / totalColsW;
     cols.forEach(c => c.w = c.w * scaleFactor);
 
-    // Header Line
-    pdf.setDrawColor(...borderDark);
-    pdf.setLineWidth(0.5);
-    pdf.line(margin, y, margin + contentW, y);
-    y += 5;
-
-    setFont('bold', 8.5, textDark);
-    let cx = margin;
-    for (const col of cols) {
-        let textX = cx;
-        if (col.align === 'center') textX = cx + col.w / 2;
-        else if (col.align === 'right') textX = cx + col.w - 2;
-        else textX = cx + 2;
-
-        pdf.text(col.label, textX, y, { align: col.align as "center" | "right" | "left" });
-        cx += col.w;
-    }
+    // Header Background
+    pdf.setFillColor(...primary);
+    pdf.roundedRect(margin, y, contentW, 10, 5, 5, 'F');
     
-    y += 2;
-    // Bottom Header Line
-    pdf.line(margin, y, margin + contentW, y);
-    y += 4;
+    setFont('bold', 8, [255, 255, 255]);
+    let cx = margin;
+    cols.forEach(col => {
+        let tx = cx + (col.align === 'center' ? col.w/2 : (col.align === 'right' ? col.w - 4 : 4));
+        pdf.text(col.label, tx, y + 6.5, { align: col.align as any });
+        cx += col.w;
+    });
+    y += 13;
 
-    // ── Items Rows ────────────────────────────────────────────────
-    let cgstTotal = 0;
-    let sgstTotal = 0;
-    let igstTotal = 0;
-    let amountTotal = 0;
-
-    for (let i = 0; i < (invoice.items || []).length; i++) {
-        const item = invoice.items![i];
+    // Rows
+    let cgstTotal = 0, sgstTotal = 0, igstTotal = 0, amountTotal = 0;
+    (invoice.items || []).forEach((item, idx) => {
         const amount = item.totalAmount || (item as any).amount || 0;
         const taxAmount = (amount * item.taxRate) / 100;
-        const cgst = isSameState ? taxAmount / 2 : 0;
-        const sgst = isSameState ? taxAmount / 2 : 0;
-        const igst = !isSameState ? taxAmount : 0;
         const rowTotal = amount + taxAmount;
-
-        cgstTotal += cgst;
-        sgstTotal += sgst;
-        igstTotal += igst;
+        
         amountTotal += amount;
+        cgstTotal += isSameState ? taxAmount/2 : 0;
+        sgstTotal += isSameState ? taxAmount/2 : 0;
+        igstTotal += !isSameState ? taxAmount : 0;
 
-        const nameLines = pdf.splitTextToSize(item.productName || (item as any).name || 'Item', cols[1].w - 4);
-        const rowH = Math.max(8, nameLines.length * 4.5);
+        const nameLines = pdf.splitTextToSize(item.productName || 'Item', cols[1].w - 8);
+        const rowH = Math.max(10, nameLines.length * 5);
 
-        // Page break if near bottom
-        if (y + rowH > 270) {
-            pdf.setDrawColor(...borderLight);
-            pdf.setLineWidth(0.1);
-            pdf.line(margin, y, margin + contentW, y);
-            pdf.addPage();
-            y = margin;
-            pdf.setDrawColor(...borderDark);
-            pdf.setLineWidth(0.5);
-            pdf.line(margin, y, margin + contentW, y);
-            y += 5;
-            setFont('bold', 8.5, textDark);
-            let hx = margin;
-            for (const col of cols) {
-                let textX = hx;
-                if (col.align === 'center') textX = hx + col.w / 2;
-                else if (col.align === 'right') textX = hx + col.w - 2;
-                else textX = hx + 2;
-                pdf.text(col.label, textX, y, { align: hx + col.w / 2 === textX ? 'center' : (hx + col.w - 2 === textX ? 'right' : 'left') });
-                hx += col.w;
-            }
-            y += 2;
-            pdf.line(margin, y, margin + contentW, y);
-            y += 4;
+        if (y + rowH > 270) { pdf.addPage(); y = margin + 10; }
+
+        // Alternating Highlight
+        if (idx % 2 !== 0) {
+            pdf.setFillColor(...primary);
+            pdf.setGState(new (pdf as any).GState({ opacity: 0.1 }));
+            pdf.roundedRect(margin, y - 2, contentW, rowH, 4, 4, 'F');
+            pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
         }
 
-        setFont('normal', 8.5, textDark);
+        setFont('bold', 9, textDark);
         let rcx = margin;
         
-        let rowVals: any[] = [String(i + 1), nameLines];
-        if (hasAnyHSN) rowVals.push(item.hsn || '-');
-        rowVals.push(String(item.quantity));
-        rowVals.push((item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN'));
-        
-        if (isSameState) {
-            rowVals.push(Math.round(taxAmount).toLocaleString('en-IN'));
-        } else {
-            rowVals.push(Math.round(igst).toLocaleString('en-IN'));
-        }
-        rowVals.push(Math.round(rowTotal).toLocaleString('en-IN'));
+        cols.forEach(col => {
+            let tx = rcx + (col.align === 'center' ? col.w/2 : (col.align === 'right' ? col.w - 4 : 4));
+            let val = '';
+            
+            if (col.label === 'QTY') val = String(item.quantity);
+            else if (col.label === 'ITEM DESCRIPTION') val = ''; // Handled separately for multi-line
+            else if (col.label === 'HSN') val = item.hsn || '-';
+            else if (col.label === 'SIZE') val = item.unit || (item as any).size || '-';
+            else if (col.label === 'COLOR') val = (item as any).color || '-';
+            else if (col.label === 'MATERIAL') val = (item as any).material || '-';
+            else if (col.label === 'PRICE') val = (item.unitPrice || 0).toLocaleString('en-IN');
+            else if (col.label === 'TOTAL') val = Math.round(rowTotal).toLocaleString('en-IN');
 
-        for (let ci = 0; ci < cols.length; ci++) {
-            const col = cols[ci];
-            const val = rowVals[ci];
-            let textX = rcx;
-            if (col.align === 'center') textX = rcx + col.w / 2;
-            else if (col.align === 'right') textX = rcx + col.w - 2;
-            else textX = rcx + 2;
-
-            if (ci === 1) {
-                setFont('bold', 8.5, textDark);
-                pdf.text(val as string[], textX, y + 4);
+            if (col.label === 'ITEM DESCRIPTION') {
+                pdf.text(nameLines, tx, y + 4);
             } else {
-                setFont('normal', 8.5, textMid);
-                if (ci === cols.length - 1) setFont('bold', 8.5, textDark);
-                if (ci === 0) setFont('normal', 8, textLight);
-                pdf.text(val as string, textX, y + 4, { align: col.align as any });
-                
-                const taxColIndex = hasAnyHSN ? [5] : [4];
-                if (taxColIndex.includes(ci)) {
-                    setFont('normal', 7, textLight);
-                    const label = `${item.taxRate || 0}%`;
-                    pdf.text(label, textX, y + 7.5, { align: 'right' });
-                }
+                setFont(col.label === 'TOTAL' || col.label === 'QTY' ? 'bold' : 'normal', col.label === 'TOTAL' ? 10 : 8, col.label === 'TOTAL' ? textDark : textMid);
+                pdf.text(val, tx, y + 4, { align: col.align as any });
             }
             rcx += col.w;
-        }
+        });
+        
         y += rowH;
-        pdf.setDrawColor(...borderLight);
-        pdf.setLineWidth(0.1);
-        pdf.line(margin, y, margin + contentW, y);
-        y += 1;
-    }
+    });
 
-    // ── Summary Section ───────────────────────────────────────────
-    y += 5;
-    const summaryW = 70;
-    const summaryX = margin + contentW - summaryW;
-    
-    if (y > 230) {
-        pdf.addPage();
-        y = margin;
-    }
+    // ── Summary & Footer ──────────────────────────────────────────
+    y += 10;
+    if (y > 220) { pdf.addPage(); y = margin + 10; }
 
-    const drawSummaryRow = (label: string, value: string, isDiscount = false) => {
-        setFont('normal', 9, textMid);
-        pdf.text(label, summaryX, y);
-        if (isDiscount) setFont('bold', 9, [5, 150, 105]); // emerald-600
-        else setFont('bold', 9, textDark);
-        pdf.text(value, summaryX + summaryW, y, { align: 'right' });
+    const summX = margin + contentW - 70;
+    const drawSum = (l: string, v: string, bold = false) => {
+        setFont(bold ? 'bold' : 'normal', 9, bold ? textDark : textMid);
+        pdf.text(l, summX, y);
+        pdf.text(v, margin + contentW - 4, y, { align: 'right' });
         y += 6;
     };
 
-    drawSummaryRow('Subtotal', amountTotal.toLocaleString('en-IN'));
-    if (invoice.transportCharges > 0) {
-        drawSummaryRow('Transportation Charges', invoice.transportCharges.toLocaleString('en-IN'));
+    drawSum('Subtotal', amountTotal.toLocaleString('en-IN'));
+    if (invoice.transportCharges > 0) drawSum('Transport', invoice.transportCharges.toLocaleString('en-IN'));
+    
+    if (isSameState) {
+        drawSum('CGST', Math.round(cgstTotal).toLocaleString('en-IN'));
+        drawSum('SGST', Math.round(sgstTotal).toLocaleString('en-IN'));
+    } else {
+        drawSum('IGST', Math.round(igstTotal).toLocaleString('en-IN'));
     }
-    const calculatedGrandTotal = Math.round(amountTotal + (isSameState ? cgstTotal + sgstTotal : igstTotal) + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
-    const finalTotal = invoice.grandTotal || calculatedGrandTotal;
-
-    if (invoice.taxTotal > 0 || (calculatedGrandTotal > (amountTotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0)))) {
-        if (invoice.items && invoice.items.length > 0) {
-            if (isSameState) {
-                drawSummaryRow('CGST', Math.round(cgstTotal).toLocaleString('en-IN'));
-                drawSummaryRow('SGST', Math.round(sgstTotal).toLocaleString('en-IN'));
-            } else {
-                drawSummaryRow('IGST', Math.round(igstTotal).toLocaleString('en-IN'));
-            }
-        } else {
-            // Legacy Fallback: Show the difference as GST
-            const taxGap = finalTotal - (amountTotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0));
-            if (taxGap > 0) {
-                drawSummaryRow('GST (Estimated)', Math.round(taxGap).toLocaleString('en-IN'));
-            }
-        }
-    }
-    if (invoice.discountTotal > 0) {
-        drawSummaryRow('Overall Discount', `- ${invoice.discountTotal.toLocaleString('en-IN')}`, true);
-    }
-
+    
+    if (invoice.discountTotal > 0) drawSum('Discount', `- ${invoice.discountTotal.toLocaleString('en-IN')}`);
 
     y += 2;
-    pdf.setDrawColor(...borderLight);
-    pdf.setLineWidth(0.3);
-    pdf.line(summaryX, y - 4, summaryX + summaryW, y - 4);
-    
-    setFont('bold', 7.5, textLight);
-    pdf.text('TOTAL AMOUNT (INR)', summaryX, y + 1);
-    setFont('bold', 16, primary);
-    pdf.text(`RS. ${finalTotal.toLocaleString('en-IN')}`, summaryX + summaryW, y + 1, { align: 'right' });
-    y += 5;
-
-    // ── Footer: Amount In Words & Terms ───────────────────────────
-    y = Math.max(y + 10, y + 10);
-    if (y > 250) { pdf.addPage(); y = margin; }
-
-    const amtInWords = `${numberToWords(finalTotal)} Only`;
-    setFont('bold', 7.5, textLight);
-    pdf.text('AMOUNT IN WORDS', margin, y);
-    y += 4;
-    setFont('bold', 9, textDark);
-    const amtLines = pdf.splitTextToSize(amtInWords, contentW);
-    pdf.text(amtLines, margin, y);
-    y += (amtLines.length * 4.5) + 5;
-
-    pdf.setDrawColor(...borderLight);
-    pdf.setLineWidth(0.3);
-    pdf.line(margin, y, margin + contentW, y);
+    pdf.setDrawColor(...textDark);
+    pdf.setLineWidth(1);
+    pdf.line(summX, y, margin + contentW, y);
     y += 8;
 
-    const footerTopY = y;
-    let leftSideY = y;
+    setFont('bold', 10, textLight);
+    pdf.text('TOTAL AMOUNT', summX, y);
+    setFont('bold', 18, primary);
+    pdf.text(`RS. ${invoice.grandTotal.toLocaleString('en-IN')}`, margin + contentW - 4, y + 1, { align: 'right' });
+
+    // Payment & Terms (Bottom Left)
+    const midY = y + 15;
+    let bottomL = midY;
     
-    if (invoice.notes || settings.invoiceNotes) {
-        setFont('bold', 7.5, textLight);
-        pdf.text('INVOICE NOTES', margin, leftSideY);
-        leftSideY += 5;
-        setFont('normal', 8, textMid);
-        const noteLines = pdf.splitTextToSize((invoice.notes || settings.invoiceNotes) as string, contentW * 0.6);
-        pdf.text(noteLines, margin, leftSideY);
-        leftSideY += noteLines.length * 4 + 2;
-    }
-
-    if (settings.termsAndConditions) {
-        setFont('bold', 7.5, textLight);
-        pdf.text('TERMS & CONDITIONS', margin, leftSideY);
-        leftSideY += 5;
-        setFont('normal', 8, textMid);
-        const termsLines = pdf.splitTextToSize(settings.termsAndConditions, contentW * 0.6);
-        pdf.text(termsLines, margin, leftSideY);
-        leftSideY += termsLines.length * 4;
-    }
-
-    const sigBoxW = 60;
-    const sigBoxX = margin + contentW - sigBoxW;
-    let rightSideY = footerTopY;
-
-    if (settings.showSignature) {
-        if (settings.signatureImage) {
-            try {
-                const imgProps = pdf.getImageProperties(settings.signatureImage);
-                const imgRatio = imgProps.width / imgProps.height;
-                const maxSigH = 15;
-                let finalW = maxSigH * imgRatio;
-                if (finalW > sigBoxW) finalW = sigBoxW;
-                pdf.addImage(settings.signatureImage, 'PNG', sigBoxX + (sigBoxW - finalW)/2, rightSideY, finalW, maxSigH, undefined, 'FAST');
-                rightSideY += maxSigH + 2;
-            } catch (e) { rightSideY += 17; }
-        } else { rightSideY += 17; }
-
-        pdf.setDrawColor(...borderLight);
-        pdf.setLineWidth(0.5);
-        pdf.line(sigBoxX, rightSideY, sigBoxX + sigBoxW, rightSideY);
-        rightSideY += 4;
-
+    if (settings.paymentDetails) {
         setFont('bold', 8, textDark);
-        const authSigner = settings.signatureText || (storeInfo.name ? `For ${storeInfo.name}` : '');
-        if (authSigner) {
-            const authSignerLines = pdf.splitTextToSize(authSigner, sigBoxW);
-            pdf.text(authSignerLines, sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
-            rightSideY += authSignerLines.length * 4;
-            setFont('normal', 7, textLight);
-            pdf.text('Authorized Signatory', sigBoxX + sigBoxW/2, rightSideY, { align: 'center' });
-        }
+        pdf.text('PAYMENT DETAILS', margin, bottomL);
+        bottomL += 5;
+        setFont('normal', 8, textMid);
+        const payLines = pdf.splitTextToSize(settings.paymentDetails, contentW * 0.5);
+        pdf.text(payLines, margin, bottomL);
+        bottomL += payLines.length * 4 + 5;
+    }
+    
+    if (invoice.notes) {
+        setFont('bold', 8, textDark);
+        pdf.text('NOTES', margin, bottomL);
+        bottomL += 5;
+        setFont('normal', 7, textMid);
+        const noteLines = pdf.splitTextToSize(invoice.notes, contentW * 0.5);
+        pdf.text(noteLines, margin, bottomL);
     }
 
-    if (settings.showFooter && settings.footerText) {
-        const bottomY = 285;
-        setFont('normal', 8, textLight);
-        pdf.text(settings.footerText, pageW / 2, bottomY, { align: 'center' });
-    }
+    // Signature (Bottom Right)
+    let sigY = midY + 10;
+    const sigW = 50;
+    const sigX = margin + contentW - sigW;
+
+    if (settings.signatureImage) {
+        try {
+            pdf.addImage(settings.signatureImage, 'PNG', sigX + 5, sigY, 40, 15, undefined, 'FAST');
+            sigY += 18;
+        } catch (e) { sigY += 15; }
+    } else { sigY += 15; }
+
+    pdf.setDrawColor(...borderLight);
+    pdf.setLineWidth(0.5);
+    pdf.line(sigX, sigY, sigX + sigW, sigY);
+    setFont('bold', 9, textDark);
+    pdf.text(settings.signatureText || 'Authorized Signatory', sigX + sigW/2, sigY + 5, { align: 'center' });
+    setFont('normal', 7, textLight);
+    pdf.text('Authorized Signatory', sigX + sigW/2, sigY + 8, { align: 'center' });
+
+    // ── DARK FOOTER BANNER ────────────────────────────────────────
+    const footerH = 30;
+    const footerY = 297 - footerH;
+    pdf.setFillColor(...primary);
+    pdf.rect(0, footerY, 210, footerH, 'F');
+    
+    setFont('bold', 8, [255, 255, 255]);
+    const footX1 = margin;
+    const footX2 = margin + 50;
+    const footX3 = margin + 100;
+    
+    pdf.text(`📞  ${storeInfo.phone || '-'}`, footX1, footerY + 12);
+    pdf.text(`✉️  ${storeInfo.email || '-'}`, footX1, footerY + 18);
+    pdf.text(`🌐  ${settings.website || '-'}`, footX2, footerY + 12);
+    pdf.text(`🆔  GST: ${storeInfo.gstin || '-'}`, footX2, footerY + 18);
+    
+    const addrLines = pdf.splitTextToSize(storeInfo.address || '-', 60);
+    pdf.text(`📍  `, footX3, footerY + 12);
+    pdf.text(addrLines, footX3 + 6, footerY + 12);
 
     return pdf;
 }

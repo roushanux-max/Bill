@@ -27,12 +27,17 @@ export interface BrandingSettings {
 
   // Domain Metadata (Invoice UI Template)
   domain?: 'general' | 'furniture' | 'clothing' | 'hotel';
+
+  // New Design Fields
+  tagline?: string;
+  website?: string;
+  paymentDetails?: string;
 }
 
 export const defaultBrandingSettings: BrandingSettings = {
   logo: null,
   logoSize: 'medium',
-  primaryColor: '#6366f1',
+  primaryColor: '#0f172a',
   headerStyle: 'modern',
   showBorder: true,
   fontFamily: 'aptos',
@@ -45,4 +50,7 @@ export const defaultBrandingSettings: BrandingSettings = {
   signatureImage: null,
   signatureText: 'Authorized Signatory',
   domain: 'general',
+  tagline: '',
+  website: '',
+  paymentDetails: '',
 };

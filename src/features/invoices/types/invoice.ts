@@ -69,6 +69,7 @@ export interface Invoice {
   // UI Helpers (populated on load)
   items?: InvoiceItem[];
   customer?: Customer;
+  dueDate?: string;
 }
 
 export interface Payment {
