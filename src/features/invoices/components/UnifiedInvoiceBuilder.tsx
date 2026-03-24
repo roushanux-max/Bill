@@ -335,7 +335,7 @@ export default function UnifiedInvoiceBuilder() {
                         </div>
                         <input 
                             className="text-3xl font-black bg-transparent border-none outline-none text-white placeholder:text-white/50 w-full"
-                            placeholder="Your Business Name"
+                            placeholder="e.g. Acme Furniture Pvt Ltd"
                             value={currentStore.name} 
                             onChange={e => handleUpdateStore('name', e.target.value)} 
                         />
@@ -374,13 +374,13 @@ export default function UnifiedInvoiceBuilder() {
                         <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 max-w-md">
                             <input 
                                 className="text-xl font-bold text-slate-800 bg-transparent border-none outline-none w-full placeholder:text-slate-300 mb-2" 
-                                placeholder="Customer Name"
+                                placeholder="e.g. John Doe / Walk-in Customer"
                                 value={customer.name} 
                                 onChange={e => setCustomer({...customer, name: e.target.value})} 
                             />
                             <textarea 
                                 className="text-sm font-medium text-slate-500 bg-transparent border-none outline-none w-full resize-none placeholder:text-slate-300" 
-                                placeholder="Customer Contact Details (Phone, Email, Address...)"
+                                placeholder="e.g. 45th Main St, Sector 2, New Delhi. Phone: 9988776655"
                                 rows={2}
                                 value={customer.mobile} 
                                 onChange={e => setCustomer({...customer, mobile: e.target.value})} 
@@ -433,7 +433,7 @@ export default function UnifiedInvoiceBuilder() {
                                             <td className="p-0 align-top">
                                                 <input 
                                                     className="w-full h-full min-h-[48px] px-4 py-2 bg-transparent border-none outline-none font-bold text-slate-800 placeholder:font-normal placeholder:text-slate-400"
-                                                    placeholder={activeDomain === 'hotel' ? "Room / Service" : "Description..."}
+                                                    placeholder={activeDomain === 'hotel' ? "e.g. Room 204 (Deluxe)" : "e.g. Teak Wood Dining Table"}
                                                     value={item.productName || ''}
                                                     onChange={e => {
                                                         const newArr = [...items];
@@ -448,7 +448,7 @@ export default function UnifiedInvoiceBuilder() {
                                                 <td className="p-0 align-top">
                                                     <input 
                                                         className="w-full h-full min-h-[48px] px-2 py-2 bg-transparent border-none outline-none text-sm text-slate-600"
-                                                        placeholder="HSN Code (Required)"
+                                                        placeholder="e.g. 9403"
                                                         value={item.hsn || ''}
                                                         onChange={e => {
                                                             const newArr = [...items];
@@ -511,7 +511,7 @@ export default function UnifiedInvoiceBuilder() {
                                                 <input 
                                                     type="number"
                                                     className="w-full h-full min-h-[48px] px-4 py-2 text-right bg-transparent border-none outline-none font-bold text-slate-800"
-                                                    placeholder="0"
+                                                    placeholder="0.00"
                                                     value={item.unitPrice === 0 ? '' : item.unitPrice}
                                                     onChange={e => {
                                                         const newArr = [...items];
@@ -595,7 +595,7 @@ export default function UnifiedInvoiceBuilder() {
                                 <span className="border-b border-dashed border-slate-300 cursor-pointer">Discount:</span>
                                 <div className="flex items-center gap-1 font-bold text-red-500">
                                     <span>-₹</span>
-                                    <input type="number" className="w-16 bg-slate-50 rounded px-2 text-right outline-none border border-transparent focus:border-slate-200 py-1" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} placeholder="0" />
+                                    <input type="number" className="w-16 bg-slate-50 rounded px-2 text-right outline-none border border-transparent focus:border-slate-200 py-1" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} placeholder="0.00" />
                                 </div>
                             </div>
                             
@@ -621,9 +621,15 @@ export default function UnifiedInvoiceBuilder() {
                                     <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-700 flex items-center gap-1 uppercase tracking-wider"><Pencil size={10}/> Add Signature</span>
                                 </div>
                             )}
-                            <div className="w-48 border-t border-slate-300 pt-2 text-center">
-                                <span className="text-xs font-bold text-slate-800 tracking-wider">AUTHORIZED SIGNATORY</span>
-                            </div>
+                             <div className="w-48 border-t border-slate-300 pt-2 text-center">
+                                <input 
+                                    className="w-full bg-transparent border-none outline-none text-xs font-bold text-slate-800 text-center placeholder:text-slate-300" 
+                                    placeholder="e.g. Rahul Sharma"
+                                    value={(globalBranding as any).signatureText || ''} 
+                                    onChange={e => updateSettings({...globalBranding, signatureText: e.target.value})} 
+                                />
+                                <div className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">AUTHORIZED SIGNATORY</div>
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -633,7 +639,7 @@ export default function UnifiedInvoiceBuilder() {
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
                         <input 
                             className="bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-400 outline-none placeholder:text-slate-400 w-full sm:w-auto text-center sm:text-left flex-1"
-                            placeholder="Business Address"
+                            placeholder="e.g. 123 Business Way, New Delhi - 110001"
                             value={currentStore.address} 
                             onChange={e => handleUpdateStore('address', e.target.value)} 
                         />
@@ -647,9 +653,23 @@ export default function UnifiedInvoiceBuilder() {
                             <span>•</span>
                             <input 
                                 className="bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-400 outline-none placeholder:text-slate-400 w-48 text-center"
-                                placeholder="Email"
+                                placeholder="e.g. info@acme.com"
                                 value={currentStore.email} 
                                 onChange={e => handleUpdateStore('email', e.target.value)} 
+                            />
+                            <span>•</span>
+                            <input 
+                                className="bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-400 outline-none placeholder:text-slate-400 w-24 text-center"
+                                placeholder="Your State"
+                                value={(currentStore as any).state || ''} 
+                                onChange={e => handleUpdateStore('state', e.target.value)} 
+                            />
+                            <span>•</span>
+                            <input 
+                                className="bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-400 outline-none placeholder:text-slate-400 w-32 text-center"
+                                placeholder="Your GSTIN"
+                                value={currentStore.gstin} 
+                                onChange={e => handleUpdateStore('gstin', e.target.value)} 
                             />
                         </div>
                     </div>
