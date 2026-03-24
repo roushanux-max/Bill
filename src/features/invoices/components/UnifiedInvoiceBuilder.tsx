@@ -914,19 +914,15 @@ export default function UnifiedInvoiceBuilder() {
                 </div>
             )}
 
-            {/* FULL SCREEN PDF PREVIEW MODAL */}
-            {showPreviewModal && pdfPreviewUrl && (
-                <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
-                    <div className="bg-slate-100 rounded-3xl shadow-2xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="flex justify-between items-center p-4 sm:p-6 bg-white border-b border-slate-200 shrink-0">
+            {showPreviewModal && (
+                <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-full max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 rounded-lg" style={{ background: `${brandColor}15`, color: brandColor }}>
                                     <Eye size={20} />
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-black text-slate-900">Document Preview</h3>
-                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Final PDF Output</p>
-                                </div>
+                                <h3 className="text-xl font-black text-slate-900">Live Preview</h3>
                             </div>
                             <div className="flex gap-3">
                                 <button 
@@ -934,7 +930,7 @@ export default function UnifiedInvoiceBuilder() {
                                     className="px-6 py-2.5 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-md"
                                     style={{ background: brandColor }}
                                 >
-                                    <Download size={16} /> Download
+                                    <Download size={16} /> Download PDF
                                 </button>
                                 <button 
                                     onClick={() => setShowPreviewModal(false)} 
@@ -944,12 +940,23 @@ export default function UnifiedInvoiceBuilder() {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 bg-slate-50 relative p-4 sm:p-8" style={{ minHeight: 0 }}>
-                            <iframe 
-                                src={pdfPreviewUrl || undefined} 
-                                className="w-full h-full rounded-xl shadow-lg border border-slate-200 bg-white" 
-                                title="PDF Preview"
-                            />
+                        <div className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-12">
+                            <div className="max-w-[210mm] mx-auto bg-white shadow-2xl rounded-sm overflow-hidden">
+                                <InvoiceTemplate 
+                                    invoice={{
+                                        ...invoiceData,
+                                        items,
+                                        grandTotal: grandTotal,
+                                        subtotal,
+                                        taxTotal: tax,
+                                        discountTotal: 0,
+                                        notes,
+                                        transportCharges: 0
+                                    }} 
+                                    settings={globalBranding} 
+                                    storeInfo={currentStore} 
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
