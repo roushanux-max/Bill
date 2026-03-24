@@ -24,6 +24,9 @@ export interface BrandingSettings {
   showSignature: boolean;
   signatureImage: string | null;
   signatureText: string;
+
+  // Domain Metadata (Invoice UI Template)
+  domain?: 'general' | 'furniture' | 'clothing' | 'hotel';
 }
 
 export const defaultBrandingSettings: BrandingSettings = {
@@ -41,4 +44,5 @@ export const defaultBrandingSettings: BrandingSettings = {
   showSignature: true,
   signatureImage: null,
   signatureText: 'Authorized Signatory',
+  domain: 'general',
 };

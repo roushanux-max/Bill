@@ -10,9 +10,14 @@ interface BrandingContextType {
   updateStoreInfo: (info: StoreInfo) => void;
   refreshBranding: () => Promise<void>;
   loading: boolean;
+  overrideSettings?: BrandingSettings;
+  overrideStoreInfo?: StoreInfo;
+  setOverrideSettings: (s: BrandingSettings | undefined) => void;
+  setOverrideStoreInfo: (i: StoreInfo | undefined) => void;
 }
 
 import { useAuth } from './AuthContext';
+import ConflictResolutionModal from '@/features/invoices/components/ConflictResolutionModal';
 
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
@@ -40,12 +45,16 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Apply styles when settings change
+  const [overrideSettings, setOverrideSettings] = useState<BrandingSettings | undefined>();
+  const [overrideStoreInfo, setOverrideStoreInfo] = useState<StoreInfo | undefined>();
+  const [conflictData, setConflictData] = useState<{ guestBranding: BrandingSettings; guestStore: StoreInfo } | null>(null);
+
+  // Apply styles when settings change (prioritize override if present)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      applyBrandingStyles(settings);
+      applyBrandingStyles(overrideSettings || settings);
     }
-  }, [settings]);
+  }, [settings, overrideSettings]);
 
   const refreshBranding = async () => {
     // Avoid double-loading if we already have a user but no data yet
@@ -123,20 +132,61 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  useEffect(() => {
+    const handleConflict = (e: any) => {
+        const { guestBranding, guestStore } = e.detail;
+        if (guestBranding || guestStore) {
+            setConflictData({ guestBranding, guestStore });
+        }
+    };
+    window.addEventListener('GUEST_LOGIN_CONFLICT', handleConflict);
+    return () => window.removeEventListener('GUEST_LOGIN_CONFLICT', handleConflict);
+  }, []);
+
   const updateSettings = async (newSettings: BrandingSettings) => {
+    if (overrideSettings) setOverrideSettings(newSettings); // update temp if in temp mode
     setSettings(newSettings);
     applyBrandingStyles(newSettings);
     if (user) await saveBrandingSettings(newSettings);
   };
 
   const updateStoreInfo = async (info: StoreInfo) => {
+    if (overrideStoreInfo) setOverrideStoreInfo(info);
     setStoreInfo(info);
     if (user) await saveStoreInfo(info);
   };
 
+  const effectiveSettings = overrideSettings || settings;
+  const effectiveStoreInfo = overrideStoreInfo || storeInfo;
+
   return (
-    <BrandingContext.Provider value={{ settings, storeInfo, updateSettings, updateStoreInfo, refreshBranding, loading }}>
+    <BrandingContext.Provider value={{ 
+        settings: effectiveSettings, 
+        storeInfo: effectiveStoreInfo, 
+        updateSettings, 
+        updateStoreInfo, 
+        refreshBranding, 
+        loading,
+        overrideSettings,
+        overrideStoreInfo,
+        setOverrideSettings,
+        setOverrideStoreInfo
+    }}>
       {children}
+      {conflictData && (
+          <ConflictResolutionModal 
+              guestBranding={conflictData.guestBranding} 
+              guestStore={conflictData.guestStore} 
+              onResolve={(action) => {
+                  if (action === 'temp') {
+                      setOverrideSettings(conflictData.guestBranding || defaultBrandingSettings);
+                      setOverrideStoreInfo(conflictData.guestStore || null);
+                  }
+                  setConflictData(null);
+                  refreshBranding(); // Ensure DB sync if keep/discard
+              }}
+          />
+      )}
     </BrandingContext.Provider>
   );
 }

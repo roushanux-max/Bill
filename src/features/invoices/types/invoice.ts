@@ -106,7 +106,7 @@ export interface StoreInfo {
   phone: string;
   email: string;
   authDistributors?: string;
-  branding_settings?: any;
+  branding_settings?: any; // Contains domain metadata now
 }
 
 export interface CustomerPayload {

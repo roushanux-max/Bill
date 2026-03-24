@@ -55,11 +55,24 @@ export default function UnifiedInvoiceBuilder() {
     const [showBrandingPanel, setShowBrandingPanel] = useState(false);
     const [saveAlertOpen, setSaveAlertOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-
+    const [showDomainSelector, setShowDomainSelector] = useState(false);
+    
+    // --- UI State: Download Validation ---
+    const [showDownloadTooltip, setShowDownloadTooltip] = useState(false);
+    
     // --- Derived ---
     const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const tax = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.taxRate / 100)), 0);
     const grandTotal = subtotal + tax + Number(transportCharges) - Number(discount);
+    
+    const currentStore = globalStore || { name: '', address: '', phone: '', email: '', gstin: '' };
+
+    const isDownloadReady = Boolean(
+        (globalStore?.name || currentStore.name)?.trim() &&
+        customer.name?.trim() &&
+        items.length > 0 &&
+        items.every(i => i.productName?.trim() && i.quantity > 0 && i.unitPrice > 0)
+    );
 
     // --- Sync State ---
     useEffect(() => {
@@ -70,6 +83,27 @@ export default function UnifiedInvoiceBuilder() {
         sessionStorage.setItem(getDraftKey('charges'), transportCharges.toString());
         sessionStorage.setItem(getDraftKey('discount'), discount.toString());
     }, [items, customer, notes, transportCharges, discount, user]);
+
+    // Check if domain is set, if not prompt it
+    useEffect(() => {
+        if (!brandingLoading && (!globalBranding.domain || globalBranding.domain === 'general')) {
+            // Only show if it matches the exact empty/default state, and hasn't been dismissed
+            // Actually, we'll force the prompt if it's 'general' for this redesign requirement
+            // But to avoid annoyance we'll only do it right after load if no items exist, or if they click setting
+        }
+    }, [globalBranding.domain, brandingLoading]);
+
+    // Force checking domain on mount
+    useEffect(() => {
+        if (!brandingLoading) {
+            const hasDomain = globalBranding.domain && globalBranding.domain !== 'general';
+            const isFirstTime = !sessionStorage.getItem('domain_prompted_once');
+            if (!hasDomain && isFirstTime) {
+                setShowDomainSelector(true);
+                sessionStorage.setItem('domain_prompted_once', 'true');
+            }
+        }
+    }, [brandingLoading, globalBranding.domain]);
 
     // --- Helpers: Branding Updates ---
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isLogo: boolean) => {
@@ -101,12 +135,28 @@ export default function UnifiedInvoiceBuilder() {
 
         setIsSaving(true);
         try {
+            // Serialize domain specific fields into productName so DB schema doesn't break
+            const serializedItems = items.map(i => {
+                let extra = [];
+                if (activeDomain === 'clothing') {
+                    if (i.unit && ['S','M','L','XL','XXL'].includes(i.unit)) extra.push(`Size: ${i.unit}`);
+                    if ((i as any).color) extra.push(`Color: ${(i as any).color}`);
+                } else if (activeDomain === 'furniture') {
+                    if ((i as any).material) extra.push(`Material: ${(i as any).material}`);
+                }
+                const suffix = extra.length > 0 ? ` [${extra.join(', ')}]` : '';
+                return {
+                    ...i,
+                    productName: `${i.productName || ''}${suffix}`
+                };
+            });
+
             const invoice: any = {
                 id: crypto.randomUUID(),
                 invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
                 date: new Date().toISOString().split('T')[0],
                 customer: { name: customer.name || 'Walk-in Customer', phone: customer.mobile },
-                items, subtotal, taxTotal: tax, discountTotal: discount,
+                items: serializedItems, subtotal, taxTotal: tax, discountTotal: discount,
                 grandTotal, transportCharges, notes,
                 createdAt: new Date().toISOString()
             };
@@ -122,15 +172,28 @@ export default function UnifiedInvoiceBuilder() {
     };
 
     const downloadPDF = () => {
-        // Map items to the shape expected by generateInvoicePDF
-        const mappedItems = items.map(item => ({
-            ...item,
-            name: item.productName || item.name || 'Item',
-            rate: item.unitPrice ?? item.rate ?? 0,
-            amount: item.totalAmount ?? item.amount ?? 0,
-            hsn: item.hsn || '',
-            unit: item.unit || 'pcs',
-        }));
+        // Map items to the shape expected by generateInvoicePDF and serialize domain logic
+        const mappedItems = items.map(item => {
+            let extra = [];
+            if (activeDomain === 'clothing') {
+                if (item.unit && ['S','M','L','XL','XXL'].includes(item.unit)) extra.push(`Size: ${item.unit}`);
+                if ((item as any).color) extra.push(`Color: ${(item as any).color}`);
+            } else if (activeDomain === 'furniture') {
+                if ((item as any).material) extra.push(`Material: ${(item as any).material}`);
+            }
+            const suffix = extra.length > 0 ? ` [${extra.join(', ')}]` : '';
+            const finalName = `${item.productName || item.name || 'Item'}${suffix}`;
+
+            return {
+                ...item,
+                name: finalName,
+                productName: finalName,
+                rate: item.unitPrice ?? item.rate ?? 0,
+                amount: item.totalAmount ?? item.amount ?? 0,
+                hsn: item.hsn || '',
+                unit: item.unit || 'pcs',
+            };
+        });
 
         const effectiveSettings = {
             ...globalBranding,
@@ -163,112 +226,176 @@ export default function UnifiedInvoiceBuilder() {
 
     if (brandingLoading) return <div className="p-20 text-center animate-pulse text-slate-400 font-bold">Loading Builder...</div>;
 
-    const currentStore = globalStore || { name: '', address: '', phone: '', email: '', gstin: '' };
+    const activeDomain = globalBranding.domain || 'general';
 
-    return (
-        <div className="w-full relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] rounded-xl border border-slate-200 bg-white overflow-hidden text-slate-800">
-            {/* Header / Actions Block */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 md:px-8 border-b border-slate-200 bg-slate-50/50">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowBrandingPanel(!showBrandingPanel)}
-                        className="px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all border-2 border-dashed"
-                        style={{
-                            borderColor: `${globalBranding.primaryColor}50`,
-                            color: globalBranding.primaryColor,
-                            background: `${globalBranding.primaryColor}10`,
-                        }}
-                    >
-                        <Pencil size={16} /> Select Color
-                    </button>
-                    {!globalStore?.name && user && (
-                        <div className="text-xs font-bold px-3 py-1.5 rounded-full animate-pulse" style={{ color: globalBranding.primaryColor, background: `${globalBranding.primaryColor}15` }}>
-                            Complete your business profile below
-                        </div>
+    // Renders the domain selector modal
+    const DomainSelectorModal = () => (
+        <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                    <h3 className="text-2xl font-black text-slate-800">Choose Your Business Type</h3>
+                    {sessionStorage.getItem('domain_prompted_once') && (
+                        <button onClick={() => setShowDomainSelector(false)} className="text-slate-400 hover:text-slate-700 bg-slate-50 p-2 rounded-full"><X size={20}/></button>
                     )}
                 </div>
                 
-                <div className="flex items-center gap-2">
-                    <button onClick={downloadPDF} className="px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-colors">
-                        <Download size={16} /> Download PDF
-                    </button>
-                    <button
-                        onClick={handleSaveInvoice}
-                        disabled={isSaving}
-                        className="px-5 py-2.5 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
-                        style={{ background: globalBranding.primaryColor }}
-                    >
-                        <Save size={16} /> {isSaving ? 'Saving...' : 'Save Invoice'}
-                    </button>
+                <p className="text-slate-500 mb-6 -mt-2">This tailors the invoice fields specifically for your industry.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    {[
+                        { id: 'furniture', icon: <span className="text-3xl mb-2 block">🛋️</span>, name: 'Furniture Store', desc: 'Adds HSN, Material' },
+                        { id: 'clothing', icon: <span className="text-3xl mb-2 block">👕</span>, name: 'Clothing Store', desc: 'Adds Size, Color' },
+                        { id: 'hotel', icon: <span className="text-3xl mb-2 block">🏨</span>, name: 'Hotel & Lodging', desc: 'Adds Room, Days' }
+                    ].map(d => (
+                        <button 
+                            key={d.id}
+                            onClick={async () => {
+                                await updateSettings({...globalBranding, domain: d.id as any});
+                                setShowDomainSelector(false);
+                                toast.success(`${d.name} template applied!`);
+                            }}
+                            className={`p-4 rounded-xl border-2 text-center transition-all hover:bg-slate-50 ${activeDomain === d.id ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-300'}`}
+                            style={activeDomain === d.id ? { borderColor: globalBranding.primaryColor, backgroundColor: `${globalBranding.primaryColor}10` } : {}}
+                        >
+                            {d.icon}
+                            <div className="font-bold text-slate-800 text-sm mb-1">{d.name}</div>
+                            <div className="text-[10px] text-slate-500">{d.desc}</div>
+                        </button>
+                    ))}
                 </div>
+                
+                <button onClick={() => setShowDomainSelector(false)} className="w-full py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold transition-colors">
+                    Cancel / Skip
+                </button>
             </div>
+        </div>
+    );
 
+    return (
+        <div className="w-full relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] rounded-xl border border-slate-200 bg-white text-slate-800">
+            {showDomainSelector && <DomainSelectorModal />}
             {/* WYSIWYG Editable Invoice Sheet */}
             <div className="p-4 md:p-8 xl:p-12" style={{ maxWidth: '850px', margin: '0 auto' }}>
                 
-                {/* INVOICE TOP: BRANDING & CUSTOMER */}
-                <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-10">
-                    <div className="flex-1 min-w-[200px]">
-                        {globalBranding.logo ? (
-                            <img src={globalBranding.logo} alt="Logo" className="max-h-20 mb-3 object-contain" />
-                        ) : (
-                            <div className="h-16 w-32 bg-slate-100 border border-slate-200 rounded-lg mb-3 flex items-center justify-center text-xs text-slate-400">YOUR LOGO</div>
-                        )}
-                        <input className="text-2xl md:text-3xl font-black text-slate-900 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-300" 
-                            placeholder="Business Name"
-                            value={currentStore.name} onChange={e => handleUpdateStore('name', e.target.value)} />
-                        <textarea className="text-sm font-medium text-slate-500 border-none px-0 outline-none w-full bg-transparent resize-none overflow-hidden h-8 placeholder:text-slate-300 mt-1" 
-                            placeholder="Business Address"
-                            value={currentStore.address} onChange={e => handleUpdateStore('address', e.target.value)} />
-                        
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
-                            <input className="text-sm font-medium text-slate-500 border-none px-0 outline-none w-32 bg-transparent placeholder:text-slate-300" 
-                            placeholder="Phone" value={currentStore.phone} onChange={e => handleUpdateStore('phone', e.target.value)} />
-                            <input className="text-sm font-medium text-slate-500 border-none px-0 outline-none w-48 bg-transparent placeholder:text-slate-300" 
-                            placeholder="Email" value={currentStore.email} onChange={e => handleUpdateStore('email', e.target.value)} />
-                            <input className="text-sm font-bold text-indigo-500 border-none px-0 outline-none w-48 bg-transparent placeholder:text-indigo-200" 
-                            placeholder="GSTIN (Optional)" value={currentStore.gstin} onChange={e => handleUpdateStore('gstin', e.target.value)} />
-                        </div>
-                    </div>
+                {/* INVOICE TOP: BRANDING & CUSTOMER (Redesigned 2-Column) */}
+                <div className="flex flex-col md:flex-row justify-between mb-8 overflow-hidden rounded-t-2xl shadow-sm border border-slate-100">
                     
-                    <div className="md:text-right w-full md:w-auto">
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-200 uppercase tracking-tighter mb-4" style={{ color: `${globalBranding.primaryColor || '#6366f1'}20` }}>
-                            INVOICE
-                        </h2>
-                        
-                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-left transition-colors hover:border-slate-300">
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">BILL TO</div>
-                            <input className="text-lg font-bold text-slate-800 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-300 mb-1" 
+                    {/* Left Column: Business Info & Bill To */}
+                    <div className="flex-1 bg-white p-6 md:p-8 flex flex-col justify-between">
+                        <div>
+                            <div className="mb-4 relative inline-block group w-fit h-fit">
+                                <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" onChange={(e) => handleImageUpload(e, true)} />
+                                {globalBranding.logo ? (
+                                    <img src={globalBranding.logo} alt="Logo" className="max-h-16 object-contain group-hover:opacity-80 transition-opacity" />
+                                ) : (
+                                    <div className="h-12 w-32 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-[10px] text-slate-400 font-bold group-hover:border-indigo-300 transition-colors">
+                                        <Camera size={14} className="mb-1 text-slate-300" /> ADD LOGO
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex flex-col gap-1">
+                                <input className="text-xl md:text-2xl font-black text-slate-900 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-300 focus:ring-0" 
+                                    placeholder="Business Name"
+                                    value={currentStore.name} onChange={e => handleUpdateStore('name', e.target.value)} />
+                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                    <input className="border-none px-0 outline-none w-24 bg-transparent placeholder:text-slate-300 focus:ring-0" 
+                                        placeholder="Phone" value={currentStore.phone} onChange={e => handleUpdateStore('phone', e.target.value)} />
+                                    <span className="text-slate-300">•</span>
+                                    <input className="border-none px-0 outline-none flex-1 bg-transparent placeholder:text-slate-300 focus:ring-0" 
+                                        placeholder="Email" value={currentStore.email} onChange={e => handleUpdateStore('email', e.target.value)} />
+                                </div>
+                                <textarea className="text-sm text-slate-500 border-none px-0 outline-none w-full bg-transparent resize-none overflow-hidden h-10 placeholder:text-slate-300 focus:ring-0 mt-1" 
+                                    placeholder="Business Address"
+                                    value={currentStore.address} onChange={e => handleUpdateStore('address', e.target.value)} />
+                                <input className="text-xs font-bold text-slate-400 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-300 focus:ring-0" 
+                                    placeholder="GSTIN (Optional)" value={currentStore.gstin} onChange={e => handleUpdateStore('gstin', e.target.value)} />
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-slate-100">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Invoice To.</label>
+                            <input className="text-lg font-bold text-slate-800 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-300 focus:ring-0 mb-1" 
                                 placeholder="Customer Name"
                                 value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} />
-                            <input className="text-sm font-medium text-slate-500 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-300" 
-                                placeholder="Customer Mobile"
+                            <input className="text-sm font-medium text-slate-500 border-none px-0 outline-none w-full bg-transparent placeholder:text-slate-400 focus:ring-0" 
+                                placeholder="Customer Phone/Email"
                                 value={customer.mobile} onChange={e => setCustomer({...customer, mobile: e.target.value})} />
+                        </div>
+                    </div>
+
+                    {/* Right Column: Dark Title Block */}
+                    <div className="w-full md:w-[40%] text-white p-6 md:p-8 flex flex-col justify-between" style={{ backgroundColor: '#1e1e1e' }}>
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-8" style={{ color: globalBranding.primaryColor }}>Invoice</h1>
+                            
+                            <div className="flex flex-col gap-4">
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-xs font-medium text-white/50 uppercase tracking-wider">Invoice No.</span>
+                                    <span className="font-mono text-sm font-semibold text-white/90">Auto-generated</span>
+                                </div>
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-xs font-medium text-white/50 uppercase tracking-wider">Date.</span>
+                                    <span className="font-mono text-sm font-semibold text-white/90">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                                <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                    <span className="text-xs font-medium text-white/50 uppercase tracking-wider">Due Date.</span>
+                                    <span className="font-mono text-sm font-semibold text-white/90">On Receipt</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex justify-end">
+                            <div className="flex items-center gap-2 text-xs font-medium text-white/40 cursor-pointer hover:text-white/80 transition-colors bg-white/5 py-1.5 px-3 rounded-full border border-white/10" onClick={() => setShowDomainSelector(true)}>
+                                <Pencil size={12} />
+                                <span>Domain: {activeDomain.charAt(0).toUpperCase() + activeDomain.slice(1)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* ITEMS TABLE */}
-                <div className="rounded-xl border border-slate-200 overflow-hidden mb-6">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[500px]">
+                <div className="mb-6">
+                    <div className="overflow-x-auto pb-4">
+                        <table className="w-full text-left border-collapse min-w-[600px] border-separate border-spacing-y-2">
                             <thead>
-                                <tr className="bg-slate-50">
-                                    <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-[50%]">Item & Description</th>
-                                    <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-[15%]">Qty</th>
-                                    <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-[15%]">Rate (₹)</th>
-                                    <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-[15%]">Amount</th>
-                                    <th className="py-3 px-4 w-[5%]"></th>
+                                <tr className="text-white text-xs font-bold uppercase tracking-wider" style={{ backgroundColor: '#1e1e1e', borderRadius: '999px' }}>
+                                    <th className="py-3 px-6 rounded-l-full w-[35%]">
+                                        {activeDomain === 'hotel' ? 'Service Description' : 'Item Description'}
+                                    </th>
+                                    
+                                    {/* Domain Specific Headers */}
+                                    {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
+                                        <th className="py-3 px-2 w-[10%]">HSN</th>
+                                    )}
+                                    {activeDomain === 'clothing' && (
+                                        <>
+                                            <th className="py-3 px-2 w-[8%] text-center">Size</th>
+                                            <th className="py-3 px-2 w-[10%]">Color</th>
+                                        </>
+                                    )}
+                                    {activeDomain === 'furniture' && (
+                                        <th className="py-3 px-2 w-[15%]">Material</th>
+                                    )}
+
+                                    <th className="py-3 px-4 text-center w-[10%]">
+                                        {activeDomain === 'hotel' ? 'Days/Qty' : 'Qty'}
+                                    </th>
+                                    <th className="py-3 px-4 text-right w-[15%]">
+                                        {activeDomain === 'hotel' ? 'Rate (₹)' : 'Price (₹)'}
+                                    </th>
+                                    <th className="py-3 px-6 text-right rounded-r-full w-[15%]">Total</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody>
                                 {items.map((item, idx) => (
-                                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="p-0 align-top">
+                                    <tr key={item.id} className="group transition-colors relative" 
+                                        style={{ backgroundColor: idx % 2 === 0 ? '#f8fafc' : `${globalBranding.primaryColor}10` }}>
+                                        <td className="p-0 align-top rounded-l-full overflow-hidden">
                                             <input 
-                                                className="w-full h-full min-h-[50px] px-4 py-3 bg-transparent border-none outline-none font-bold text-slate-800 placeholder:font-normal placeholder:text-slate-300"
-                                                placeholder="Service description..."
-                                                value={item.productName}
+                                                className="w-full h-full min-h-[48px] px-6 py-2 bg-transparent border-none outline-none font-bold text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:bg-white/50"
+                                                placeholder={activeDomain === 'hotel' ? "e.g., Deluxe Room (Dec 12-14)" : "Item name..."}
+                                                value={item.productName || ''}
                                                 onChange={e => {
                                                     const newArr = [...items];
                                                     newArr[idx].productName = e.target.value;
@@ -276,10 +403,75 @@ export default function UnifiedInvoiceBuilder() {
                                                 }}
                                             />
                                         </td>
+
+                                        {/* Domain Specific Inputs */}
+                                        {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
+                                            <td className="p-0 align-top">
+                                                <input 
+                                                    className="w-full h-full min-h-[48px] px-2 py-2 bg-transparent border-none outline-none text-sm text-slate-600 focus:bg-white/50"
+                                                    placeholder="HSN"
+                                                    value={item.hsn || ''}
+                                                    onChange={e => {
+                                                        const newArr = [...items];
+                                                        newArr[idx].hsn = e.target.value;
+                                                        setItems(newArr);
+                                                    }}
+                                                />
+                                            </td>
+                                        )}
+                                        {activeDomain === 'clothing' && (
+                                            <>
+                                                <td className="p-0 align-top">
+                                                    <select 
+                                                        className="w-full h-full min-h-[48px] px-2 py-2 bg-transparent border-none outline-none text-sm font-bold text-center text-slate-700 cursor-pointer focus:bg-white/50 appearance-none"
+                                                        value={item.unit || ''}
+                                                        onChange={e => {
+                                                            const newArr = [...items];
+                                                            newArr[idx].unit = e.target.value;
+                                                            setItems(newArr);
+                                                        }}
+                                                    >
+                                                        <option value="" disabled>Size</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                    </select>
+                                                </td>
+                                                <td className="p-0 align-top">
+                                                    <input 
+                                                        className="w-full h-full min-h-[48px] px-2 py-2 bg-transparent border-none outline-none text-sm text-slate-600 focus:bg-white/50"
+                                                        placeholder="Color"
+                                                        value={(item as any).color || ''}
+                                                        onChange={e => {
+                                                            const newArr = [...items];
+                                                            (newArr[idx] as any).color = e.target.value;
+                                                            setItems(newArr);
+                                                        }}
+                                                    />
+                                                </td>
+                                            </>
+                                        )}
+                                        {activeDomain === 'furniture' && (
+                                            <td className="p-0 align-top">
+                                                <input 
+                                                    className="w-full h-full min-h-[48px] px-2 py-2 bg-transparent border-none outline-none text-sm text-slate-600 focus:bg-white/50"
+                                                    placeholder="Material (e.g., Teak)"
+                                                    value={(item as any).material || ''}
+                                                    onChange={e => {
+                                                        const newArr = [...items];
+                                                        (newArr[idx] as any).material = e.target.value;
+                                                        setItems(newArr);
+                                                    }}
+                                                />
+                                            </td>
+                                        )}
+
                                         <td className="p-0 align-top">
                                             <input 
                                                 type="number"
-                                                className="w-full h-full min-h-[50px] px-4 py-3 text-right bg-transparent border-none outline-none font-bold text-slate-700"
+                                                className="w-full h-full min-h-[48px] px-4 py-2 text-center bg-transparent border-none outline-none font-bold text-slate-700 focus:bg-white/50"
                                                 value={item.quantity === 0 ? '' : item.quantity}
                                                 onChange={e => {
                                                     const newArr = [...items];
@@ -292,7 +484,7 @@ export default function UnifiedInvoiceBuilder() {
                                         <td className="p-0 align-top">
                                             <input 
                                                 type="number"
-                                                className="w-full h-full min-h-[50px] px-4 py-3 text-right bg-transparent border-none outline-none font-bold text-slate-700"
+                                                className="w-full h-full min-h-[48px] px-4 py-2 text-right bg-transparent border-none outline-none font-bold text-slate-700 focus:bg-white/50"
                                                 value={item.unitPrice === 0 ? '' : item.unitPrice}
                                                 onChange={e => {
                                                     const newArr = [...items];
@@ -302,13 +494,12 @@ export default function UnifiedInvoiceBuilder() {
                                                 }}
                                             />
                                         </td>
-                                        <td className="px-4 py-3 text-right font-black text-slate-900 border-l border-slate-50 bg-slate-50/50">
+                                        <td className="px-6 py-2 text-right font-black text-slate-900 rounded-r-full">
                                             {item.totalAmount.toLocaleString('en-IN')}
-                                        </td>
-                                        <td className="px-2 py-3">
                                             <button 
                                                 onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                                                className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                className="absolute -right-8 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-2"
+                                                title="Remove Item"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -322,73 +513,134 @@ export default function UnifiedInvoiceBuilder() {
                 
                 <button 
                     onClick={() => setItems([...items, { id: crypto.randomUUID(), productName: '', quantity: 1, unitPrice: 0, taxRate: 18, totalAmount: 0 }])}
-                    className="flex w-fit items-center gap-2 px-4 py-2 border border-dashed border-slate-300 text-slate-500 rounded-lg hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-bold mb-10"
+                    className="flex w-fit items-center gap-2 px-5 py-2.5 border-2 border-dashed border-slate-200 text-slate-500 rounded-full hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-colors text-sm font-bold mb-10"
                 >
                     <Plus size={16} /> Add Line Item
                 </button>
 
                 {/* FOOTER TOTALS & SIGNATURE */}
-                <div className="flex flex-col md:flex-row justify-between gap-8 mt-4">
+                <div className="flex flex-col md:flex-row justify-between gap-12 mt-8 pt-8 border-t border-slate-100">
                     
-                    {/* Notes & Signature */}
+                    {/* Left: Terms & Signature */}
                     <div className="flex-1 w-full flex flex-col justify-between">
                         <div className="mb-8">
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">NOTES / TERMS</div>
+                            <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-3">TERMS & CONDITION.</div>
                             <textarea 
-                                className="w-full max-w-sm text-sm p-4 bg-slate-50 border border-slate-100 rounded-xl resize-none outline-none focus:border-indigo-300 transition-colors text-slate-600"
-                                placeholder="..."
+                                className="w-full max-w-sm text-sm text-slate-500 bg-transparent border-none resize-none outline-none focus:ring-0 p-0 leading-relaxed"
+                                placeholder="Enter terms and conditions here..."
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
-                                rows={3}
+                                rows={4}
                             />
                         </div>
                         
-                        <div>
+                        <div className="flex flex-col items-end w-fit">
                             {globalBranding.signatureImage ? (
-                                <div className="mb-2 relative w-fit">
-                                    <img src={globalBranding.signatureImage} alt="Signature" className="h-16 w-auto object-contain border-b border-dashed border-slate-300 pb-1" />
-                                    <button onClick={() => {
-                                        updateSettings({...globalBranding, signatureImage: ''});
-                                    }} className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow border border-slate-100 text-red-500"><X size={12}/></button>
+                                <div className="mb-2 relative w-fit group cursor-pointer">
+                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" onChange={(e) => handleImageUpload(e, false)} />
+                                    <img src={globalBranding.signatureImage} alt="Signature" className="h-16 w-auto object-contain pb-1 group-hover:opacity-80 transition-opacity" />
+                                    <button onClick={(e) => { e.stopPropagation(); updateSettings({...globalBranding, signatureImage: ''}); }} className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm border border-slate-100 text-red-500 z-20 hover:bg-slate-50"><X size={12}/></button>
                                 </div>
                             ) : (
-                                <div className="h-16 w-40 border-b-2 border-slate-200 mb-2" />
+                                <div className="h-16 w-40 mb-2 flex items-center justify-center cursor-pointer group relative overflow-hidden bg-slate-50/50 hover:bg-slate-50 rounded-lg transition-colors border border-dashed border-slate-200">
+                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" onChange={(e) => handleImageUpload(e, false)} />
+                                    <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 flex items-center gap-1 uppercase tracking-wider"><Pencil size={10}/> Add Signature</span>
+                                </div>
                             )}
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Authorized Signatory</div>
+                            <div className="w-48 border-t border-slate-200 pt-2 text-right">
+                                <span className="text-xs font-bold text-slate-800">Authorized Signatory</span>
+                                <div className="text-[10px] text-slate-500">{currentStore.name}</div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Totals Box */}
-                    <div className="w-full md:w-72 bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                        <div className="flex justify-between items-center mb-3 text-sm font-bold text-slate-500">
-                            <span>Subtotal</span>
-                            <span>{subtotal.toLocaleString('en-IN')}</span>
+                    {/* Right: Totals Box */}
+                    <div className="w-full md:w-80">
+                        <div className="flex justify-between items-center mb-4 text-sm font-semibold text-slate-600">
+                            <span>Sub-Total:</span>
+                            <span className="font-bold text-slate-800">₹{subtotal.toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="flex justify-between items-center mb-3 text-sm font-bold text-slate-500">
-                            <span>Tax (18% Default)</span>
-                            <span>{Math.round(tax).toLocaleString('en-IN')}</span>
+                        <div className="flex justify-between items-center mb-4 text-sm font-semibold text-slate-600">
+                            <span>Tax Vat (18%):</span>
+                            <span className="font-bold text-slate-800">₹{Math.round(tax).toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="flex justify-between items-center mb-3 text-sm font-bold text-slate-500 group relative">
-                            <span className="cursor-pointer border-b border-dashed border-slate-300">Transport (+)</span>
-                            <div className="flex items-center gap-1">
+                        <div className="flex justify-between items-center mb-4 text-sm font-semibold text-slate-600 group relative">
+                            <span className="cursor-pointer border-b border-dashed border-slate-300">Transport:</span>
+                            <div className="flex items-center gap-1 font-bold text-slate-800">
                                 <span>₹</span>
-                                <input type="number" className="w-16 bg-transparent text-right outline-none text-slate-800" style={{ borderBottom: `1px solid ${globalBranding.primaryColor}40` }} value={transportCharges || ''} onChange={e => setTransportCharges(Number(e.target.value))} />
+                                <input type="number" className="w-16 bg-transparent text-right outline-none" value={transportCharges || ''} onChange={e => setTransportCharges(Number(e.target.value))} />
                             </div>
                         </div>
-                        <div className="flex justify-between items-center mb-6 text-sm font-bold text-slate-500 group relative">
-                            <span className="cursor-pointer border-b border-dashed border-slate-300">Discount (-)</span>
-                            <div className="flex items-center gap-1">
-                                <span>₹</span>
-                                <input type="number" className="w-16 bg-transparent text-right outline-none text-slate-800" style={{ borderBottom: `1px solid ${globalBranding.primaryColor}40` }} value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} />
+                        <div className="flex justify-between items-center mb-6 text-sm font-semibold text-slate-600 group relative">
+                            <span className="cursor-pointer border-b border-dashed border-slate-300">Discount:</span>
+                            <div className="flex items-center gap-1 font-bold text-slate-800">
+                                <span>-₹</span>
+                                <input type="number" className="w-16 bg-transparent text-right outline-none" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} />
                             </div>
                         </div>
                         
-                        <div className="pt-4 border-t-2 border-slate-200">
-                            <div className="flex justify-between items-end mb-1">
-                                <span className="text-sm font-black text-slate-800">TOTAL</span>
-                                <span className="text-2xl font-black" style={{ color: globalBranding.primaryColor }}>₹{Math.round(grandTotal).toLocaleString('en-IN')}</span>
-                            </div>
+                        <div className="pt-4 flex justify-between items-center border-t border-slate-800">
+                            <span className="text-lg font-black text-slate-800">Total:</span>
+                            <span className="text-2xl font-black text-slate-900">₹{Math.round(grandTotal).toLocaleString('en-IN')}</span>
                         </div>
+                    </div>
+                </div>
+
+                {/* BUSINESS FOOTER BAR */}
+                <div className="mt-12 pt-6 border-t-[6px] flex flex-wrap justify-between items-center text-xs font-semibold text-white p-6 rounded-b-2xl shadow-inner gap-4" 
+                     style={{ backgroundColor: '#1e1e1e', borderColor: `${globalBranding.primaryColor}` }}>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-white/10">📞</div>
+                            <span>{currentStore.phone || '+91 000 000 0000'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-white/10">✉️</div>
+                            <span>{currentStore.email || 'yourmail@gmail.com'}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-white/10">📍</div>
+                        <span>{currentStore.address ? currentStore.address.substring(0, 40) + '...' : 'Your Business Address Here'}</span>
+                    </div>
+                </div>
+                
+                {/* BOTTOM ACTION BAR (Moved from Top) */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-8 mt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <button
+                            onClick={() => setShowBrandingPanel(!showBrandingPanel)}
+                            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all border-2 border-dashed"
+                            style={{ borderColor: `${globalBranding.primaryColor}50`, color: globalBranding.primaryColor, background: `${globalBranding.primaryColor}08` }}
+                        >
+                            <span className="w-4 h-4 rounded-full mr-1 shadow-sm" style={{ background: globalBranding.primaryColor }} />
+                            Select Theme Color
+                        </button>
+                    </div>
+                    
+                    <div className="flex items-center justify-end gap-3 w-full sm:w-auto">
+                        <div className="relative" onMouseEnter={() => !isDownloadReady && setShowDownloadTooltip(true)} onMouseLeave={() => setShowDownloadTooltip(false)}>
+                            <button 
+                                onClick={downloadPDF} 
+                                disabled={!isDownloadReady}
+                                className={`px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${!isDownloadReady ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-800 shadow-md hover:shadow-lg'}`}
+                            >
+                                <Download size={16} /> Download
+                            </button>
+                            {showDownloadTooltip && !isDownloadReady && (
+                                <div className="absolute bottom-full mb-2 right-0 w-64 p-3 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl animate-in slide-in-from-bottom-2 z-50">
+                                    Missing required fields: Add your business name, customer name, and at least 1 priced item to download.
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={handleSaveInvoice}
+                            disabled={isSaving}
+                            className="px-6 py-3 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+                            style={{ background: globalBranding.primaryColor }}
+                        >
+                            <Save size={16} /> {isSaving ? 'Saving...' : 'Save & Share'}
+                        </button>
                     </div>
                 </div>
 
@@ -405,52 +657,8 @@ export default function UnifiedInvoiceBuilder() {
                         
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Upload Logo</label>
-                                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center bg-slate-50 cursor-pointer relative overflow-hidden transition-colors" style={{}} onMouseEnter={e => (e.currentTarget.style.borderColor = globalBranding.primaryColor)} onMouseLeave={e => (e.currentTarget.style.borderColor = '')}>
-                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={(e) => handleImageUpload(e, true)} />
-                                    {globalBranding.logo ? (
-                                        <img src={globalBranding.logo} className="h-16 object-contain pointer-events-none" />
-                                    ) : (
-                                        <>
-                                            <Camera size={24} className="text-slate-400 mb-2" />
-                                            <span className="text-sm font-medium text-slate-500">Tap to upload your logo</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Upload Signature</label>
-                                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center bg-slate-50 cursor-pointer relative overflow-hidden transition-colors" onMouseEnter={e => (e.currentTarget.style.borderColor = globalBranding.primaryColor)} onMouseLeave={e => (e.currentTarget.style.borderColor = '')}>
-                                    <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={(e) => handleImageUpload(e, false)} />
-                                    {globalBranding.signatureImage ? (
-                                        <img src={globalBranding.signatureImage} className="h-16 object-contain pointer-events-none" />
-                                    ) : (
-                                        <>
-                                            <Pencil size={24} className="text-slate-400 mb-2" />
-                                            <span className="text-sm font-medium text-slate-500">Tap to upload signature</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
+                                <div className="flex gap-4 flex-wrap">
 
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">GSTIN Number</label>
-                                <input 
-                                    type="text"
-                                    placeholder="e.g. 10ABCDE1234F1Z5"
-                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono text-sm uppercase transition-colors"
-                                    style={{ borderColor: '' }}
-                                    onFocus={e => (e.currentTarget.style.borderColor = globalBranding.primaryColor)}
-                                    onBlur={e => (e.currentTarget.style.borderColor = '')}
-                                    value={currentStore.gstin}
-                                    onChange={e => handleUpdateStore('gstin', e.target.value)}
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-bold text-slate-600 mb-2">Theme Color</label>
-                                <div className="flex gap-3">
                                     {['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#0f172a'].map(c => (
                                         <button key={c} onClick={() => { updateSettings({...globalBranding, primaryColor: c}); }} className={`w-8 h-8 rounded-full shadow-sm ring-offset-2 border border-slate-200`} style={{ background: c, outline: globalBranding.primaryColor === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }} />
                                     ))}

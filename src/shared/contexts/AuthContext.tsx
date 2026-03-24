@@ -216,16 +216,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (draftRaw) {
           const draft = JSON.parse(draftRaw);
           if (draft && (draft.items?.length > 0 || draft.customerId)) {
-            // Ensure active_store_id is present before saving
             const sKey = getUserKey('active_store_id');
             const storeId = sKey ? safeGet(sKey) : null;
             if (storeId) {
-              // saveInvoice will use active_store_id via storage helpers
               await saveInvoice(draft);
               if (dKey) safeRemove(dKey);
             }
           }
         }
+
+        // Guest Branding Migration Check (Conflict Resolution)
+        const guestBrandingRaw = window.sessionStorage.getItem('guest_demo_branding_settings');
+        const guestStoreRaw = window.sessionStorage.getItem('guest_demo_store_info');
+        
+        if (guestBrandingRaw || guestStoreRaw) {
+            window.dispatchEvent(new CustomEvent('GUEST_LOGIN_CONFLICT', {
+                detail: {
+                    guestBranding: guestBrandingRaw ? JSON.parse(guestBrandingRaw) : null,
+                    guestStore: guestStoreRaw ? JSON.parse(guestStoreRaw) : null
+                }
+            }));
+        }
+
       } catch (e) {
         console.error('Invoice draft migration failed', e);
       }

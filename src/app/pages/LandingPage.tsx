@@ -161,7 +161,7 @@ export default function LandingPage() {
             </header>
 
             {/* ─── Interactive Demo / Experience ─── */}
-            <section id="experience" style={{ padding: '80px max(24px, calc((100vw - 1100px)/2)) 120px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
+            <section id="experience" style={{ padding: '100px max(24px, calc((100vw - 1100px)/2)) 120px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
                 <div style={{ textAlign: 'center', marginBottom: 60 }}>
                     <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
                         Experience the Speed.
