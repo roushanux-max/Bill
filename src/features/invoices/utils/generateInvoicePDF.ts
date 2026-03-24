@@ -366,9 +366,10 @@ export function generateInvoicePDF(
     if (invoice.taxTotal > 0 || (calculatedGrandTotal > (amountTotal + (invoice.transportCharges || 0) - (invoice.discountTotal || 0)))) {
         if (invoice.items && invoice.items.length > 0) {
             if (isSameState) {
-                drawSummaryRow('GST Total', Math.round(cgstTotal + sgstTotal).toLocaleString('en-IN'));
+                drawSummaryRow('CGST', Math.round(cgstTotal).toLocaleString('en-IN'));
+                drawSummaryRow('SGST', Math.round(sgstTotal).toLocaleString('en-IN'));
             } else {
-                drawSummaryRow('IGST Total', Math.round(igstTotal).toLocaleString('en-IN'));
+                drawSummaryRow('IGST', Math.round(igstTotal).toLocaleString('en-IN'));
             }
         } else {
             // Legacy Fallback: Show the difference as GST

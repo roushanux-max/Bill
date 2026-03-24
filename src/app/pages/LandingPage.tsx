@@ -178,13 +178,13 @@ export default function LandingPage() {
                     </div>
                 </div>
 
-                <div className="max-w-[1000px] mx-auto px-2">
+                <div className="max-w-[1000px] mx-auto px-2 mt-12 mb-12">
                     <UnifiedInvoiceBuilder />
                 </div>
             </section>
 
             {/* ─── Stats ─── */}
-            <section style={{ padding: '0 max(24px, calc((100vw - 1100px)/2)) 80px', position: 'relative', zIndex: 2 }}>
+            <section style={{ padding: '0 max(24px, calc((100vw - 1100px)/2)) 80px', marginTop: '48px', marginBottom: '48px', position: 'relative', zIndex: 2 }}>
                 <AnimatedSection>
                     <div style={{
                         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -213,7 +213,7 @@ export default function LandingPage() {
                     <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1.5px', marginBottom: 24 }}>
                         Engineered for modern business.
                     </h2>
-                    <p style={{ fontSize: 20, color: '#475569', maxWidth: 640, margin: '0 auto' }}>
+                    <p style={{ fontSize: 20, color: '#475569', maxWidth: 640, margin: '0 auto', lineHeight: 1.6 }}>
                         Bill provides a powerful suite of tools to manage your invoicing, customers, and inventory with zero friction.
                     </p>
                 </div>

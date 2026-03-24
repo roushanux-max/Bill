@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Shield, Plus, Trash2, Camera, Pencil, Save, X, Palette } from 'lucide-react';
+import { Download, Shield, Plus, Trash2, Camera, Pencil, Save, X, Palette, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
 import { useAuth } from '@/shared/contexts/AuthContext';
@@ -54,6 +54,8 @@ export default function UnifiedInvoiceBuilder() {
     const [isSaving, setIsSaving] = useState(false);
     const [showDomainSelector, setShowDomainSelector] = useState(false);
     const [showDownloadTooltip, setShowDownloadTooltip] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
     
     // --- Derived ---
     const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
@@ -67,7 +69,11 @@ export default function UnifiedInvoiceBuilder() {
         (globalStore?.name || currentStore.name)?.trim() &&
         customer.name?.trim() &&
         items.length > 0 &&
-        items.every(i => i.productName?.trim() && i.quantity > 0 && i.unitPrice > 0)
+        items.every(i => {
+            const basic = i.productName?.trim() && i.quantity > 0 && i.unitPrice > 0;
+            const hsnRequired = (activeDomain === 'furniture' || activeDomain === 'clothing') ? Boolean(i.hsn?.trim()) : true;
+            return basic && hsnRequired;
+        })
     );
 
     // --- Sync State ---
@@ -206,6 +212,62 @@ export default function UnifiedInvoiceBuilder() {
         };
         const doc = generateInvoicePDF(invoiceObj, storeForPDF, effectiveSettings);
         doc.save(getInvoiceFilename(invoiceObj));
+    };
+
+    const handlePreviewPDF = () => {
+        const mappedItems = items.map(item => {
+            let extra = [];
+            if (activeDomain === 'clothing') {
+                if (item.unit && ['S','M','L','XL','XXL'].includes(item.unit)) extra.push(`Size: ${item.unit}`);
+                if ((item as any).color) extra.push(`Color: ${(item as any).color}`);
+            } else if (activeDomain === 'furniture') {
+                if ((item as any).material) extra.push(`Material: ${(item as any).material}`);
+            }
+            const suffix = extra.length > 0 ? ` [${extra.join(', ')}]` : '';
+            const finalName = `${item.productName || item.name || 'Item'}${suffix}`;
+
+            return {
+                ...item,
+                name: finalName,
+                productName: finalName,
+                rate: item.unitPrice ?? item.rate ?? 0,
+                amount: item.totalAmount ?? item.amount ?? 0,
+                hsn: item.hsn || '',
+                unit: item.unit || 'pcs',
+            };
+        });
+
+        const effectiveSettings = {
+            ...globalBranding,
+            showSignature: !!globalBranding.signatureImage,
+        };
+
+        const invoiceObj: any = {
+            invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+            date: new Date().toISOString().split('T')[0],
+            customer: { name: customer.name || 'Walk-in Customer', phone: customer.mobile },
+            items: mappedItems,
+            subtotal,
+            taxTotal: tax,
+            discountTotal: discount,
+            grandTotal,
+            transportCharges,
+            notes,
+        };
+        const storeForPDF: any = {
+            name: currentStore.name || 'Your Business',
+            address: currentStore.address || '',
+            phone: currentStore.phone || '',
+            email: currentStore.email || '',
+            gstin: currentStore.gstin || '',
+            state: (currentStore as any).state || 'Bihar',
+        };
+        const doc = generateInvoicePDF(invoiceObj, storeForPDF, effectiveSettings);
+        
+        const pdfBlob = doc.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        setPdfPreviewUrl(url);
+        setShowPreviewModal(true);
     };
 
     if (brandingLoading) return <div className="p-20 text-center animate-pulse text-slate-400 font-bold">Loading Builder...</div>;
@@ -386,7 +448,7 @@ export default function UnifiedInvoiceBuilder() {
                                                 <td className="p-0 align-top">
                                                     <input 
                                                         className="w-full h-full min-h-[48px] px-2 py-2 bg-transparent border-none outline-none text-sm text-slate-600"
-                                                        placeholder="HSN"
+                                                        placeholder="HSN Code (Required)"
                                                         value={item.hsn || ''}
                                                         onChange={e => {
                                                             const newArr = [...items];
@@ -503,10 +565,25 @@ export default function UnifiedInvoiceBuilder() {
                                 <span>Sub-Total:</span>
                                 <span className="font-bold text-slate-800">₹{subtotal.toLocaleString('en-IN')}</span>
                             </div>
-                            <div className="flex justify-between items-center mb-3 text-sm font-semibold text-slate-500">
-                                <span className="border-b border-dashed border-slate-300">Tax VAT/GST:</span>
-                                <span className="font-bold text-slate-800">₹{Math.round(tax).toLocaleString('en-IN')}</span>
-                            </div>
+                            
+                            {(activeDomain === 'furniture' || activeDomain === 'clothing') && tax > 0 ? (
+                                <>
+                                    <div className="flex justify-between items-center mb-3 text-sm font-semibold text-slate-500">
+                                        <span className="border-b border-dashed border-slate-300">CGST</span>
+                                        <span className="font-bold text-slate-800">₹{Math.round(tax / 2).toLocaleString('en-IN')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-3 text-sm font-semibold text-slate-500">
+                                        <span className="border-b border-dashed border-slate-300">SGST</span>
+                                        <span className="font-bold text-slate-800">₹{Math.round(tax / 2).toLocaleString('en-IN')}</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex justify-between items-center mb-3 text-sm font-semibold text-slate-500">
+                                    <span className="border-b border-dashed border-slate-300">Tax VAT/GST:</span>
+                                    <span className="font-bold text-slate-800">₹{Math.round(tax).toLocaleString('en-IN')}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center mb-3 text-sm font-semibold text-slate-500">
                                 <span className="border-b border-dashed border-slate-300 cursor-pointer">Transport:</span>
                                 <div className="flex items-center gap-1 font-bold text-slate-800">
@@ -581,38 +658,48 @@ export default function UnifiedInvoiceBuilder() {
             </div>
 
             {/* ACTION BUTTONS (Moved Below Invoice) */}
-            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
-                <button
-                    onClick={() => setShowBrandingPanel(!showBrandingPanel)}
-                    className="px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all border-2 border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm text-slate-700 w-full sm:w-auto"
-                >
-                    <Palette size={18} className="text-slate-400" />
-                    Select Brand Color
-                </button>
-                
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="relative w-full sm:w-auto" onMouseEnter={() => !isDownloadReady && setShowDownloadTooltip(true)} onMouseLeave={() => setShowDownloadTooltip(false)}>
-                        <button 
-                            onClick={downloadPDF} 
-                            disabled={!isDownloadReady}
-                            className={`w-full sm:w-auto px-8 py-3.5 bg-slate-900 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${!isDownloadReady ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800 hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl'}`}
-                        >
-                            <Download size={18} /> Download .PDF
-                        </button>
-                        {showDownloadTooltip && !isDownloadReady && (
-                            <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:right-0 sm:left-auto w-64 p-3 bg-red-600 text-white text-xs font-bold rounded-xl shadow-2xl animate-in slide-in-from-bottom-2 z-50 text-center">
-                                Complete invoice before downloading (Missing names or items)
-                            </div>
-                        )}
-                    </div>
+            <div className="w-full flex flex-col items-center justify-center gap-4 mt-8 bg-white p-6 sm:p-4 rounded-2xl border border-slate-200 shadow-sm relative z-20">
+                <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
                     <button
-                        onClick={handleSaveInvoice}
-                        disabled={isSaving}
-                        className="w-full sm:w-auto px-8 py-3.5 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl disabled:opacity-50"
-                        style={{ background: brandColor }}
+                        onClick={() => setShowBrandingPanel(!showBrandingPanel)}
+                        className="px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all border-2 border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm text-slate-700 w-full sm:w-auto"
                     >
-                        <Save size={18} /> {isSaving ? 'Saving...' : 'Save & Close'}
+                        <Palette size={18} className="text-slate-400" />
+                        Select Brand Color
                     </button>
+                    
+                    <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                        <button 
+                            onClick={handlePreviewPDF}
+                            disabled={!isDownloadReady}
+                            className={`px-8 py-3.5 bg-slate-100 text-slate-800 border-2 border-slate-200 hover:border-slate-300 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all min-w-max ${!isDownloadReady ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white shadow-sm hover:shadow'}`}
+                        >
+                            <Eye size={18} /> Preview Invoice
+                        </button>
+                        
+                        <div className="relative min-w-max" onMouseEnter={() => !isDownloadReady && setShowDownloadTooltip(true)} onMouseLeave={() => setShowDownloadTooltip(false)}>
+                            <button 
+                                onClick={downloadPDF} 
+                                disabled={!isDownloadReady}
+                                className={`px-8 py-3.5 bg-slate-900 border-2 border-slate-900 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${!isDownloadReady ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800 hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl'}`}
+                            >
+                                <Download size={18} /> Download .PDF
+                            </button>
+                            {showDownloadTooltip && !isDownloadReady && (
+                                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 p-3 bg-red-600 text-white text-xs font-bold rounded-xl shadow-2xl animate-in slide-in-from-bottom-2 z-50 text-center">
+                                    Complete invoice before downloading (Missing names or items)
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={handleSaveInvoice}
+                            disabled={isSaving}
+                            className="px-8 py-3.5 text-white border-2 border-transparent rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl disabled:opacity-50 min-w-max"
+                            style={{ background: brandColor }}
+                        >
+                            <Save size={18} /> {isSaving ? 'Saving...' : 'Save & Close'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -699,6 +786,47 @@ export default function UnifiedInvoiceBuilder() {
                         <button onClick={() => setSaveAlertOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-800 hover:bg-slate-100 p-2 rounded-full transition-colors">
                             <X size={20} />
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* FULL SCREEN PDF PREVIEW MODAL */}
+            {showPreviewModal && pdfPreviewUrl && (
+                <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
+                    <div className="bg-slate-100 rounded-3xl shadow-2xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center p-4 sm:p-6 bg-white border-b border-slate-200 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg" style={{ background: `${brandColor}15`, color: brandColor }}>
+                                    <Eye size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900">Document Preview</h3>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Final PDF Output</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={downloadPDF} 
+                                    className="px-6 py-2.5 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-md"
+                                    style={{ background: brandColor }}
+                                >
+                                    <Download size={16} /> Download
+                                </button>
+                                <button 
+                                    onClick={() => setShowPreviewModal(false)} 
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-xl transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex-1 bg-slate-50 relative p-4 sm:p-8" style={{ minHeight: 0 }}>
+                            <iframe 
+                                src={pdfPreviewUrl} 
+                                className="w-full h-full rounded-xl shadow-lg border border-slate-200 bg-white" 
+                                title="PDF Preview"
+                            />
+                        </div>
                     </div>
                 </div>
             )}
