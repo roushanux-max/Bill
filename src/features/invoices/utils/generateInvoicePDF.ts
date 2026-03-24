@@ -131,24 +131,27 @@ export function generateInvoicePDF(
 
     if (storeInfo.name) {
         setFont('bold', 18, textDark);
-        pdf.text(storeInfo.name.toUpperCase(), margin, leftY + 2);
-        leftY += 8;
+        const storeNameLines = pdf.splitTextToSize(storeInfo.name.toUpperCase(), 100); // Limit width to prevent overlap with right box
+        pdf.text(storeNameLines, margin, leftY + 2);
+        leftY += storeNameLines.length * 7;
     }
     
     if (settings.tagline) {
         setFont('normal', 8, textLight);
-        pdf.text((settings.tagline || '').toUpperCase(), margin, leftY);
-        leftY += 5;
+        const taglineLines = pdf.splitTextToSize((settings.tagline || '').toUpperCase(), 90);
+        pdf.text(taglineLines, margin, leftY);
+        leftY += taglineLines.length * 4;
     }
 
     // Invoice Meta Info (Right side, below banner)
     let rightY = y + bannerH + 12;
-    setFont('bold', 7, textLight);
-    pdf.text('BILL TO.', margin, rightY + 12); // Re-labeling or spacing
     
-    y = Math.max(leftY + 15, rightY + 15);
+    // Ensure y is below both the left info and the right banner area
+    y = Math.max(leftY + 12, rightY + 5);
 
     // ── Bill To Section ───────────────────────────────────────────
+    pdf.text('BILL TO.', margin, y);
+    y += 6;
     if (invoice.customer?.name) {
         setFont('bold', 24, textDark);
         const custNameLines = pdf.splitTextToSize(invoice.customer.name, contentW * 0.7);

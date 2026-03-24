@@ -379,7 +379,7 @@ export default function UnifiedInvoiceBuilder() {
                 </div>
 
                 {/* INVOICE HEADER */}
-                <header className="flex flex-col md:flex-row justify-between items-start relative z-10">
+                <header className="flex flex-col lg:flex-row justify-between items-start relative z-10 w-full overflow-hidden">
                     <div className="pl-6 md:pl-16 pt-8 md:pt-12 flex flex-col">
                         {/* Logo Section */}
                         <div className="mb-10 group relative">
@@ -413,19 +413,19 @@ export default function UnifiedInvoiceBuilder() {
                         </div>
 
                         {/* Billing Info */}
-                        <div className="mb-8 pr-6 md:pr-0">
+                        <div className="mb-8 pr-6 md:pr-0 max-w-full overflow-hidden">
                             <h3 className="font-bold text-base mb-3 tracking-wide text-slate-900">Invoice To.</h3>
                             <input 
-                                className="text-3xl md:text-5xl font-extrabold mb-6 bg-transparent border-none outline-none w-full tracking-tight text-slate-900 placeholder:text-slate-100"
+                                className="text-3xl md:text-5xl font-extrabold mb-6 bg-transparent border-none outline-none w-full tracking-tight text-slate-900 placeholder:text-slate-100 break-words"
                                 placeholder="Customer Name"
                                 value={customer.name} 
                                 onChange={e => setCustomer({...customer, name: e.target.value})} 
                             />
                             <div className="text-slate-500 text-[15px] leading-relaxed space-y-1 relative">
-                                <div className="flex items-center gap-2 group">
+                                <div className="flex items-center gap-2 group flex-wrap">
                                     <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: accentColor }}></span>
                                     <input 
-                                        className="bg-transparent border-none outline-none w-full placeholder:text-slate-200"
+                                        className="bg-transparent border-none outline-none w-full placeholder:text-slate-200 min-w-0"
                                         placeholder="+039 123 456 7890"
                                         value={customer.mobile} 
                                         onChange={async (e) => {
@@ -468,20 +468,20 @@ export default function UnifiedInvoiceBuilder() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: accentColor }}></span>
+                                <div className="flex items-start gap-2 flex-wrap">
+                                    <span className="w-1 h-1 rounded-full shrink-0 mt-2" style={{ backgroundColor: accentColor }}></span>
                                     <textarea 
-                                        className="bg-transparent border-none outline-none w-full placeholder:text-slate-200 resize-none"
+                                        className="bg-transparent border-none outline-none w-full placeholder:text-slate-200 resize-none min-w-0"
                                         placeholder="Customer Address"
                                         rows={2}
                                         value={customer.address} 
                                         onChange={e => setCustomer({...customer, address: e.target.value})} 
                                     />
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                     <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: accentColor }}></span>
                                     <input 
-                                        className="bg-transparent border-none outline-none w-full placeholder:text-slate-200"
+                                        className="bg-transparent border-none outline-none w-full placeholder:text-slate-200 min-w-0"
                                         placeholder="customer@email.com"
                                         value={customer.email} 
                                         onChange={e => setCustomer({...customer, email: e.target.value})} 
@@ -492,7 +492,7 @@ export default function UnifiedInvoiceBuilder() {
                     </div>
 
                     {/* Invoice Title Box */}
-                    <div className="bg-slate-900 text-white w-full md:w-[600px] pt-12 md:pt-16 pb-16 md:pb-20 px-8 md:px-16 relative z-10 rounded-none md:rounded-bl-[120px]" data-purpose="invoice-header-box" style={{ backgroundColor: brandColor }}>
+                    <div className="bg-slate-900 text-white w-full lg:w-[600px] pt-12 md:pt-16 pb-16 md:pb-20 px-8 md:px-16 relative z-10 rounded-none lg:rounded-bl-[120px] shrink-0" data-purpose="invoice-header-box" style={{ backgroundColor: brandColor }}>
                         <h2 className="text-6xl md:text-8xl font-bold mb-12 tracking-tight">Invoice</h2>
                         <div className="flex justify-between text-[11px] uppercase tracking-[0.2em] font-bold gap-4">
                             <div>

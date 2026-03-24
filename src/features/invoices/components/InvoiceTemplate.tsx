@@ -90,8 +90,8 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
             <div className="relative z-10 p-12 flex flex-col min-h-full">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-16">
-                    <div className="flex-1">
+                <div className="flex flex-row flex-wrap justify-between items-start gap-8 mb-16 relative">
+                    <div className="flex-1 min-w-[300px]">
                         {settings.logo ? (
                             <img src={settings.logo} alt="Logo" className={`${logoSizeMap[settings.logoSize] || 'h-16'} mb-6 object-contain`} />
                         ) : (
@@ -105,8 +105,8 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                                 </span>
                             </div>
                         )}
-                        <h1 className="text-3xl font-black text-slate-900 mb-2">{storeInfo?.name?.toUpperCase() || 'YOUR BUSINESS'}</h1>
-                        <p className="text-slate-500 text-sm max-w-xs leading-relaxed whitespace-pre-line">{storeInfo?.address}</p>
+                        <h1 className="text-3xl font-black text-slate-900 mb-2 break-words">{storeInfo?.name?.toUpperCase() || 'YOUR BUSINESS'}</h1>
+                        <p className="text-slate-500 text-sm max-w-sm leading-relaxed whitespace-pre-line break-words">{storeInfo?.address}</p>
                         <div className="mt-4 flex flex-wrap gap-4 text-[11px] font-bold text-slate-400">
                             {storeInfo?.phone && <span className="flex items-center gap-1"> {storeInfo.phone}</span>}
                             {storeInfo?.email && <span className="flex items-center gap-1"> {storeInfo.email}</span>}
@@ -114,7 +114,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                         </div>
                     </div>
 
-                    <div className="relative pt-4">
+                    <div className="relative pt-4 flex-shrink-0">
                         <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-2xl relative overflow-hidden min-w-[280px]">
                             {/* Accent within box */}
                             <div 
@@ -125,18 +125,18 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                             <h2 className="text-5xl font-black tracking-tighter mb-8 italic">INVOICE</h2>
                             
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Number</span>
-                                    <span className="font-mono text-lg font-bold">{invoice.invoiceNumber}</span>
+                                <div className="flex justify-between items-center border-b border-white/10 pb-2 gap-4">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Number</span>
+                                    <span className="font-mono text-lg font-bold break-all text-right">{invoice.invoiceNumber}</span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</span>
-                                    <span className="font-bold">{formatDateForDisplay(invoice.date)}</span>
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Date</span>
+                                    <span className="font-bold text-right">{formatDateForDisplay(invoice.date)}</span>
                                 </div>
                                 {invoice.dueDate && (
-                                    <div className="flex justify-between items-center text-rose-400">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Due</span>
-                                        <span className="font-bold">{formatDateForDisplay(invoice.dueDate)}</span>
+                                    <div className="flex justify-between items-center text-rose-400 gap-4">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Due</span>
+                                        <span className="font-bold text-right">{formatDateForDisplay(invoice.dueDate)}</span>
                                     </div>
                                 )}
                             </div>
@@ -150,19 +150,19 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                         <div className="w-8 h-px bg-slate-200"></div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Billed To</span>
                     </div>
-                    <div className="flex flex-col md:flex-row justify-between items-end gap-6 pl-10 border-l-2 border-slate-100">
-                        <div className="flex-1">
-                            <h3 className="text-4xl font-black text-slate-900 leading-tight">
+                    <div className="flex flex-row flex-wrap justify-between items-end gap-6 pl-10 border-l-2 border-slate-100">
+                        <div className="flex-1 min-w-[250px]">
+                            <h3 className="text-4xl font-black text-slate-900 leading-tight break-words">
                                 {invoice.customer?.name || 'Walk-in Customer'}
                             </h3>
-                            <div className="mt-4 flex flex-col gap-1 text-slate-500 font-medium">
+                            <div className="mt-4 flex flex-col gap-1 text-slate-500 font-medium break-words">
                                 {invoice.customer?.phone && <p>{invoice.customer.phone}</p>}
                                 {invoice.customer?.email && <p>{invoice.customer.email}</p>}
-                                {invoice.customer?.address && <p className="max-w-xs">{invoice.customer.address}</p>}
+                                {invoice.customer?.address && <p className="max-w-md">{invoice.customer.address}</p>}
                             </div>
                         </div>
                         {invoice.customer?.gstin && (
-                            <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                            <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shrink-0">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Customer GST</span>
                                 <span className="text-sm font-black text-slate-700">{invoice.customer.gstin}</span>
                             </div>
