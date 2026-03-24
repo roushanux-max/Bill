@@ -249,32 +249,32 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                         )}
                     </div>
 
-                    <div className="min-w-[320px] bg-slate-50 rounded-[2rem] p-10 space-y-6">
+                    <div className="min-w-[320px] bg-slate-50 rounded-[2rem] p-10 space-y-6 self-stretch md:self-auto">
                         <div className="flex justify-between items-center text-slate-500 font-bold italic">
                             <span>Subtotal</span>
-                            <span>₹{subtotal.toLocaleString('en-IN')}</span>
+                            <span>₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         {invoice.transportCharges > 0 && (
                             <div className="flex justify-between items-center text-slate-500 font-bold italic">
                                 <span>Transport</span>
-                                <span>₹{invoice.transportCharges.toLocaleString('en-IN')}</span>
+                                <span>₹{invoice.transportCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                         )}
                         <div className="flex justify-between items-center text-slate-500 font-bold italic">
                             <span>GST (Tax)</span>
-                            <span>₹{Math.round(totalTax).toLocaleString('en-IN')}</span>
+                            <span>₹{Math.round(totalTax).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                         {invoice.discountTotal > 0 && (
                             <div className="flex justify-between items-center text-emerald-600 font-bold italic">
                                 <span>Discount</span>
-                                <span>- ₹{invoice.discountTotal.toLocaleString('en-IN')}</span>
+                                <span>- ₹{invoice.discountTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                         )}
                         <div className="pt-6 border-t border-slate-200">
-                            <div className="flex justify-between items-end">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 leading-none">Total Due</span>
-                                <span className="text-5xl font-black text-slate-900 tracking-tighter italic" style={{ color: brandColor }}>
-                                    ₹{total.toLocaleString('en-IN')}
+                            <div className="flex justify-between items-end gap-4">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 leading-none shrink-0">Total Amount</span>
+                                <span className="text-5xl font-black text-slate-900 tracking-tighter italic break-all text-right" style={{ color: brandColor }}>
+                                    ₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
                         </div>
@@ -310,7 +310,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                                 </div>
                             )}
                             <div className="w-48 h-px bg-slate-900 ml-auto opacity-20"></div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mt-2">Authorized Signatory</span>
+                            {(settings.signatureText?.toLowerCase() !== 'authorized signatory' && !settings.signatureImage) && (
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mt-2">Authorized Signatory</span>
+                            )}
                         </div>
                     </div>
                 </div>

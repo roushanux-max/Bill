@@ -298,9 +298,10 @@ export function generateInvoicePDF(
     y += 8;
 
     setFont('bold', 10, textLight);
-    pdf.text('TOTAL AMOUNT', summX, y);
+    const summLabelX = margin + contentW - 80;
+    pdf.text('TOTAL AMOUNT', summLabelX, y);
     setFont('bold', 18, primary);
-    pdf.text(`RS. ${invoice.grandTotal.toLocaleString('en-IN')}`, margin + contentW - 4, y + 1, { align: 'right' });
+    pdf.text(`Rs. ${invoice.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, margin + contentW - 4, y + 1.5, { align: 'right' });
 
     // Payment & Terms (Bottom Left)
     const midY = y + 15;
@@ -310,8 +311,8 @@ export function generateInvoicePDF(
         setFont('bold', 8, textDark);
         pdf.text('PAYMENT DETAILS', margin, bottomL);
         bottomL += 5;
-        setFont('normal', 8, textMid);
-        const payLines = pdf.splitTextToSize(settings.paymentDetails, contentW * 0.5);
+        setFont('normal', 7, textMid);
+        const payLines = pdf.splitTextToSize(settings.paymentDetails, contentW * 0.45);
         pdf.text(payLines, margin, bottomL);
         bottomL += payLines.length * 4 + 5;
     }
@@ -321,7 +322,7 @@ export function generateInvoicePDF(
         pdf.text('NOTES', margin, bottomL);
         bottomL += 5;
         setFont('normal', 7, textMid);
-        const noteLines = pdf.splitTextToSize(invoice.notes, contentW * 0.5);
+        const noteLines = pdf.splitTextToSize(invoice.notes, contentW * 0.45);
         pdf.text(noteLines, margin, bottomL);
     }
 
@@ -335,35 +336,55 @@ export function generateInvoicePDF(
             pdf.addImage(settings.signatureImage, 'PNG', sigX + 5, sigY, 40, 15, undefined, 'FAST');
             sigY += 18;
         } catch (e) { sigY += 15; }
-    } else { sigY += 15; }
+    } else { 
+        // Show signature text in a nice font if possible, else just space
+        sigY += 15; 
+    }
 
     pdf.setDrawColor(...borderLight);
     pdf.setLineWidth(0.5);
     pdf.line(sigX, sigY, sigX + sigW, sigY);
+    
+    const sigText = settings.signatureText || (storeInfo.name?.split(' ')[0] || 'Authorized Signatory');
     setFont('bold', 9, textDark);
-    pdf.text(settings.signatureText || 'Authorized Signatory', sigX + sigW/2, sigY + 5, { align: 'center' });
-    setFont('normal', 7, textLight);
-    pdf.text('Authorized Signatory', sigX + sigW/2, sigY + 8, { align: 'center' });
+    pdf.text(sigText, sigX + sigW/2, sigY + 5, { align: 'center' });
+    
+    // Only show sub-label if the main text isn't already the label
+    if (sigText.toLowerCase() !== 'authorized signatory') {
+        setFont('normal', 7, textLight);
+        pdf.text('Authorized Signatory', sigX + sigW/2, sigY + 8, { align: 'center' });
+    }
 
     // ── DARK FOOTER BANNER ────────────────────────────────────────
-    const footerH = 30;
+    const footerH = 35;
     const footerY = 297 - footerH;
     pdf.setFillColor(...primary);
     pdf.rect(0, footerY, 210, footerH, 'F');
     
     setFont('bold', 8, [255, 255, 255]);
-    const footX1 = margin;
-    const footX2 = margin + 50;
-    const footX3 = margin + 100;
+    const footCol1 = margin + 5;
+    const footCol2 = margin + 65;
+    const footCol3 = margin + 125;
     
-    pdf.text(`📞  ${storeInfo.phone || '-'}`, footX1, footerY + 12);
-    pdf.text(`✉️  ${storeInfo.email || '-'}`, footX1, footerY + 18);
-    pdf.text(`🌐  ${settings.website || '-'}`, footX2, footerY + 12);
-    pdf.text(`🆔  GST: ${storeInfo.gstin || '-'}`, footX2, footerY + 18);
+    // Column 1
+    pdf.text('CONTACT', footCol1, footerY + 10);
+    setFont('normal', 8, [255, 255, 255]);
+    pdf.text(`Ph: ${storeInfo.phone || '-'}`, footCol1, footerY + 16);
+    pdf.text(`Em: ${storeInfo.email || '-'}`, footCol1, footerY + 22);
     
-    const addrLines = pdf.splitTextToSize(storeInfo.address || '-', 60);
-    pdf.text(`📍  `, footX3, footerY + 12);
-    pdf.text(addrLines, footX3 + 6, footerY + 12);
+    // Column 2
+    setFont('bold', 8, [255, 255, 255]);
+    pdf.text('BUSINESS', footCol2, footerY + 10);
+    setFont('normal', 8, [255, 255, 255]);
+    pdf.text(`Web: ${settings.website || (storeInfo.name?.toLowerCase().replace(/\s+/g,'') + '.com')}`, footCol2, footerY + 16);
+    pdf.text(`GST: ${storeInfo.gstin || '-'}`, footCol2, footerY + 22);
+    
+    // Column 3
+    setFont('bold', 8, [255, 255, 255]);
+    pdf.text('ADDRESS', footCol3, footerY + 10);
+    setFont('normal', 8, [255, 255, 255]);
+    const footAddr = pdf.splitTextToSize(storeInfo.address || '-', 65);
+    pdf.text(footAddr, footCol3, footerY + 16);
 
     return pdf;
 }

@@ -726,7 +726,9 @@ export default function UnifiedInvoiceBuilder() {
                             value={globalBranding.signatureText || ''} 
                             onChange={e => updateSettings({...globalBranding, signatureText: e.target.value})} 
                         />
-                        <p className="text-[13px] text-slate-400 font-medium uppercase tracking-widest mt-1">Authorized Person</p>
+                        {(globalBranding.signatureText?.toLowerCase() !== 'authorized signatory' && !globalBranding.signatureImage) && (
+                            <p className="text-[13px] text-slate-400 font-medium uppercase tracking-widest mt-1">Authorized Signatory</p>
+                        )}
                     </div>
                 </section>
 
