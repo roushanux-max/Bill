@@ -1,52 +1,93 @@
 /**
- * Calculate the brightness of a hex color
- * Returns a value between 0 (darkest) and 255 (brightest)
+ * Utility functions for color manipulation and accessibility (WCAG AAA)
  */
-export function getColorBrightness(hexColor: string): number {
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
 
-  // Using relative luminance formula
-  return (r * 299 + g * 587 + b * 114) / 1000;
+/**
+ * Get relative luminance of a color
+ * @param hex Hex color string (e.g., #ffffff)
+ */
+export function getLuminance(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((v) => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 /**
- * Determine if light or dark text should be used based on background color
- * Returns 'light' for dark backgrounds, 'dark' for light backgrounds
+ * Get contrast ratio between two colors
+ * @param color1 Hex color string
+ * @param color2 Hex color string
  */
-export function getContrastTextColor(hexColor: string): 'light' | 'dark' {
-  const brightness = getColorBrightness(hexColor);
-  return brightness > 128 ? 'dark' : 'light';
+export function getContrastRatio(color1: string, color2: string): number {
+  const l1 = getLuminance(color1);
+  const l2 = getLuminance(color2);
+
+  const brightest = Math.max(l1, l2);
+  const darkest = Math.min(l1, l2);
+
+  return (brightest + 0.05) / (darkest + 0.05);
 }
 
 /**
- * Get the text color class based on background
+ * Get AAA-compliant foreground color (black or white) for a given background
+ * @param backgroundHex Background color hex
  */
-export function getTextColorClass(hexColor: string): string {
-  const contrast = getContrastTextColor(hexColor);
-  return contrast === 'light' ? 'text-white' : 'text-gray-900';
+export function getAAAForeground(backgroundHex: string): string {
+  const whiteContrast = getContrastRatio('#ffffff', backgroundHex);
+  const blackContrast = getContrastRatio('#000000', backgroundHex);
+
+  // Preferred AAA is 7:1, if neither meets it, pick the best one
+  return whiteContrast > blackContrast ? '#ffffff' : '#000000';
 }
 
 /**
- * Get the description text color class based on background
+ * Generate a secondary color based on a primary color
+ * Usually a lighter or darker version that maintains harmony
  */
-export function getDescriptionColorClass(hexColor: string): string {
-  const contrast = getContrastTextColor(hexColor);
-  return contrast === 'light' ? 'text-white/80' : 'text-gray-600';
+export function generateSecondaryColor(primaryHex: string): string {
+  const luminance = getLuminance(primaryHex);
+  
+  // If primary is dark, go lighter. If light, go darker.
+  if (luminance < 0.2) {
+    return adjustBrightness(primaryHex, 70); // Light highlight
+  } else if (luminance > 0.7) {
+    return adjustBrightness(primaryHex, -40); // Darker contrast
+  } else {
+    // Middle ground: usually a soft light version for backgrounds
+    return adjustBrightness(primaryHex, 85);
+  }
 }
 
 /**
- * Get contrast color (white or black) based on hex background
+ * Adjust brightness of a hex color
  */
-export function getContrastColor(hexcolor: string): string {
-  const hex = hexcolor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
+export function adjustBrightness(color: string, percent: number): string {
+  const num = parseInt(color.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  let R = (num >> 16) + amt;
+  let G = (num >> 8 & 0x00FF) + amt;
+  let B = (num & 0x0000FF) + amt;
 
-  // Calculate relative luminance
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= 128 ? '#000000' : '#ffffff';
+  R = Math.min(255, Math.max(0, R));
+  G = Math.min(255, Math.max(0, G));
+  B = Math.min(255, Math.max(0, B));
+
+  return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+}
+
+/**
+ * Convert hex to RGB
+ */
+function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
 }

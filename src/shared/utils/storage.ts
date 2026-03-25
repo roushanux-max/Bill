@@ -714,7 +714,7 @@ export const deleteCustomer = async (id: string) => {
     if (error) {
       if (error.code === '23503') { // Foreign key violation
         console.warn('Customer has linked invoices. Using local-only delete for now.');
-        // This is a "soft-delete" on the client side since we can't easily add is_deleted column
+        // This is a "soft-delete" on the frontend side since we can't easily add is_deleted column
         // The customer will remain in DB but won't show in the main list because we cleared them from localStorage
         // and getCustomers returns union/filtered data usually.
       } else {

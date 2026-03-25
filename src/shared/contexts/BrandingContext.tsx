@@ -18,6 +18,7 @@ interface BrandingContextType {
 
 import { useAuth } from './AuthContext';
 import ConflictResolutionModal from '@/features/invoices/components/ConflictResolutionModal';
+import { getAAAForeground, generateSecondaryColor, adjustBrightness } from '@/shared/utils/colorUtils';
 
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
@@ -221,28 +222,36 @@ function applyBrandingStyles(settings: BrandingSettings) {
     document.head.appendChild(existingStyle);
   }
 
-  const dynamicTextColor = adjustBrightness(settings.primaryColor, -60);
-  const dynamicSecondaryColor = adjustBrightness(settings.primaryColor, -40);
-  const primaryLight = adjustBrightness(settings.primaryColor, 85);
-  const primaryHover = adjustBrightness(settings.primaryColor, -15);
-  const primaryForeground = getContrastColor(settings.primaryColor);
+  const dynamicTextColor = '#1a1a2e'; // Standardized deep dark for readability
+  const primaryLight = generateSecondaryColor(settings.primaryColor);
+  const primaryHover = adjustBrightness(settings.primaryColor, -10);
+  const primaryActive = adjustBrightness(settings.primaryColor, -20);
+  const primaryForeground = getAAAForeground(settings.primaryColor);
 
   const themeCSS = `
     :root {
       --color-primary: ${settings.primaryColor};
       --color-primary-hover: ${primaryHover};
+      --color-primary-active: ${primaryActive};
       --color-primary-light: ${primaryLight};
       --color-primary-foreground: ${primaryForeground};
+      --color-secondary: ${primaryLight};
+      --color-contrast-text: ${primaryForeground};
       --primary: ${settings.primaryColor};
       --primary-hover: ${primaryHover};
+      --primary-active: ${primaryActive};
       --primary-light: ${primaryLight};
       --primary-foreground: ${primaryForeground};
       --font-family: ${getFontFamilyString(settings.fontFamily)};
+      --line-height-base: 1.5;
+      --font-size-base: 14px;
+      --font-size-lg: 16px;
     }
 
     .user-theme {
       --primary: ${settings.primaryColor};
       --primary-hover: ${primaryHover};
+      --primary-active: ${primaryActive};
       --primary-light: ${primaryLight};
       --primary-foreground: ${primaryForeground};
       --font-family: ${getFontFamilyString(settings.fontFamily)};
@@ -265,7 +274,7 @@ function applyBrandingStyles(settings: BrandingSettings) {
     }
     
     .user-theme a:hover {
-      color: ${dynamicSecondaryColor};
+      color: var(--color-primary-light);
     }
 
     /* Ensure consistent heading colors */
@@ -275,34 +284,6 @@ function applyBrandingStyles(settings: BrandingSettings) {
   `;
 
   existingStyle.textContent = themeCSS;
-}
-
-/**
- * Get contrast color (white or black) based on hex background
- */
-function getContrastColor(hexcolor: string): string {
-  const r = parseInt(hexcolor.slice(1, 3), 16);
-  const g = parseInt(hexcolor.slice(3, 5), 16);
-  const b = parseInt(hexcolor.slice(5, 7), 16);
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= 128 ? '#000000' : '#ffffff';
-}
-
-/**
- * Adjust brightness of a hex color correctly - for testing 
- */
-function adjustBrightness(color: string, percent: number): string {
-  const num = parseInt(color.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  let R = (num >> 16) + amt;
-  let G = (num >> 8 & 0x00FF) + amt;
-  let B = (num & 0x0000FF) + amt;
-
-  R = R < 0 ? 0 : R > 255 ? 255 : R;
-  G = G < 0 ? 0 : G > 255 ? 255 : G;
-  B = B < 0 ? 0 : B > 255 ? 255 : B;
-
-  return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
 }
 
 /**

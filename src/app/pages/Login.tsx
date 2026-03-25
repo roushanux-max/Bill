@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/shared/utils/supabase';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { safeGet, safeSet, safeRemove } from '@/shared/utils/storage';
+import { validateInput, ValidationRules } from '@/shared/utils/validation';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ export default function Login() {
   const { settings } = useBranding();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,8 +53,24 @@ export default function Login() {
     }
   }, [user, authLoading]);
 
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = ValidationRules.email.format(e.target.value);
+    setEmail(val);
+    setEmailError(validateInput('email', val));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPassword(val);
+    setPasswordError(validateInput('password', val));
+  };
+
+  const isFormValid = !emailError && !passwordError && email.trim() !== '' && password.trim() !== '';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
+    
     setLoading(true);
 
     // Save credentials if "Remember Me" is checked
@@ -97,7 +116,7 @@ export default function Login() {
             <div className="rounded-3xl p-4 flex justify-center items-center">
               <img
                 src="/bill_illustration.png?v=2"
-                alt="Bill Platform Illustration"
+                alt="Invoice Platform Illustration"
                 className="w-full max-w-sm h-auto drop-shadow-2xl"
               />
             </div>
@@ -105,7 +124,7 @@ export default function Login() {
             <div className="mt-8 text-center text-slate-900">
               <h2 className="text-3xl font-bold mb-4">Streamline Your Business</h2>
               <p className="text-slate-600 text-lg max-w-md mx-auto">
-                Professional GST billing, inventory management, and customer tracking in one simple platform.
+                Professional GST invoicing, inventory management, and customer tracking in one simple platform.
               </p>
             </div>
           </div>
@@ -179,10 +198,13 @@ export default function Login() {
                         type="email"
                         required
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400"
+                        onChange={handleEmailChange}
+                        className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 ${
+                          emailError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'
+                        }`}
                         placeholder="name@company.com"
                       />
+                      {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
                     </div>
 
                     <div className="space-y-1">
@@ -197,8 +219,10 @@ export default function Login() {
                           type={showPassword ? 'text' : 'password'}
                           required
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400 pr-12"
+                          onChange={handlePasswordChange}
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 pr-12 ${
+                            passwordError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'
+                          }`}
                           placeholder="••••••••"
                         />
                         <button
@@ -209,6 +233,7 @@ export default function Login() {
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
+                      {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -226,7 +251,7 @@ export default function Login() {
 
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || !isFormValid}
                       style={{
                         borderColor: 'var(--color-primary)',
                         color: 'var(--color-primary)',
@@ -245,7 +270,7 @@ export default function Login() {
                   </form>
 
                   <p className="text-center text-slate-600 text-sm">
-                    New to Bill?{' '}
+                    New to Invoice?{' '}
                     <Link to="/register" className="text-primary font-bold hover:opacity-80 transition-all">
                       Create an account
                     </Link>
@@ -273,7 +298,7 @@ export default function Login() {
 
           {/* Simple Footer */}
           <div className="p-8 text-center border-t border-slate-50 text-xs text-slate-400 lg:text-left lg:px-24">
-            © 2026 Bill. All rights reserved.
+            © 2026 Invoice. All rights reserved.
           </div>
         </div>
       </div>

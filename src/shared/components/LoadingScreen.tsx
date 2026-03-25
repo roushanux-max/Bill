@@ -9,7 +9,7 @@ const defaultPhrases = [
   "Authenticating business data...",
   "Preparing your dashboard...",
   "Connecting to secure vault...",
-  "Arranging your clients...",
+  "Arranging your customers...",
   "Syncing your catalog..."
 ];
 

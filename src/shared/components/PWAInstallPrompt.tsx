@@ -92,7 +92,7 @@ export function PWAInstallPrompt() {
 
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 mb-1">
-              Install Bill
+              Install Invoice
             </h3>
             <p className="text-sm text-gray-600 mb-3">
               Install our app for quick access, offline use, and a better experience!
@@ -171,7 +171,7 @@ export function IOSInstallInstructions() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-3">
             <Smartphone className="size-8 text-primary" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Install Bill on iOS</h2>
+          <h2 className="text-xl font-bold text-gray-900">Install Invoice on iOS</h2>
         </div>
 
         <div className="space-y-4 text-sm">
@@ -191,7 +191,7 @@ export function IOSInstallInstructions() {
             </div>
             <div>
               <p className="font-semibold text-gray-900">Scroll and tap "Add to Home Screen"</p>
-              <p className="text-gray-600">You'll see the Bill icon and name</p>
+              <p className="text-gray-600">You'll see the Invoice icon and name</p>
             </div>
           </div>
 
@@ -201,7 +201,7 @@ export function IOSInstallInstructions() {
             </div>
             <div>
               <p className="font-semibold text-gray-900">Tap "Add"</p>
-              <p className="text-gray-600">Bill will appear on your home screen!</p>
+              <p className="text-gray-600">Invoice will appear on your home screen!</p>
             </div>
           </div>
         </div>

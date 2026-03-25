@@ -70,37 +70,48 @@ export function generateInvoicePDF(
         pdf.setTextColor(...color);
     };
 
-    // ── Header Section ──────────────────────────────────────────────
-    
-    // Modern Dark Header Banner for "INVOICE"
-    const bannerW = 100;
-    const bannerH = 25;
-    pdf.setFillColor(...primary);
-    pdf.roundedRect(margin + contentW - bannerW + 10, y, bannerW, bannerH, 10, 10, 'F');
-    
-    setFont('bold', 34, [255, 255, 255]);
-    // 2. HEADER BANNER - DARK & ASYMMETRICAL
-    // Draw main dark blue banner
-    pdf.setFillColor(...primary);
-    // Main rectangle - stretched left
-    pdf.rect(120, 0, 95, 40, 'F');
-    // Simulate asymmetrical rounded corner (bottom-left)
-    pdf.setFillColor(...primary);
-    pdf.roundedRect(110, 0, 105, 35, 15, 15, 'F'); // More rounded
-    
-    // Header Text
-    setFont('bold', 28, [255, 255, 255]);
-    pdf.text('INVOICE', 135, 22, { charSpace: 2 });
-    
-    // Corner Accent (The Tan Triangle from the UI)
-    pdf.setFillColor(...tanAccent);
-    pdf.triangle(210, 0, 210, 15, 195, 0, 'F');
+    // 3. INVOICE HEADER BOX
+    const headerH = 35;
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(0, 0, 210, headerH, 'F');
+    pdf.setDrawColor(...primary);
+    pdf.setLineWidth(1.5);
+    pdf.line(0, headerH, 210, headerH);
 
-    // 3. INVOICE META (Number, Dates)
-    setFont('bold', 8, [255, 255, 255]);
-    const metaX = 135;
-    pdf.text(`No: ${invoice.invoiceNumber}`, metaX, 32);
-    pdf.text(`Date: ${formatDateForDisplay(invoice.date)}`, metaX + 35, 32);
+    // Header Content
+    let logoX = margin;
+    let logoY = 8;
+    if (settings.logo) {
+        try {
+            const imgProps = pdf.getImageProperties(settings.logo);
+            const imgRatio = imgProps.width / imgProps.height;
+            let finalH = 20;
+            let finalW = finalH * imgRatio;
+            pdf.addImage(settings.logo, 'PNG', logoX, logoY, finalW, finalH, undefined, 'FAST');
+            logoX += finalW + 8;
+        } catch (e) {}
+    } else {
+        pdf.setFillColor(...primary);
+        pdf.roundedRect(logoX, logoY, 15, 15, 3, 3, 'F');
+        setFont('bold', 14, [255, 255, 255]);
+        pdf.text(storeInfo.name?.[0]?.toUpperCase() || 'C', logoX + 7.5, logoY + 10, { align: 'center' });
+        logoX += 20;
+    }
+
+    setFont('bold', 20, textDark);
+    pdf.text(storeInfo.name?.toUpperCase() || 'COMPANY', logoX, logoY + 10);
+    if (storeInfo.gstin) {
+        setFont('bold', 8, textMid);
+        pdf.text(`GSTIN: ${storeInfo.gstin}`, logoX, logoY + 16);
+    }
+
+    // "INVOICE" Title aligned right
+    setFont('bold', 34, primary);
+    pdf.text('INVOICE', 210 - margin, logoY + 12, { align: 'right', charSpace: -1 });
+    setFont('bold', 12, textMid);
+    pdf.text(`#${invoice.invoiceNumber || 'INV-0001'}`, 210 - margin, logoY + 20, { align: 'right' });
+
+    y = headerH + 15;
 
     // 4. BOTTOM-LEFT ACCENT (Circle)
     pdf.setDrawColor(...primary);
@@ -110,68 +121,61 @@ export function generateInvoicePDF(
     // Reset for content
     setFont('normal', 10, textDark);
     
-    // Logo and Store Info (Left Side)
-    let leftY = y + 2; 
-    const maxLogoH = settings.logoSize === 'large' ? 28 : settings.logoSize === 'medium' ? 20 : 15;
-    if (settings.logo) {
-        try {
-            const imgProps = pdf.getImageProperties(settings.logo);
-            const imgRatio = imgProps.width / imgProps.height;
-            const maxLogoW = 40;
-            let finalH = maxLogoH;
-            let finalW = finalH * imgRatio;
-            if (finalW > maxLogoW) {
-                finalW = maxLogoW;
-                finalH = finalW / imgRatio;
-            }
-            pdf.addImage(settings.logo, 'PNG', margin, leftY, finalW, finalH, undefined, 'FAST');
-            leftY += finalH + 6;
-        } catch (e) {}
-    }
-
     if (storeInfo.name) {
         setFont('bold', 18, textDark);
-        const storeNameLines = pdf.splitTextToSize(storeInfo.name.toUpperCase(), 100); // Limit width to prevent overlap with right box
-        pdf.text(storeNameLines, margin, leftY + 2);
-        leftY += storeNameLines.length * 7;
-    }
-    
-    if (settings.tagline) {
-        setFont('normal', 8, textLight);
-        const taglineLines = pdf.splitTextToSize((settings.tagline || '').toUpperCase(), 90);
-        pdf.text(taglineLines, margin, leftY);
-        leftY += taglineLines.length * 4;
     }
 
     // Invoice Meta Info (Right side, below banner)
-    let rightY = y + bannerH + 12;
+    let rightY = y + 12;
     
     // Ensure y is below both the left info and the right banner area
-    y = Math.max(leftY + 12, rightY + 5);
+    y = Math.max(y + 12, rightY + 5);
 
-    // ── Bill To Section ───────────────────────────────────────────
-    pdf.text('BILL TO.', margin, y);
-    y += 6;
+    // ── Invoice Details Section ───────────────────────────────────
+    pdf.text('BILL TO:', margin, y);
+    y += 8;
     if (invoice.customer?.name) {
-        setFont('bold', 24, textDark);
-        const custNameLines = pdf.splitTextToSize(invoice.customer.name, contentW * 0.7);
-        pdf.text(custNameLines, margin, y + 2);
-        y += custNameLines.length * 10;
+        setFont('bold', 20, textDark);
+        const custNameLines = pdf.splitTextToSize(invoice.customer.name, contentW * 0.6);
+        pdf.text(custNameLines, margin, y);
+        y += custNameLines.length * 9;
 
-        setFont('normal', 10, textMid);
-        const contactInfo = [invoice.customer.phone, (invoice.customer as any).email].filter(Boolean).join('  •  ');
-        if (contactInfo) {
-            pdf.text(contactInfo, margin, y);
-            y += 6;
-        }
+        setFont('normal', 11, textMid);
+        const contactDetails = [
+            invoice.customer.phone,
+            invoice.customer.email,
+            invoice.customer.gstin ? `GSTIN: ${invoice.customer.gstin}` : null
+        ].filter(Boolean);
+
+        contactDetails.forEach(detail => {
+            pdf.text(detail!, margin, y);
+            y += 5;
+        });
         
         if (invoice.customer.address) {
-            const addrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.6);
+            y += 2;
+            const addrLines = pdf.splitTextToSize(invoice.customer.address, contentW * 0.5);
             pdf.text(addrLines, margin, y);
             y += addrLines.length * 5;
         }
-        y += 12;
     }
+
+    // Date Info (Aligned right)
+    let metaY = headerH + 15 + 8;
+    setFont('bold', 10, textMid);
+    pdf.text('DATE:', 210 - margin, metaY, { align: 'right' });
+    setFont('bold', 11, textDark);
+    pdf.text(formatDateForDisplay(invoice.date), 210 - margin, metaY + 5, { align: 'right' });
+    
+    if (invoice.dueDate) {
+        metaY += 15;
+        setFont('bold', 10, textMid);
+        pdf.text('DUE DATE:', 210 - margin, metaY, { align: 'right' });
+        setFont('bold', 11, textDark);
+        pdf.text(formatDateForDisplay(invoice.dueDate), 210 - margin, metaY + 5, { align: 'right' });
+    }
+
+    y = Math.max(y, metaY + 15) + 10;
 
     // ── Items Table ───────────────────────────────────────────────
     const activeDomain = settings.domain || 'general';
@@ -356,35 +360,36 @@ export function generateInvoicePDF(
     }
 
     // ── DARK FOOTER BANNER ────────────────────────────────────────
-    const footerH = 35;
+    // ── ICON-BASED FOOTER ────────────────────────────────────────
+    const footerH = 25;
     const footerY = 297 - footerH;
-    pdf.setFillColor(...primary);
+    
+    // Footer Background (Very Light Slate)
+    pdf.setFillColor(252, 252, 253);
     pdf.rect(0, footerY, 210, footerH, 'F');
-    
-    setFont('bold', 8, [255, 255, 255]);
-    const footCol1 = margin + 5;
-    const footCol2 = margin + 65;
-    const footCol3 = margin + 125;
-    
-    // Column 1
-    pdf.text('CONTACT', footCol1, footerY + 10);
-    setFont('normal', 8, [255, 255, 255]);
-    pdf.text(`Ph: ${storeInfo.phone || '-'}`, footCol1, footerY + 16);
-    pdf.text(`Em: ${storeInfo.email || '-'}`, footCol1, footerY + 22);
-    
-    // Column 2
-    setFont('bold', 8, [255, 255, 255]);
-    pdf.text('BUSINESS', footCol2, footerY + 10);
-    setFont('normal', 8, [255, 255, 255]);
-    pdf.text(`Web: ${settings.website || (storeInfo.name?.toLowerCase().replace(/\s+/g,'') + '.com')}`, footCol2, footerY + 16);
-    pdf.text(`GST: ${storeInfo.gstin || '-'}`, footCol2, footerY + 22);
-    
-    // Column 3
-    setFont('bold', 8, [255, 255, 255]);
-    pdf.text('ADDRESS', footCol3, footerY + 10);
-    setFont('normal', 8, [255, 255, 255]);
-    const footAddr = pdf.splitTextToSize(storeInfo.address || '-', 65);
-    pdf.text(footAddr, footCol3, footerY + 16);
+    pdf.setDrawColor(...primary);
+    pdf.setLineWidth(1);
+    pdf.line(margin, footerY, 210 - margin, footerY);
+
+    setFont('bold', 11, textDark);
+    let fx = margin;
+    const footYOffset = footerY + 10;
+
+    // Helper to draw icon + text
+    const drawFootItem = (icon: string, text: string) => {
+        pdf.setTextColor(...primary);
+        pdf.text(icon, fx, footYOffset);
+        pdf.setTextColor(...textDark);
+        pdf.text(text, fx + 6, footYOffset);
+        fx += pdf.getTextWidth(text) + 25;
+    };
+
+    if (storeInfo.phone) drawFootItem('PH.', storeInfo.phone);
+    if (storeInfo.email) drawFootItem('EM.', storeInfo.email);
+    if (storeInfo.address) drawFootItem('LOC.', storeInfo.address.substring(0, 30));
+
+    setFont('bold', 7, textLight);
+    pdf.text(`Generated by ${storeInfo.name || 'InvoicePro'}`, 210 - margin, footerY + 18, { align: 'right' });
 
     return pdf;
 }

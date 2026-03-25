@@ -231,7 +231,7 @@ export default function Invoices() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              className="flex items-center gap-1.5 text-[var(--color-primary)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -239,7 +239,7 @@ export default function Invoices() {
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoices</h1>
           </div>
           <Link to="/create-invoice" className="hidden sm:flex">
-            <Button size="sm" className="bg-amber-400 hover:bg-amber-500 text-slate-900 border-none font-semibold px-4">
+            <Button size="sm" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] border-none font-semibold px-4">
               <Plus className="h-4 w-4 mr-2" />
               Create Invoice
             </Button>
@@ -390,8 +390,8 @@ export default function Invoices() {
                 </p>
                 {!searchTerm && (
                   <Link to="/create-invoice">
-                    <Button>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                    <Button className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]">
+                      <Plus className="h-4 w-4 mr-2" />
                       Create Invoice
                     </Button>
                   </Link>

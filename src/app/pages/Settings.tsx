@@ -15,7 +15,7 @@ import { getBrandingSettings, saveBrandingSettings, getStoreInfo, saveStoreInfo,
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { toast } from 'sonner';
-import { validateEmail, validatePhone } from '@/shared/utils/validation';
+import { validateInput, ValidationRules } from '@/shared/utils/validation';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -23,6 +23,15 @@ export default function SettingsPage() {
   const { user, signOut } = useAuth();
   const [settings, setSettings] = useState<BrandingSettings>(defaultBrandingSettings);
   const [storeInfo, setStoreInfo] = useState<StoreInfo | null>(null);
+  
+  // Validation States for Store Info
+  const [storeErrors, setStoreErrors] = useState<{
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    gstin?: string | null;
+    pincode?: string | null;
+  }>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('store');
@@ -127,26 +136,22 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
-    if (storeInfo && !storeInfo.name?.trim()) {
-      setActiveSection('store');
-      setTimeout(() => {
-        document.getElementById('business-name-input')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        document.getElementById('business-name-input')?.focus();
-      }, 100);
-      toast.error('Business Name is required. Please fill in this field before saving.');
-      return;
-    }
+    // Check validation states
+    if (storeInfo) {
+      const errs: any = {};
+      errs.name = validateInput('name', storeInfo.name);
+      errs.phone = validateInput('mobile', storeInfo.phone);
+      errs.email = validateInput('email', storeInfo.email);
+      errs.gstin = validateInput('gst', storeInfo.gstin);
+      errs.pincode = validateInput('pin', storeInfo.pincode);
 
-    if (storeInfo?.phone && !validatePhone(storeInfo.phone)) {
-      setActiveSection('store');
-      toast.error('Please enter a valid 10-digit phone number');
-      return;
-    }
-
-    if (storeInfo?.email && !validateEmail(storeInfo.email)) {
-      setActiveSection('store');
-      toast.error('Please enter a valid email address');
-      return;
+      const hasErrors = Object.values(errs).some(err => err !== null);
+      if (hasErrors || !storeInfo.name?.trim()) {
+        setStoreErrors(errs);
+        setActiveSection('store');
+        toast.error('Please fix the errors in Store Details before saving.');
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -205,11 +210,21 @@ export default function SettingsPage() {
     updateGlobalStoreInfo(newStoreInfo);
     setHasChanges(true);
 
+    // Real-time validation
+    if (key === 'name') setStoreErrors(prev => ({ ...prev, name: validateInput('name', value) }));
+    if (key === 'phone') setStoreErrors(prev => ({ ...prev, phone: validateInput('mobile', value) }));
+    if (key === 'email') setStoreErrors(prev => ({ ...prev, email: validateInput('email', value) }));
+    if (key === 'gstin') setStoreErrors(prev => ({ ...prev, gstin: validateInput('gst', value) }));
+    if (key === 'pincode') setStoreErrors(prev => ({ ...prev, pincode: validateInput('pin', value) }));
+
     // Auto-fetch location if pincode is 6 digits
     if (key === 'pincode' && value.length === 6 && /^\d{6}$/.test(value)) {
       handlePincodeLookup(value);
     }
   };
+
+  const isFormValid = !Object.values(storeErrors).some(err => err !== null) && 
+                      (!storeInfo || (storeInfo && storeInfo.name?.trim() !== ''));
 
   const handlePincodeLookup = async (pincode: string) => {
     setFetchingPincode(true);
@@ -268,15 +283,15 @@ export default function SettingsPage() {
           {/* Header Actions */}
           <div className="flex items-center gap-2">
             {hasChanges && (
-              <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-100 mr-2">
-                <div className="w-1.5 h-1.5 bg-amber-600 rounded-full animate-pulse" />
+              <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-1 rounded-full border border-[var(--color-primary)]/20 mr-2">
+                <div className="w-1.5 h-1.5 bg-[var(--color-primary)] rounded-full animate-pulse" />
                 Unsaved changes
               </span>
             )}
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2 hidden sm:flex border-slate-200 text-amber-600 hover:bg-amber-50" 
+              className="gap-2 hidden sm:flex border-slate-200 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5" 
               onClick={async () => {
                 // Prepare a preview invoice using current settings and storeInfo
                 try {
@@ -334,23 +349,8 @@ export default function SettingsPage() {
               </Button>
               {hasChanges && (
                 <Button 
-                  onClick={async () => {
-                    setIsSaving(true);
-                    try {
-                      await Promise.all([
-                        saveBrandingSettings(settings),
-                        storeInfo ? saveStoreInfo(storeInfo) : Promise.resolve()
-                      ]);
-                      setHasChanges(false);
-                      refreshBranding();
-                      toast.success('Settings saved successfully!');
-                    } catch (e) {
-                      toast.error('Failed to save settings');
-                    } finally {
-                      setIsSaving(false);
-                    }
-                  }} 
-                  disabled={isSaving}
+                  onClick={handleSave}
+                  disabled={isSaving || !isFormValid}
                   size="sm" 
                   className="gap-2 transition-all border-none text-white"
                   style={{ backgroundColor: settings.primaryColor }}
@@ -448,33 +448,43 @@ export default function SettingsPage() {
                         <Input
                           id="business-name-input"
                           value={storeInfo.name}
-                          onChange={(e) => updateStoreDetails('name', e.target.value)}
+                          onChange={(e) => {
+                            const val = ValidationRules.name.format(e.target.value);
+                            updateStoreDetails('name', val);
+                          }}
                           placeholder="e.g. M/S-AASHVI ENTERPRISES"
-                          className="text-sm border-slate-200"
+                          className={`text-sm ${storeErrors.name ? 'border-red-500 focus:border-red-500 ring-red-500' : 'border-slate-200'}`}
                         />
+                        {storeErrors.name && <p className="text-red-500 text-xs mt-1">{storeErrors.name}</p>}
                       </div>
                       <div className="space-y-3">
                         <Label className="text-sm font-semibold text-slate-700">GSTIN</Label>
                         <Input
                           value={storeInfo.gstin}
-                          onChange={(e) => updateStoreDetails('gstin', e.target.value)}
+                          onChange={(e) => {
+                            const val = ValidationRules.gst.format(e.target.value);
+                            updateStoreDetails('gstin', val);
+                          }}
+                          maxLength={15}
                           placeholder="e.g. 10DAOPK4311H1Z1"
-                          className="text-sm border-slate-200"
+                          className={`text-sm ${storeErrors.gstin ? 'border-red-500 focus:border-red-500 ring-red-500' : 'border-slate-200'}`}
                         />
+                        {storeErrors.gstin && <p className="text-red-500 text-xs mt-1">{storeErrors.gstin}</p>}
                       </div>
                       <div className="space-y-3">
                         <label className="text-sm font-semibold text-slate-700 block mb-1">Phone Number</label>
                         <Input
                           value={storeInfo.phone}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            const val = ValidationRules.mobile.format(e.target.value);
                             updateStoreDetails('phone', val);
                           }}
-                          inputMode="tel"
+                          inputMode="numeric"
                           maxLength={10}
                           placeholder="e.g. 8507329056"
-                          className="text-sm border-slate-200"
+                          className={`text-sm ${storeErrors.phone ? 'border-red-500 focus:border-red-500 ring-red-500' : 'border-slate-200'}`}
                         />
+                        {storeErrors.phone && <p className="text-red-500 text-xs mt-1">{storeErrors.phone}</p>}
                       </div>
                       <div className="space-y-3">
                         <label className="text-sm font-semibold text-slate-700 block mb-1">City</label>
@@ -490,10 +500,14 @@ export default function SettingsPage() {
                         <div className="relative">
                           <Input
                             value={storeInfo.pincode || ''}
-                            onChange={(e) => updateStoreDetails('pincode', e.target.value)}
+                            onChange={(e) => {
+                              const val = ValidationRules.pin.format(e.target.value);
+                              updateStoreDetails('pincode', val);
+                            }}
+                            inputMode="numeric"
                             placeholder="6 digits"
                             maxLength={6}
-                            className="text-sm border-slate-200"
+                            className={`text-sm ${storeErrors.pincode ? 'border-red-500 focus:border-red-500 ring-red-500' : 'border-slate-200'}`}
                           />
                           {fetchingPincode && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -501,6 +515,7 @@ export default function SettingsPage() {
                             </div>
                           )}
                         </div>
+                        {storeErrors.pincode && <p className="text-red-500 text-xs mt-1">{storeErrors.pincode}</p>}
                       </div>
                       <div className="space-y-3">
                         <Label className="text-sm font-semibold text-slate-700">Email Address (Optional)</Label>
@@ -688,7 +703,7 @@ export default function SettingsPage() {
                         <Switch
                           checked={settings.showFooter}
                           onCheckedChange={(checked) => updateSettings('showFooter', checked)}
-                          className="data-[state=checked]:bg-indigo-600"
+                          className="data-[state=checked]:bg-[var(--color-primary)]"
                         />
                       </div>
                       {settings.showFooter && (
@@ -715,7 +730,7 @@ export default function SettingsPage() {
                         <Switch
                           checked={settings.showSignature}
                           onCheckedChange={(checked) => updateSettings('showSignature', checked)}
-                          className="data-[state=checked]:bg-indigo-600"
+                          className="data-[state=checked]:bg-[var(--color-primary)]"
                         />
                       </div>
                       {settings.showSignature && (
@@ -723,7 +738,7 @@ export default function SettingsPage() {
                           {/* Signature Image */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-slate-700">Signature Image (Optional)</Label>
-                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 bg-white hover:border-indigo-400 transition-all">
+                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 bg-white hover:border-[var(--color-primary)]/50 transition-all">
                               {settings.signatureImage ? (
                                 <div className="flex flex-col items-center gap-3">
                                   <div className="relative group">

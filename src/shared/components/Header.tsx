@@ -31,10 +31,10 @@ export default function Header() {
 
     const navItems = [
         { label: 'Home', icon: Home, path: '/dashboard' },
-        { label: 'Bills', icon: FileText, path: '/invoices' },
+        { label: 'Invoices', icon: FileText, path: '/invoices' },
         { label: 'Create Invoice', icon: PlusCircle, path: '/create-invoice' },
         { label: 'Products', icon: Package, path: '/products' },
-        { label: 'Clients', icon: Users, path: '/customers' },
+        { label: 'Customers', icon: Users, path: '/customers' },
         { label: 'Settings', icon: SettingsIcon, path: '/settings' },
     ];
 
@@ -43,7 +43,7 @@ export default function Header() {
     }
 
     const primaryColor = user ? settings.primaryColor : '#6366f1';
-    const businessName = (user && storeInfo?.name) ? storeInfo.name : 'Bill';
+    const businessName = (user && storeInfo?.name) ? storeInfo.name : 'Invoice';
     const displayLogo = (user && settings.logo) ? settings.logo : null;
 
     const isLandingPage = location.pathname === '/' && !user;
@@ -107,7 +107,7 @@ export default function Header() {
                                     }}
                                     onMouseEnter={e => {
                                         (e.currentTarget as HTMLElement).style.background = 'var(--color-primary)';
-                                        (e.currentTarget as HTMLElement).style.color = 'white';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-primary-foreground, white)';
                                     }}
                                     onMouseLeave={e => {
                                         (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-light)';
@@ -128,10 +128,10 @@ export default function Header() {
                                     <DropdownMenuItem key={item.path} asChild>
                                         <Link
                                             to={item.path}
-                                            style={{ textDecoration: 'none', color: 'inherit' }}
-                                            className={`flex items-center gap-3 cursor-pointer ${location.pathname === item.path ? 'font-semibold' : ''}`}
+                                            style={{ textDecoration: 'none' }}
+                                            className={`flex items-center gap-3 cursor-pointer py-2 px-1 rounded-md transition-colors ${location.pathname === item.path ? 'font-semibold text-[var(--color-primary)] bg-[var(--color-primary-light)]/30' : 'text-slate-600 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/20'}`}
                                         >
-                                            <item.icon className="w-4 h-4 text-slate-500" />
+                                            <item.icon className={`w-4 h-4 ${location.pathname === item.path ? 'text-[var(--color-primary)]' : 'text-slate-400'}`} />
                                             {item.label}
                                         </Link>
                                     </DropdownMenuItem>

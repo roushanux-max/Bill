@@ -6,7 +6,7 @@ import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/util
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { saveInvoice as dbSaveInvoice, getAndIncrementInvoiceNumber } from '@/shared/utils/storage';
-
+import { validateInput, ValidationRules } from '@/shared/utils/validation';
 
 import InvoicePreviewModal from './InvoicePreviewModal';
 
@@ -14,39 +14,63 @@ export default function InvoiceForm() {
     const { user } = useAuth();
     const { settings: globalBranding, storeInfo: currentStore, updateSettings } = useBranding();
     const navigate = useNavigate();
-    const getDraftKey = (key: string) => user ? `draft_${user.id}_${key}` : `guest_demo_${key}`;
+    const getDraftKey = () => user ? `draft_${user.id}_new_invoice` : `guest_draft_new_invoice`;
 
     // --- State: UI & Controls ---
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
 
-    // --- State: Single Source of Truth ---
-    const [invoice, setInvoice] = useState<any>(() => {
-        if (typeof window === 'undefined') return { items: [], customer: { name: '', mobile: '', email: '', address: '' }, notes: '', transportCharges: 0, discountTotal: 0, invoiceNumber: '', date: new Date().toISOString().split('T')[0], dueDate: '' };
-        
-        const saved = sessionStorage.getItem(getDraftKey('full_draft'));
-        if (saved) {
-            try {
-                return JSON.parse(saved);
-            } catch (e) {
-                console.error('Failed to parse draft:', e);
-            }
-        }
+    // --- Validation State ---
+    const [customerErrors, setCustomerErrors] = useState<{name?: string | null, mobile?: string | null}>({});
+    const [itemErrors, setItemErrors] = useState<Record<string, {quantity?: string | null, unitPrice?: string | null}>>({});
 
-        return {
-            id: crypto.randomUUID(),
-            items: [{ id: crypto.randomUUID(), productName: '', quantity: 1, unitPrice: 0, taxRate: 18, totalAmount: 0 }],
-            customer: { name: '', mobile: '', email: '', address: '' },
-            notes: 'Thank you for your business.',
-            transportCharges: 0,
-            discountTotal: 0,
-            invoiceNumber: '', // Will be fetched on mount
-            date: new Date().toISOString().split('T')[0],
-            dueDate: '',
-            status: 'unpaid'
+    // --- State: Single Source of Truth ---
+    const [invoice, setInvoice] = useState<any>(null); // Start null for loader
+    const [isLoadingDraft, setIsLoadingDraft] = useState(true);
+
+    // --- Restoration Logic ---
+    useEffect(() => {
+        const restoreData = async () => {
+            setIsLoadingDraft(true);
+            try {
+                const draftKey = getDraftKey();
+                const localDraft = localStorage.getItem(draftKey);
+                let restored = null;
+
+                if (localDraft) {
+                    restored = JSON.parse(localDraft);
+                }
+
+                // If logged in, we COULD fetch the latest "draft" invoice from DB here if needed
+                // but for now, localStorage is the primary "active work" buffer.
+                
+                if (restored) {
+                    setInvoice(restored);
+                } else {
+                    setInvoice({
+                        id: crypto.randomUUID(),
+                        items: [{ id: crypto.randomUUID(), productName: '', quantity: 1, unitPrice: 0, taxRate: 18, totalAmount: 0 }],
+                        customer: { name: '', mobile: '', email: '', address: '' },
+                        notes: 'Thank you for your business.',
+                        transportCharges: 0,
+                        discountTotal: 0,
+                        invoiceNumber: '', 
+                        date: new Date().toISOString().split('T')[0],
+                        dueDate: '',
+                        status: 'unpaid',
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to restore draft:', e);
+            } finally {
+                setIsLoadingDraft(false);
+            }
         };
-    });
+
+        restoreData();
+    }, [user?.id]);
 
     // UI-only states (not persisted to DB)
     const [customerMatches, setCustomerMatches] = useState<any[]>([]);
@@ -61,7 +85,13 @@ export default function InvoiceForm() {
     const tax = (invoice.items || []).reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice * (item.taxRate / 100)), 0);
     const grandTotal = subtotal + tax + Number(invoice.transportCharges) - Number(invoice.discountTotal);
 
-    const isReady = Boolean(invoice.customer?.name?.trim() && invoice.items?.length > 0 && invoice.items.every((i: any) => i.productName?.trim() && i.quantity > 0 && i.unitPrice > 0));
+    const isCustomerValid = !Object.values(customerErrors).some(err => err !== null) && invoice.customer?.name?.trim();
+    const areItemsValid = invoice.items?.length > 0 && invoice.items.every((i: any) => {
+        const errs = itemErrors[i.id] || {};
+        return !errs.quantity && !errs.unitPrice && i.productName?.trim() && i.quantity > 0 && i.unitPrice > 0;
+    });
+    
+    const isReady = Boolean(isCustomerValid && areItemsValid);
 
     // --- Fetch Next Invoice Number on Mount (if new) ---
     useEffect(() => {
@@ -74,38 +104,38 @@ export default function InvoiceForm() {
 
     // --- Autosave & Persistence ---
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        if (!invoice || typeof window === 'undefined') return;
         
-        // 1. Instant sync to session storage (Full Draft)
-        sessionStorage.setItem(getDraftKey('full_draft'), JSON.stringify(invoice));
+        const draftKey = getDraftKey();
+        
+        // 1. Instant sync to localStorage (Safety)
+        localStorage.setItem(draftKey, JSON.stringify({ ...invoice, updatedAt: new Date().toISOString() }));
 
         // 2. Debounced save to Database (Real Reliability)
-        if (!user) return; // Only autosave to DB for logged-in users
-
         const timer = setTimeout(async () => {
-            if (isSaving) return;
+            if (isSaving || !user) return;
             
             try {
                 setIsSaving(true);
-                // We enrich the invoice object with calculated totals for storage
                 const toSave = {
                     ...invoice,
                     subtotal,
                     taxTotal: tax,
-                    grandTotal
+                    grandTotal,
+                    updatedAt: new Date().toISOString()
                 };
                 
                 await dbSaveInvoice(toSave);
                 setLastSaved(new Date().toLocaleTimeString());
             } catch (e) {
-                console.error('Autosave failed:', e);
+                console.warn('DB Autosave failed (likely offline):', e);
             } finally {
                 setIsSaving(false);
             }
-        }, 800); // 800ms debounce to be safe
+        }, 500); // 500ms debounce
 
         return () => clearTimeout(timer);
-    }, [invoice, user]);
+    }, [invoice, user?.id]);
 
     // --- Actions ---
     const updateInvoice = (updates: any) => {
@@ -117,6 +147,11 @@ export default function InvoiceForm() {
             ...prev,
             customer: { ...prev.customer, ...updates }
         }));
+
+        let newErrs = { ...customerErrors };
+        if (updates.name !== undefined) newErrs.name = validateInput('name', updates.name);
+        if (updates.mobile !== undefined) newErrs.mobile = validateInput('mobile', String(updates.mobile));
+        setCustomerErrors(newErrs);
     };
 
     const updateItem = (id: string, updates: any) => {
@@ -124,6 +159,13 @@ export default function InvoiceForm() {
             ...prev,
             items: prev.items.map((item: any) => item.id === id ? { ...item, ...updates } : item)
         }));
+
+        const newErrs = { ...itemErrors[id] };
+        if (updates.quantity !== undefined) newErrs.quantity = validateInput('quantity', String(updates.quantity));
+        if (updates.unitPrice !== undefined) newErrs.unitPrice = validateInput('amount', String(updates.unitPrice));
+        if (Object.keys(newErrs).length > 0) {
+            setItemErrors(prev => ({ ...prev, [id]: newErrs }));
+        }
     };
 
     const addItem = () => {
@@ -198,6 +240,15 @@ export default function InvoiceForm() {
         setShowPreviewModal(false);
     };
 
+    if (isLoadingDraft || !invoice) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200 rounded-3xl animate-pulse">
+                <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin mb-4" />
+                <p className="text-slate-500 font-bold">Restoring your draft...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
             {showPreviewModal && (
@@ -239,7 +290,7 @@ export default function InvoiceForm() {
                     <div className="md:col-span-2 relative">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Customer Name *</label>
                         <input 
-                            className="w-full bg-slate-50 p-3 rounded-xl font-bold text-slate-800 outline-none border focus:border-slate-300 transition-colors"
+                            className={`w-full bg-slate-50 p-3 rounded-xl font-bold text-slate-800 outline-none border transition-colors ${customerErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
                             placeholder="Type customer name..."
                             value={invoice.customer.name} 
                             onChange={async (e) => {
@@ -254,6 +305,7 @@ export default function InvoiceForm() {
                             onFocus={() => { if(customerMatches.length > 0) setShowCustomerDropdown(true); }}
                             onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
                         />
+                        {customerErrors.name && <p className="text-red-500 text-[10px] mt-1 font-semibold absolute -bottom-5 left-0">{customerErrors.name}</p>}
                         {showCustomerDropdown && customerMatches.length > 0 && (
                             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
                                 {customerMatches.map((match: any) => (
@@ -279,9 +331,20 @@ export default function InvoiceForm() {
                             </div>
                         )}
                     </div>
-                    <div>
+                    <div className="relative">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Phone Number</label>
-                        <input className="w-full bg-slate-50 p-3 rounded-xl border focus:border-slate-300 outline-none transition-colors" placeholder="e.g. +91 9999..." value={invoice.customer.mobile} onChange={e => updateCustomer({ mobile: e.target.value })} />
+                        <input 
+                            className={`w-full bg-slate-50 p-3 rounded-xl border outline-none transition-colors ${customerErrors.mobile ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`} 
+                            placeholder="e.g. 9876543210" 
+                            inputMode="numeric"
+                            maxLength={10}
+                            value={invoice.customer.mobile} 
+                            onChange={e => {
+                                const val = ValidationRules.mobile.format(e.target.value);
+                                updateCustomer({ mobile: val });
+                            }} 
+                        />
+                        {customerErrors.mobile && <p className="text-red-500 text-[10px] mt-1 font-semibold absolute -bottom-5 left-0">{customerErrors.mobile}</p>}
                     </div>
                     <div className="md:col-span-3">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Address</label>
@@ -385,8 +448,8 @@ export default function InvoiceForm() {
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="p-3 text-center">
-                                            <input type="number" className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center font-bold" value={item.quantity || ''} onFocus={e => e.target.select()} onChange={e => updateItem(item.id, { quantity: Number(e.target.value), totalAmount: Number(e.target.value) * item.unitPrice })} />
+                                        <td className="p-3 text-center relative">
+                                            <input type="number" className={`w-full bg-slate-50 p-2 rounded-lg outline-none text-center font-bold transition-colors ${(itemErrors[item.id] && itemErrors[item.id].quantity) ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'border border-transparent hover:border-slate-200'}`} value={item.quantity === 0 ? '' : item.quantity} onFocus={e => e.target.select()} onChange={e => updateItem(item.id, { quantity: Number(e.target.value), totalAmount: Number(e.target.value) * item.unitPrice })} />
                                         </td>
                                         {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
                                             <td className="p-3 text-center">
@@ -429,7 +492,7 @@ export default function InvoiceForm() {
                                             </td>
                                         )}
                                         <td className="p-3 text-right">
-                                            <input type="number" className="w-full bg-slate-50 p-2 rounded-lg outline-none text-right font-bold text-slate-600" value={item.unitPrice || ''} onFocus={e => e.target.select()} onChange={e => updateItem(item.id, { unitPrice: Number(e.target.value), totalAmount: item.quantity * Number(e.target.value) })} />
+                                            <input type="number" className={`w-full bg-slate-50 p-2 rounded-lg outline-none text-right font-bold text-slate-600 transition-colors ${(itemErrors[item.id] && itemErrors[item.id].unitPrice) ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'border border-transparent hover:border-slate-200'}`} value={item.unitPrice === 0 ? '' : item.unitPrice} onFocus={e => e.target.select()} onChange={e => updateItem(item.id, { unitPrice: Number(e.target.value), totalAmount: item.quantity * Number(e.target.value) })} />
                                         </td>
                                         <td className="p-3 text-right">
                                             <select className="w-full bg-slate-50 p-2 rounded-lg outline-none appearance-none text-center font-bold" value={item.taxRate} onChange={e => updateItem(item.id, { taxRate: Number(e.target.value) })}>

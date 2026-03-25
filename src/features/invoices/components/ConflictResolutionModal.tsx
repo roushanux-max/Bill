@@ -77,9 +77,9 @@ export default function ConflictResolutionModal({ guestStore, guestBranding, onR
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-8 scale-in-center overflow-hidden relative border border-slate-100">
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 to-amber-400" />
+                <div className="absolute top-0 left-0 w-full h-2 bg-[var(--color-primary)]" />
                 
-                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-5">
+                <div className="w-12 h-12 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full flex items-center justify-center mb-5">
                     <ShieldAlert size={24} />
                 </div>
                 
@@ -92,14 +92,14 @@ export default function ConflictResolutionModal({ guestStore, guestBranding, onR
                     {options.map(opt => (
                         <label 
                             key={opt.id} 
-                            className={`flex items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${selected === opt.id ? 'border-amber-500 bg-amber-50/50' : 'border-slate-100 hover:border-slate-200'}`}
+                            className={`flex items-start p-4 rounded-xl border-2 cursor-pointer transition-colors ${selected === opt.id ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-slate-100 hover:border-slate-200'}`}
                             onClick={() => setSelected(opt.id)}
                         >
-                            <div className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center mr-3 shrink-0 ${selected === opt.id ? 'border-amber-500 bg-amber-500 text-white' : 'border-slate-300'}`}>
+                            <div className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center mr-3 shrink-0 ${selected === opt.id ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white' : 'border-slate-300'}`}>
                                 {selected === opt.id && <Check size={12} strokeWidth={3} />}
                             </div>
                             <div>
-                                <div className={`font-bold ${selected === opt.id ? 'text-amber-900' : 'text-slate-700'}`}>{opt.title}</div>
+                                <div className={`font-bold ${selected === opt.id ? 'text-[var(--color-primary)]' : 'text-slate-700'}`}>{opt.title}</div>
                                 <div className="text-sm text-slate-500 font-medium mt-0.5">{opt.desc}</div>
                             </div>
                         </label>
@@ -110,7 +110,7 @@ export default function ConflictResolutionModal({ guestStore, guestBranding, onR
                     <button 
                         onClick={handleApply}
                         disabled={saving}
-                        className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors disabled:opacity-50"
+                        className="flex-1 py-3 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-xl font-bold hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
                     >
                         {saving ? 'Saving...' : 'Confirm Choice'}
                     </button>

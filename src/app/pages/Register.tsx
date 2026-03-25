@@ -5,7 +5,7 @@ import Logo from '@/shared/components/Logo';
 import { Loader2, ArrowLeft, Eye, EyeOff, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/utils/supabase';
-import { validateEmail, validatePhone } from '@/shared/utils/validation';
+import { validateInput, ValidationRules } from '@/shared/utils/validation';
 import { safeSet } from '@/shared/utils/storage';
 
 export default function Register() {
@@ -20,6 +20,57 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [industry, setIndustry] = useState('general');
+
+  // Validation States
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [mobileError, setMobileError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = ValidationRules.name.format(e.target.value);
+    setName(val);
+    setNameError(validateInput('name', val));
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = ValidationRules.email.format(e.target.value);
+    setEmail(val);
+    setEmailError(validateInput('email', val));
+  };
+
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = ValidationRules.mobile.format(e.target.value);
+    setMobile(val);
+    setMobileError(validateInput('mobile', val));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPassword(val);
+    setPasswordError(validateInput('password', val));
+    if (confirmPassword && val !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match');
+    } else if (confirmPassword) {
+      setConfirmPasswordError(null);
+    }
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setConfirmPassword(val);
+    if (val !== password) {
+      setConfirmPasswordError('Passwords do not match');
+    } else {
+      setConfirmPasswordError(null);
+    }
+  };
+
+  const isFormValid = 
+    !nameError && !emailError && !mobileError && !passwordError && !confirmPasswordError &&
+    name.trim() !== '' && email.trim() !== '' && mobile.length === 10 && password.length >= 6 && 
+    password === confirmPassword && dob !== '';
 
   // Redirect if already logged in
   useEffect(() => {
@@ -52,30 +103,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !confirmPassword || !name || !mobile || !dob) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    if (!validatePhone(mobile)) {
-      toast.error('Please enter a valid 10-digit mobile number');
-      return;
-    }
+    if (!isFormValid) return;
 
     setLoading(true);
     const { error } = await signUp(email, password, name, mobile, industry, dob);
@@ -107,13 +135,13 @@ export default function Register() {
             <div className="bg-white rounded-3xl p-4 shadow-2xl border border-slate-200 mb-8 inline-block">
               <img
                 src="/bill_illustration.png?v=2"
-                alt="Bill Illustration"
+                alt="Invoice Illustration"
                 className="w-full max-w-sm h-auto"
               />
             </div>
             <h2 className="text-3xl font-bold mb-4 text-slate-900">Join the Next Generation</h2>
             <p className="text-slate-600 text-lg max-w-md mx-auto">
-              Professional GST billing, inventory management, and customer tracking. Setup in less than 60 seconds.
+              Professional GST invoicing, inventory management, and customer tracking. Setup in less than 60 seconds.
             </p>
           </div>
         </div>
@@ -164,11 +192,27 @@ export default function Register() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Full Name</label>
-                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="John Doe" />
+                        <input 
+                          type="text" 
+                          required 
+                          value={name} 
+                          onChange={handleNameChange} 
+                          className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 ${nameError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'}`} 
+                          placeholder="John Doe" 
+                        />
+                        {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Email</label>
-                        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="name@company.com" />
+                        <input 
+                          type="email" 
+                          required 
+                          value={email} 
+                          onChange={handleEmailChange} 
+                          className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 ${emailError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'}`} 
+                          placeholder="name@company.com" 
+                        />
+                        {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Mobile Number</label>
@@ -176,12 +220,13 @@ export default function Register() {
                           type="tel" 
                           required 
                           value={mobile} 
-                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} 
-                          inputMode="tel"
+                          onChange={handleMobileChange} 
+                          inputMode="numeric"
                           maxLength={10}
-                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" 
+                          className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 ${mobileError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'}`} 
                           placeholder="9876543210" 
                         />
+                        {mobileError && <p className="text-red-500 text-xs mt-1">{mobileError}</p>}
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Date of Birth</label>
@@ -194,8 +239,8 @@ export default function Register() {
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary pr-10"
+                            onChange={handlePasswordChange}
+                            className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 pr-10 ${passwordError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'}`}
                             placeholder="••••••••"
                           />
                           <button
@@ -206,6 +251,7 @@ export default function Register() {
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
                         </div>
+                        {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Confirm Password</label>
@@ -214,11 +260,12 @@ export default function Register() {
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={confirmPassword}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary pr-10"
+                            onChange={handleConfirmPasswordChange}
+                            className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 pr-10 focus:ring-2 focus:ring-primary/20 ${confirmPasswordError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'}`}
                             placeholder="••••••••"
                           />
                         </div>
+                        {confirmPasswordError && <p className="text-red-500 text-xs mt-1">{confirmPasswordError}</p>}
                       </div>
                       <div className="space-y-1 md:col-span-2">
                         <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -241,7 +288,7 @@ export default function Register() {
 
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || !isFormValid}
                       style={{
                         backgroundColor: (name && email && mobile && dob && password && confirmPassword) ? 'var(--color-primary)' : 'white',
                         color: (name && email && mobile && dob && password && confirmPassword) ? 'var(--color-primary-foreground)' : 'var(--color-primary)',
@@ -285,7 +332,7 @@ export default function Register() {
           )}
 
           <div className="p-8 text-center border-t border-slate-50 text-xs text-slate-400 lg:text-left lg:px-24">
-            © 2026 Bill. All rights reserved.
+            © 2026 Invoice. All rights reserved.
           </div>
         </div>
       </div>

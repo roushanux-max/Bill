@@ -163,7 +163,7 @@ export default function Products() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              className="flex items-center gap-1.5 text-[var(--color-primary)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -175,7 +175,7 @@ export default function Products() {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button size="sm" className="bg-amber-400 hover:bg-amber-500 text-slate-900 border-none px-4 font-semibold">
+                <Button size="sm" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] border-none px-4 font-semibold">
                   <Plus className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Add Product</span>
                 </Button>
@@ -243,7 +243,7 @@ export default function Products() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
                       Cancel
                     </Button>
-                    <Button type="submit" className="flex-1" disabled={isSaving}>
+                    <Button type="submit" className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]" disabled={isSaving}>
                       {isSaving ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -133,7 +133,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
             <Button
               onClick={() => navigate('/create-invoice')}
-              className="hidden sm:flex bg-amber-400 hover:bg-amber-500 text-slate-900 border-none font-semibold px-4"
+              className="hidden sm:flex bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] border-none font-semibold px-4"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -141,7 +141,7 @@ export default function Dashboard() {
             </Button>
           </div>
           <p className="text-sm sm:text-base text-slate-500">
-            Welcome back <span className="font-semibold text-slate-800">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong className="text-amber-600">{storeInfo.name}</strong> : 'organization'} overview.
+            Welcome back <span className="font-semibold text-slate-800">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong className="text-[var(--color-primary)]">{storeInfo.name}</strong> : 'organization'} overview.
           </p>
         </div>
 
@@ -257,7 +257,7 @@ export default function Dashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle>Save Temporary Unsaved Data?</AlertDialogTitle>
             <AlertDialogDescription>
-              We found invoices tracking activity from when you were exploring Bill as a Guest. Would you like to save these invoices permanently to your new account?
+              We found invoices tracking activity from when you were exploring Invoice as a Guest. Would you like to save these invoices permanently to your new account?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -183,7 +183,7 @@ export default function Customers() {
       head: [['Customer Name', 'Phone', 'GSTIN', 'State', 'Invoices', 'Total Spent']],
       body: customerData.map(c => [c.name, c.phone, c.gstin, c.state, c.invoiceCount, c.totalSpent]),
       headStyles: {
-        fillColor: [99, 102, 241], // indigo-500
+        fillColor: storeInfo?.ownerName ? (settings.primaryColor as any) : [99, 102, 241],
         textColor: 255,
         fontStyle: 'bold',
         fontSize: 9,
@@ -251,7 +251,7 @@ export default function Customers() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              className="flex items-center gap-1.5 text-[var(--color-primary)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -263,7 +263,7 @@ export default function Customers() {
               variant="outline"
               size="sm"
               onClick={handleExport}
-              className="text-amber-600 border-amber-200 hover:bg-amber-50"
+              className="text-[var(--color-primary)] border-[var(--color-primary)]/20 hover:bg-[var(--color-primary)]/5"
               disabled={filteredSortedCustomers.length === 0}
             >
               <Download className="h-4 w-4 sm:mr-2" />
@@ -274,7 +274,7 @@ export default function Customers() {
                 if (!open) resetForm();
               }}>
                 <DialogTrigger asChild>
-                  <Button size="sm">
+                  <Button size="sm" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]">
                     <Plus className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Add Customer</span>
                   </Button>
@@ -352,7 +352,7 @@ export default function Customers() {
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
                         Cancel
                       </Button>
-                      <Button type="submit" className="flex-1" disabled={isSaving}>
+                      <Button type="submit" className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]" disabled={isSaving}>
                         {isSaving ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -482,7 +482,7 @@ export default function Customers() {
                   <Button
                     size="sm"
                     onClick={() => setIsDialogOpen(true)}
-                    className="gap-2"
+                    className="gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]"
                   >
                     <Plus className="h-4 w-4" />
                     Add Your First Customer
@@ -525,7 +525,7 @@ export default function Customers() {
                           <p>{customer.state}</p>
                         </div>
                         <div className="mt-3 pt-2 border-t border-slate-200">
-                          <p className="text-xs text-[var(--color-primary)] font-medium">Click to create bill</p>
+                          <p className="text-xs text-[var(--color-primary)] font-medium">Click to create invoice</p>
                         </div>
                       </div>
                       <div className="flex gap-1 sm:gap-2">

@@ -63,10 +63,10 @@ export default function LandingPage() {
         window.addEventListener('scroll', onScroll, { passive: true });
 
         // Silent SEO Optimization
-        document.title = "Bill | Professional GST Billing Software for Indian Businesses";
+        document.title = "Invoice | Professional GST Billing Software for Indian Businesses";
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) {
-            metaDesc.setAttribute("content", "Generate GST-compliant invoices in seconds. Bill is a fast, free, and secure business management tool designed specifically for Indian small enterprises and freelancers.");
+            metaDesc.setAttribute("content", "Generate GST-compliant invoices in seconds. Invoice is a fast, free, and secure business management tool designed specifically for Indian small enterprises and freelancers.");
         }
 
         let metaKeywords = document.querySelector('meta[name="keywords"]');
@@ -75,7 +75,7 @@ export default function LandingPage() {
             metaKeywords.setAttribute('name', 'keywords');
             document.head.appendChild(metaKeywords);
         }
-        metaKeywords.setAttribute("content", "Free GST Billing Software India, Invoice Generator for Small Business India, GST Compliant Bill Maker, Professional Invoicing Tool, Business Management App India, Offline First PWA Billing");
+        metaKeywords.setAttribute("content", "Free GST Billing Software India, Invoice Generator for Small Business India, GST Compliant Invoice Maker, Professional Invoicing Tool, Business Management App India, Offline First PWA Billing");
 
         return () => {
             window.removeEventListener('scroll', onScroll);
@@ -104,9 +104,9 @@ export default function LandingPage() {
                         display: 'inline-flex', alignItems: 'center', gap: 8,
                         background: 'var(--color-primary-light, #f5f3ff)',
                         opacity: 0.9,
-                        border: '1px solid var(--color-primary, #6366f1)',
+                        border: '1px solid var(--color-primary)',
                         borderRadius: 100, padding: '6px 16px', marginBottom: 32,
-                        fontSize: 13, fontWeight: 500, color: 'var(--color-primary, #6366f1)',
+                        fontSize: 13, fontWeight: 500, color: 'var(--color-primary)',
                     }}>
                         <Zap size={14} fill="currentColor" className="animate-pulse" />
                         <span>Proprietary PWA technology • 100% Free</span>
@@ -128,17 +128,17 @@ export default function LandingPage() {
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 40 }}>
                         <Link to="/register" style={{
-                            fontSize: 18, fontWeight: 700, color: 'white', textDecoration: 'none',
-                            background: 'linear-gradient(135deg, var(--color-primary, #6366f1), var(--color-primary-hover, #4f46e5))',
+                            fontSize: 18, fontWeight: 700, color: 'var(--color-primary-foreground, white)', textDecoration: 'none',
+                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
                             padding: '16px 36px', borderRadius: 16,
                             display: 'flex', alignItems: 'center', gap: 8,
-                            boxShadow: '0 15px 30px -10px var(--color-primary-light, #f5f3ff)',
+                            boxShadow: '0 15px 30px -10px var(--color-primary-light)',
                             transition: 'transform 0.2s, box-shadow 0.2s',
                         }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light, #f5f3ff)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light, #f5f3ff)'; }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light)'; }}
                         >
-                            Start Billing Now <ArrowRight size={20} />
+                            Start Invoicing Now <ArrowRight size={20} />
                         </Link>
                         <button onClick={() => setShowGuestModal(true)} style={{
                             fontSize: 18, fontWeight: 700, color: '#0f172a', textDecoration: 'none',
@@ -152,13 +152,13 @@ export default function LandingPage() {
                             Try Guest Mode
                         </button>
                         <a href="#experience" style={{
-                            fontSize: 18, fontWeight: 700, color: '#6366f1', textDecoration: 'none',
-                            background: '#f5f3ff', border: '1.5px solid #6366f1', cursor: 'pointer',
+                            fontSize: 18, fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none',
+                            background: 'var(--color-primary-light)', border: '1.5px solid var(--color-primary)', cursor: 'pointer',
                             padding: '16px 36px', borderRadius: 16,
                             transition: 'all 0.2s',
                         }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#ede9fe'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = '#f5f3ff'; }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-light)'; e.currentTarget.style.opacity = '0.9'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary-light)'; e.currentTarget.style.opacity = '1'; }}
                         >
                             Try Live Demo
                         </a >
@@ -211,7 +211,7 @@ export default function LandingPage() {
                                 onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
                                 onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                             >
-                                <div style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: '#6366f1', letterSpacing: '-1px', lineHeight: 1 }}>{s.value}</div>
+                                <div style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{s.value}</div>
                                 <div style={{ fontSize: 14, color: '#64748b', marginTop: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{s.label}</div>
                             </div>
                         ))}
@@ -226,7 +226,7 @@ export default function LandingPage() {
                         Engineered for modern business.
                     </h2>
                     <p style={{ fontSize: 20, color: '#475569', maxWidth: 640, margin: '0 auto', lineHeight: 1.6 }}>
-                        Bill provides a powerful suite of tools to manage your invoicing, customers, and inventory with zero friction.
+                        Invoice provides a powerful suite of tools to manage your invoicing, customers, and inventory with zero friction.
                     </p>
                 </div>
 
@@ -234,33 +234,33 @@ export default function LandingPage() {
                     {[
                         {
                             icon: FileText,
-                            title: 'GST-Compliant Billing',
+                            title: 'GST-Compliant Invoicing',
                             desc: 'Automatically calculate CGST, SGST, and IGST. Generate HSN-ready tax invoices that meet all Indian regulatory standards.',
-                            color: '#6366f1', bg: '#f5f3ff'
+                            color: 'var(--color-primary)', bg: 'var(--color-primary-light)'
                         },
                         {
                             icon: Users,
                             title: 'Customer Management',
-                            desc: 'Save unlimited customer details, track their purchase history, and manage their GSTINs for recurring professional billing.',
+                            desc: 'Save unlimited customer details, track their purchase history, and manage their GSTINs for recurring professional invoicing.',
                             color: '#10b981', bg: '#f0fdf4'
                         },
                         {
                             icon: Package,
                             title: 'Product Catalog',
-                            desc: 'Quickly add products with predefined HSN codes and GST rates. Auto-populate invoice items for ultra-fast bill creation.',
+                            desc: 'Quickly add products with predefined HSN codes and GST rates. Auto-populate invoice items for ultra-fast invoice creation.',
                             color: '#f59e0b', bg: '#fffbeb'
                         },
                         {
                             icon: Shield,
                             title: 'Privacy First',
                             desc: 'Your business data stays in your browser. We prioritize your privacy with local storage and secure cloud-based data isolation.',
-                            color: '#6366f1', bg: '#f5f3ff'
+                            color: 'var(--color-primary)', bg: 'var(--color-primary-light)'
                         },
                         {
                             icon: Zap,
                             title: 'Offline Optimized (PWA)',
-                            desc: 'Install Bill on your phone or desktop. Works perfectly offline, so you can continue billing even without an internet connection.',
-                            color: '#8b5cf6', bg: '#f5f3ff'
+                            desc: 'Install Invoice on your phone or desktop. Works perfectly offline, so you can continue invoicing even without an internet connection.',
+                            color: '#8b5cf6', bg: 'var(--color-primary-light)'
                         },
                         {
                             icon: ArrowRight,
@@ -298,15 +298,15 @@ export default function LandingPage() {
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                                 <Logo className="w-5 h-5" />
                             </div>
-                            <span style={{ fontWeight: 700, fontSize: 16, color: '#111' }}>Bill</span>
+                            <span style={{ fontWeight: 700, fontSize: 16, color: '#111' }}>Invoice</span>
                         </div>
-                        <span style={{ fontSize: 13, color: '#94a3b8' }}>© 2026 Bill. All rights reserved.</span>
+                        <span style={{ fontSize: 13, color: '#94a3b8' }}>© 2026 Invoice. All rights reserved.</span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: '#94a3b8' }}>
                         <span>
                             Designed & Developed by 
-                            <a href="https://roushan.framer.website" target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600, marginLeft: 4 }}>roushan.framer.website</a>
+                            <a href="https://roushan.framer.website" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600, marginLeft: 4 }}>roushan.framer.website</a>
                         </span>
                         <span style={{ color: '#e2e8f0' }}>|</span>
                         <a 
@@ -412,8 +412,8 @@ export default function LandingPage() {
                                     sessionStorage.setItem('guest_mode_bill_store_info', JSON.stringify(storeInfo));
                                     navigate('/create-invoice');
                                 }}
-                                style={{ flex: 1, padding: 14, background: 'var(--color-primary, #6366f1)', color: '#fff', borderRadius: 12, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
-                                Start Billing
+                                style={{ flex: 1, padding: 14, background: 'var(--color-primary)', color: 'var(--color-primary-foreground, white)', borderRadius: 12, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+                                Start Invoicing
                             </button>
                         </div>
                     </div>

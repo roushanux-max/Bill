@@ -12,9 +12,9 @@ const MobileNav: React.FC = () => {
 
   const baseItems = [
     { label: 'Home', icon: Home, path: '/dashboard' },
-    { label: 'Bills', icon: FileText, path: '/invoices' },
+    { label: 'Invoices', icon: FileText, path: '/invoices' },
     { label: 'Products', icon: Package, path: '/products' },
-    { label: 'Clients', icon: Users, path: '/customers' },
+    { label: 'Customers', icon: Users, path: '/customers' },
     { label: 'Settings', icon: Settings, path: '/settings' },
   ];
 

@@ -74,9 +74,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: `2px solid #eaeaea`, paddingBottom: '20px', marginBottom: '24px' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111', marginBottom: '8px' }}>INVOICE</div>
-            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}><strong>No:</strong> {invoice.invoiceNumber || 'INV-0001'}</div>
-            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}><strong>Date:</strong> {formatDateForDisplay(invoice.date)}</div>
+            <div style={{ fontSize: '18px', fontWeight: 900, color: '#111', marginBottom: '8px' }}>INVOICE</div>
+            <div style={{ fontSize: 'var(--font-size-base)', color: '#666', marginBottom: '4px' }}><strong>No:</strong> {invoice.invoiceNumber || 'INV-0001'}</div>
+            <div style={{ fontSize: 'var(--font-size-base)', color: '#666', marginBottom: '4px' }}><strong>Date:</strong> {formatDateForDisplay(invoice.date)}</div>
           </div>
           
           <div style={{ flex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -85,14 +85,14 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             ) : (
               <div style={{ color: '#111', fontWeight: 900, fontSize: '22px' }}>{storeInfo?.name?.toUpperCase() || 'COMPANY'}</div>
             )}
-            <div style={{ display: 'flex', gap: '16px', fontSize: '10px', color: '#666', fontWeight: 500 }}>
+            <div style={{ display: 'flex', gap: '16px', fontSize: 'var(--font-size-base)', color: '#666', fontWeight: 500 }}>
                {storeInfo?.phone && <span>{storeInfo.phone}</span>}
                {storeInfo?.email && <span>{storeInfo.email}</span>}
             </div>
           </div>
 
           <div style={{ flex: 1, textAlign: 'right' }}>
-             <div style={{ fontSize: '10px', color: '#666', lineHeight: 1.4, maxWidth: '180px', marginLeft: 'auto' }}>
+             <div style={{ fontSize: 'var(--font-size-base)', color: '#666', lineHeight: 1.5, maxWidth: '180px', marginLeft: 'auto' }}>
                 {storeInfo?.address}
              </div>
           </div>
@@ -110,17 +110,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{settings.paymentDetails ? 'Payment Info' : 'Business Info'}</p>
-            <div style={{ fontSize: '11px', color: '#555', lineHeight: 1.5 }}>
-              {settings.paymentDetails ? (
-                <div style={{ whiteSpace: 'pre-wrap' }}>{settings.paymentDetails}</div>
-              ) : (
-                <>
-                  {storeInfo?.gstin && <div>GST No: {storeInfo.gstin}</div>}
-                  {settings.website && <div>{settings.website}</div>}
-                </>
-              )}
-            </div>
+            {settings.website && (
+              <>
+                <p style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Website</p>
+                <div style={{ fontSize: 'var(--font-size-base)', color: '#555', fontWeight: 600 }}>{settings.website}</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -246,10 +241,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 </div>
 
                 <div style={{ marginTop: 'auto' }}>
-                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>{settings.paymentDetails ? 'Payment Info' : 'Business Info'}</p>
-                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-                        {settings.paymentDetails || settings.termsAndConditions || (settings.website && `Web: ${settings.website}`)}
-                    </div>
+                    {settings.website && (
+                      <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{settings.website}</p>
+                    )}
                 </div>
             </div>
 
@@ -354,53 +348,38 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       }}
     >
       {/* ── TOP HEADER BAR ─────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1a1a2e', padding: '20px 28px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff', padding: '32px 28px', borderBottom: `4px solid var(--color-primary)` }}>
         {/* Logo Section */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1 }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
           {settings.logo ? (
-            <img src={settings.logo} alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
+            <img src={settings.logo} alt="Logo" style={{ height: '64px', objectFit: 'contain' }} />
           ) : (
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 900, fontSize: '20px' }}>{storeInfo?.name?.[0]?.toUpperCase() || 'C'}</span>
+            <div style={{ width: '56px', height: '56px', borderRadius: '12px', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: 'var(--color-contrast-text)', fontWeight: 900, fontSize: '28px' }}>{storeInfo?.name?.[0]?.toUpperCase() || 'C'}</span>
             </div>
           )}
           <div>
-            <div style={{ color: '#fff', fontWeight: 900, fontSize: '22px', letterSpacing: '-0.5px' }}>
+            <div style={{ color: '#1e293b', fontWeight: 900, fontSize: '28px', letterSpacing: '-1px' }}>
               {storeInfo?.name?.toUpperCase() || 'COMPANY'}
             </div>
+            {storeInfo?.gstin && (
+              <div style={{ color: '#64748b', fontSize: '11px', fontWeight: 700, marginTop: '2px' }}>
+                GSTIN: {storeInfo.gstin}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Evenly Spaced Contact Info */}
-        <div style={{ flex: 2, display: 'flex', justifyContent: 'center', gap: '40px', zIndex: 1 }}>
-          {storeInfo?.phone && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ color: brandColor, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Call Us</span>
-              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600 }}>{storeInfo.phone}</span>
-            </div>
-          )}
-          {storeInfo?.email && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ color: brandColor, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Email Us</span>
-              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600 }}>{storeInfo.email}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Address aligned to right */}
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', zIndex: 1 }}>
-          {storeInfo?.address && (
-            <div style={{ textAlign: 'right', maxWidth: '180px' }}>
-              <span style={{ color: brandColor, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px', display: 'block' }}>Address</span>
-              <span style={{ color: '#fff', fontSize: '10px', fontWeight: 500, lineHeight: 1.3 }}>{storeInfo.address}</span>
-            </div>
-          )}
+        {/* Invoice Title aligned to right */}
+        <div style={{ textAlign: 'right' }}>
+          <h1 style={{ fontSize: '42px', fontWeight: 900, color: 'var(--color-primary)', margin: 0, lineHeight: 1, letterSpacing: '-2px' }}>INVOICE</h1>
+          <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: '#64748b', marginTop: '4px' }}>#{invoice.invoiceNumber || 'INV-0001'}</div>
         </div>
       </div>
 
-      {/* ── BILL TO + INVOICE INFO ───────────────────────── */}
+      {/* ── INVOICE TO + INVOICE INFO ───────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '24px 28px 20px 28px', gap: '32px' }}>
-        {/* Bill To */}
+        {/* Invoice To */}
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: '11px', fontWeight: 800, color: brandColor, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Invoice To:</p>
           <h2 style={{ fontSize: '22px', fontWeight: 900, color: '#1a1a2e', marginBottom: '4px', lineHeight: 1.2 }}>
@@ -409,31 +388,22 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           {invoice.customer?.gstin && (
             <p style={{ fontSize: '11px', color: '#555', marginBottom: '8px' }}>GSTIN: {invoice.customer.gstin}</p>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '11px', color: '#555' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: 'var(--font-size-base)', color: '#555', lineHeight: '1.5' }}>
             {invoice.customer?.phone && <span>Phone: {invoice.customer.phone}</span>}
             {invoice.customer?.email && <span>Email: {invoice.customer.email}</span>}
             {invoice.customer?.address && <span>Address: {invoice.customer.address}</span>}
           </div>
           
-          <div style={{ marginTop: '16px' }}>
-            <p style={{ fontSize: '11px', fontWeight: 800, color: brandColor, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-              {settings.paymentDetails ? 'Payment Method' : 'Business Details'}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#444' }}>
-              {settings.paymentDetails ? (
-                <p style={{ lineHeight: 1.5 }}>{settings.paymentDetails}</p>
-              ) : (
-                <>
-                  {storeInfo?.gstin && (
-                    <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#777', minWidth: '90px' }}>GST No:</span><span style={{ fontWeight: 700 }}>{storeInfo.gstin}</span></div>
-                  )}
-                  {settings.website && (
-                    <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#777', minWidth: '90px' }}>Website:</span><span style={{ fontWeight: 700 }}>{settings.website}</span></div>
-                  )}
-                </>
-              )}
+          {settings.paymentDetails && (
+            <div style={{ marginTop: '16px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                Payment Method
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: 'var(--font-size-base)', color: '#444', lineHeight: '1.5' }}>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{settings.paymentDetails}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Invoice Info Right aligned */}
@@ -461,11 +431,11 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
       {/* ── ITEMS TABLE ────────────────────────────────────── */}
       <div style={{ padding: '0 28px', flex: 1 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-base)', lineHeight: '1.4' }}>
           <thead>
-            <tr style={{ backgroundColor: brandColor, color: '#fff' }}>
-              <th style={{ padding: '9px 10px', textAlign: 'center', width: '36px', fontWeight: 800, letterSpacing: '0.5px' }}>NO.</th>
-              <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 800, letterSpacing: '0.5px' }}>ITEM DESCRIPTION</th>
+            <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-contrast-text)' }}>
+              <th style={{ padding: '12px 10px', textAlign: 'center', width: '36px', fontWeight: 900 }}>NO.</th>
+              <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 900 }}>ITEM DESCRIPTION</th>
               {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
                 <th style={{ padding: '9px 8px', textAlign: 'center', width: '60px', fontWeight: 800 }}>HSN</th>
               )}
@@ -571,9 +541,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 <span style={{ fontWeight: 700, color: '#1a1a2e' }}>₹{Math.round(totalTax).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: brandColor, padding: '10px 12px', borderRadius: '4px' }}>
-              <span style={{ color: '#fff', fontWeight: 900, fontSize: '13px', letterSpacing: '0.5px' }}>Total:</span>
-              <span style={{ color: '#fff', fontWeight: 900, fontSize: '16px' }}>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--color-primary)', padding: '14px 16px', borderRadius: '12px', marginTop: '8px' }}>
+              <span style={{ color: 'var(--color-contrast-text)', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>Total Amount</span>
+              <span style={{ color: 'var(--color-contrast-text)', fontWeight: 900, fontSize: '20px' }}>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
@@ -601,15 +571,41 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
         </div>
       </div>
 
-      {/* ── DARK BOTTOM BAR ────────────────────────────────── */}
-      <div style={{ marginTop: 'auto', backgroundColor: '#1a1a2e', padding: '12px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', bottom: '-20px', left: '-20px', width: '80px', height: '80px', borderRadius: '50%', backgroundColor: brandColor, opacity: 0.8 }} />
-        <span style={{ color: '#888', fontSize: '9px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', zIndex: 1 }}>
-          Generated by {storeInfo?.name || 'BillPro'}
-        </span>
-        <span style={{ color: '#555', fontSize: '9px', fontWeight: 600, zIndex: 1 }}>
-          {storeInfo?.phone && `${storeInfo.phone}  •  `}{storeInfo?.email}
-        </span>
+      {/* ── REDESIGNED FOOTER: ICON BASED ────────────────────── */}
+      <div style={{ marginTop: 'auto', borderTop: `2px solid var(--color-primary-light)`, padding: '24px 28px', backgroundColor: '#fcfcfd' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '32px' }}>
+            {storeInfo?.phone && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ color: 'var(--color-primary)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                </div>
+                <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: '#1a1a2e' }}>{storeInfo.phone}</span>
+              </div>
+            )}
+            {storeInfo?.email && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ color: 'var(--color-primary)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </div>
+                <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: '#1a1a2e' }}>{storeInfo.email}</span>
+              </div>
+            )}
+            {storeInfo?.address && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ color: 'var(--color-primary)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                </div>
+                <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: '#1a1a2e' }}>{storeInfo.address}</span>
+              </div>
+            )}
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Generated by {storeInfo?.name || 'InvoicePro'}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
