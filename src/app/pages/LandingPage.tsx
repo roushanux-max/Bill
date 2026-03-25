@@ -161,7 +161,7 @@ export default function LandingPage() {
                             onMouseLeave={e => { e.currentTarget.style.background = '#f5f3ff'; }}
                         >
                             Try Live Demo
-                        </a>
+                        </a >
                     </div>
 
                     {/* Scroll hint */}
@@ -173,12 +173,12 @@ export default function LandingPage() {
             </header>
 
             {/* ─── Interactive Demo / Experience ─── */}
-            <section id="experience" style={{ padding: '60px max(16px, calc((100vw - 1152px)/2)) 80px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
-                <div style={{ textAlign: 'center', marginBottom: 60 }}>
-                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
+            <section id="experience" style={{ padding: '40px max(16px, calc((100vw - 1152px)/2)) 60px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
+                <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                    <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 12 }}>
                         Experience the Speed.
                     </h2>
-                    <p style={{ fontSize: 20, color: '#64748b', maxWidth: 660, margin: '0 auto 32px' }}>
+                    <p style={{ fontSize: 20, color: '#64748b', maxWidth: 660, margin: '0 auto 24px' }}>
                         Create, customize, and download a professional GST invoice in real-time. 
                         No registration required to try.
                     </p>
@@ -190,7 +190,7 @@ export default function LandingPage() {
                     </div>
                 </div>
 
-                <div className="max-w-6xl mx-auto px-4 py-12 md:py-24 my-24 md:my-40">
+                <div className="max-w-6xl mx-auto px-4 py-4 md:py-6 my-4 md:my-8">
                     <InvoiceForm />
                 </div>
             </section>
@@ -344,7 +344,7 @@ export default function LandingPage() {
                     }}>
                         <h3 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Quick Setup</h3>
                         <p style={{ color: '#64748b', marginBottom: 24, lineHeight: 1.5 }}>
-                            Enter your branding details to start making invoices immediately. This data is temporary and will be cleared when you close the tab.
+                            Enter your business details to start making invoices immediately. This data is temporary and will be cleared when you close the tab.
                         </p>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

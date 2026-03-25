@@ -19,8 +19,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
     return sum + (amt * item.taxRate) / 100;
   }, 0);
 
-  const discount = invoice.discountTotal || 0;
-  const calculatedGrandTotal = subtotal + totalTax + (invoice.transportCharges ?? 0) - discount;
+  const discount = Number(invoice.discountTotal) || 0;
+  const transport = Number(invoice.transportCharges) || 0;
+  const calculatedGrandTotal = subtotal + totalTax + transport - discount;
   const total = invoice.grandTotal || calculatedGrandTotal;
 
   const fontFamilyMap: Record<string, string> = {
@@ -71,23 +72,29 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           padding: '40px'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `2px solid #eaeaea`, paddingBottom: '16px', marginBottom: '24px' }}>
-          <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}><strong>Invoice No:</strong> {invoice.invoiceNumber || 'INV-0001'}</div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}><strong>Date:</strong> {formatDateForDisplay(invoice.date)}</div>
-            {invoice.dueDate && <div style={{ fontSize: '12px', color: '#666' }}><strong>Due:</strong> {formatDateForDisplay(invoice.dueDate)}</div>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: `2px solid #eaeaea`, paddingBottom: '20px', marginBottom: '24px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#111', marginBottom: '8px' }}>INVOICE</div>
+            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}><strong>No:</strong> {invoice.invoiceNumber || 'INV-0001'}</div>
+            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}><strong>Date:</strong> {formatDateForDisplay(invoice.date)}</div>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          
+          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             {settings.logo ? (
-              <img src={settings.logo} alt="Logo" style={{ height: '40px', objectFit: 'contain', marginBottom: '12px' }} />
+              <img src={settings.logo} alt="Logo" style={{ height: '44px', objectFit: 'contain' }} />
             ) : (
-              <div style={{ color: '#111', fontWeight: 700, fontSize: '20px', marginBottom: '4px' }}>{storeInfo?.name?.toUpperCase() || 'COMPANY'}</div>
+              <div style={{ color: '#111', fontWeight: 900, fontSize: '22px' }}>{storeInfo?.name?.toUpperCase() || 'COMPANY'}</div>
             )}
-            <div style={{ fontSize: '10px', color: '#666', lineHeight: 1.4 }}>
-              {storeInfo?.address}<br/>
-              {storeInfo?.phone && <>{storeInfo.phone}<br/></>}
-              {storeInfo?.email && <>{storeInfo.email}</>}
+            <div style={{ display: 'flex', gap: '16px', fontSize: '10px', color: '#666', fontWeight: 500 }}>
+               {storeInfo?.phone && <span>{storeInfo.phone}</span>}
+               {storeInfo?.email && <span>{storeInfo.email}</span>}
             </div>
+          </div>
+
+          <div style={{ flex: 1, textAlign: 'right' }}>
+             <div style={{ fontSize: '10px', color: '#666', lineHeight: 1.4, maxWidth: '180px', marginLeft: 'auto' }}>
+                {storeInfo?.address}
+             </div>
           </div>
         </div>
 
@@ -156,9 +163,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   <span>Discount</span><span>- ₹{discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
-              {invoice.transportCharges > 0 && (
+              {transport > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '11px', color: '#555' }}>
-                  <span>Transport</span><span>₹{invoice.transportCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  <span>Transport</span><span>₹{transport.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
               {totalTax > 0 && (
@@ -294,9 +301,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                                 <span>Discount</span><span style={{ fontWeight: 600 }}>- ₹{discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                         )}
-                        {invoice.transportCharges > 0 && (
+                        {transport > 0 && (
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '11px', color: '#475569' }}>
-                                <span>Transport</span><span style={{ fontWeight: 600, color: '#0f172a' }}>₹{invoice.transportCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                <span>Transport</span><span style={{ fontWeight: 600, color: '#0f172a' }}>₹{transport.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                         )}
                         {totalTax > 0 && (
@@ -347,49 +354,45 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       }}
     >
       {/* ── TOP HEADER BAR ─────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1a1a2e', padding: '16px 28px', position: 'relative', overflow: 'hidden' }}>
-        {/* Dark red arc accent top-right */}
-        <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '100px', height: '100px', borderRadius: '50%', backgroundColor: brandColor, opacity: 0.85 }} />
-
-        {/* Logo + Company Name */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1a1a2e', padding: '20px 28px', position: 'relative', overflow: 'hidden' }}>
+        {/* Logo Section */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1 }}>
           {settings.logo ? (
             <img src={settings.logo} alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
           ) : (
-            <div style={{ width: '36px', height: '36px', borderRadius: '6px', backgroundColor: brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 900, fontSize: '18px' }}>{storeInfo?.name?.[0]?.toUpperCase() || 'C'}</span>
+            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: '#fff', fontWeight: 900, fontSize: '20px' }}>{storeInfo?.name?.[0]?.toUpperCase() || 'C'}</span>
             </div>
           )}
           <div>
-            <div style={{ color: '#fff', fontWeight: 900, fontSize: '20px', letterSpacing: '-0.5px', lineHeight: 1 }}>
+            <div style={{ color: '#fff', fontWeight: 900, fontSize: '22px', letterSpacing: '-0.5px' }}>
               {storeInfo?.name?.toUpperCase() || 'COMPANY'}
             </div>
-            {settings.tagline && (
-              <div style={{ color: '#aaa', fontSize: '9px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', marginTop: '2px' }}>
-                {settings.tagline}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Contact Info Strip */}
-        <div style={{ display: 'flex', gap: '20px', zIndex: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        {/* Evenly Spaced Contact Info */}
+        <div style={{ flex: 2, display: 'flex', justifyContent: 'center', gap: '40px', zIndex: 1 }}>
           {storeInfo?.phone && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ color: '#aaa', fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Phone</span>
-              <span style={{ color: '#fff', fontSize: '10px', fontWeight: 600 }}>{storeInfo.phone}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ color: brandColor, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Call Us</span>
+              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600 }}>{storeInfo.phone}</span>
             </div>
           )}
           {storeInfo?.email && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ color: '#aaa', fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Email</span>
-              <span style={{ color: '#fff', fontSize: '10px', fontWeight: 600 }}>{storeInfo.email}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ color: brandColor, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Email Us</span>
+              <span style={{ color: '#fff', fontSize: '11px', fontWeight: 600 }}>{storeInfo.email}</span>
             </div>
           )}
+        </div>
+
+        {/* Address aligned to right */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', zIndex: 1 }}>
           {storeInfo?.address && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', maxWidth: '160px' }}>
-              <span style={{ color: '#aaa', fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Address</span>
-              <span style={{ color: '#fff', fontSize: '10px', fontWeight: 600, textAlign: 'right', lineHeight: 1.3 }}>{storeInfo.address}</span>
+            <div style={{ textAlign: 'right', maxWidth: '180px' }}>
+              <span style={{ color: brandColor, fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px', display: 'block' }}>Address</span>
+              <span style={{ color: '#fff', fontSize: '10px', fontWeight: 500, lineHeight: 1.3 }}>{storeInfo.address}</span>
             </div>
           )}
         </div>
@@ -556,10 +559,10 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 <span style={{ fontWeight: 700, color: '#16a34a' }}>- ₹{discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
-            {invoice.transportCharges > 0 && (
+            {transport > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11px' }}>
                 <span style={{ color: '#666', fontWeight: 600 }}>Transport:</span>
-                <span style={{ fontWeight: 700, color: '#1a1a2e' }}>₹{invoice.transportCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span style={{ fontWeight: 700, color: '#1a1a2e' }}>₹{transport.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
             {totalTax > 0 && (

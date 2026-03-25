@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import Logo from '@/shared/components/Logo';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, EyeOff, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/utils/supabase';
 import { validateEmail, validatePhone } from '@/shared/utils/validation';
@@ -18,6 +18,8 @@ export default function Register() {
   const [mobile, setMobile] = useState('');
   const [dob, setDob] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [industry, setIndustry] = useState('general');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function Register() {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password, name, mobile, '', dob);
+    const { error } = await signUp(email, password, name, mobile, industry, dob);
     if (error) {
       toast.error(error.message || 'Failed to create account');
       setLoading(false);
@@ -187,11 +189,53 @@ export default function Register() {
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Password</label>
-                        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="••••••••" />
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary pr-10"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-1">
                         <label className="block text-sm font-semibold text-slate-700">Confirm Password</label>
-                        <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="••••••••" />
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={confirmPassword}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary pr-10"
+                            placeholder="••••••••"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
+                          <LayoutGrid size={16} className="text-primary" />
+                          Business Industry
+                        </label>
+                        <select
+                          value={industry}
+                          onChange={(e) => setIndustry(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 outline-none transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        >
+                          <option value="general">General Business</option>
+                          <option value="furniture">Furniture Shop</option>
+                          <option value="clothing">Clothing / Boutique</option>
+                          <option value="hotel">Hotel / Residency</option>
+                        </select>
+                        <p className="text-[10px] text-slate-400 px-1">This sets your default invoice template and fields.</p>
                       </div>
                     </div>
 
@@ -219,6 +263,22 @@ export default function Register() {
                       Sign In
                     </Link>
                   </p>
+
+                  <div className="relative py-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-100"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="px-4 bg-white text-slate-400 font-medium">Temporary Access</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/create-invoice')}
+                    className="w-full py-3 rounded-xl font-bold border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-2"
+                  >
+                    Try Guest Mode
+                  </button>
                 </div>
               </div>
             </div>

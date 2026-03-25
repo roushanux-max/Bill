@@ -71,7 +71,7 @@ export default function ConflictResolutionModal({ guestStore, guestBranding, onR
         { id: 'all', title: 'Apply to all', desc: 'Update my profile and use this for all invoices' },
         { id: 'new', title: 'Apply to new invoices', desc: 'Update profile, keep old invoices unchanged' },
         { id: 'temp', title: 'Use only for this invoice', desc: 'Temporary. Do not save to my profile' },
-        { id: 'discard', title: 'Keep existing branding', desc: 'Discard these guest changes' },
+        { id: 'discard', title: 'Keep existing business details', desc: 'Discard these guest changes' },
     ] as const;
 
     return (
@@ -83,7 +83,7 @@ export default function ConflictResolutionModal({ guestStore, guestBranding, onR
                     <ShieldAlert size={24} />
                 </div>
                 
-                <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Sync Branding?</h3>
+                <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Sync Business Details?</h3>
                 <p className="text-slate-500 mb-6 leading-relaxed font-medium">
                     You made changes to your branding while logged out. How would you like to apply them to your existing account?
                 </p>

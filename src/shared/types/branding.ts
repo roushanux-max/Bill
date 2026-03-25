@@ -37,7 +37,7 @@ export interface BrandingSettings {
 export const defaultBrandingSettings: BrandingSettings = {
   logo: null,
   logoSize: 'medium',
-  primaryColor: '#0f172a',
+  primaryColor: '#4f46e5',
   headerStyle: 'modern',
   showBorder: true,
   fontFamily: 'aptos',

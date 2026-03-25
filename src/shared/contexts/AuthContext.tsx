@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/shared/utils/supabase';
 import { saveInvoice, getUserKey, logActivity, safeGet, safeSet, safeRemove } from '@/shared/utils/storage';
+import { toast } from 'sonner';
 import LoadingScreen from '@/shared/components/LoadingScreen';
 
 interface AuthContextType {
@@ -11,7 +12,7 @@ interface AuthContextType {
   loading: boolean;
   hasStore: boolean | null;
   refreshHasStore: () => Promise<void>;
-  signUp: (email: string, password: string, name: string, mobile?: string, city?: string, dob?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string, mobile?: string, industry?: string, dob?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   isAdmin: boolean;
@@ -246,7 +247,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     handleUserSignIn(user);
   }, [user]);
 
-  const signUp = async (email: string, password: string, name: string, mobile?: string, city?: string, dob?: string) => {
+  const getFriendlyError = (error: any) => {
+    if (!error) return null;
+    const msg = error.message?.toLowerCase() || '';
+    if (msg.includes('user already exists')) return 'This email is already registered. Please try logging in.';
+    if (msg.includes('invalid login credentials')) return 'Incorrect email or password. Please try again.';
+    if (msg.includes('rate limit exceeded') || msg.includes('429')) return 'Too many attempts. Please wait a few minutes.';
+    if (msg.includes('weak_password')) return 'Password is too weak. Use at least 6 characters.';
+    return error.message;
+  };
+
+  const signUp = async (email: string, password: string, name: string, mobile?: string, industry?: string, dob?: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -255,7 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             name,
             mobile: mobile || '',
-            city: city || '',
+            domain: industry || 'general',
             dob: dob || '',
           }
         }
@@ -270,10 +281,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
+      if (error) {
+        const friendlyMsg = getFriendlyError(error);
+        console.error('Signup Error:', error);
+        toast.error(friendlyMsg);
+      }
       return { error };
-    } catch (error) {
-      console.error('Error during signup:', error);
-      return { error: 'Failed to create account' };
+    } catch (error: any) {
+      console.error('Unexpected Error during signup:', error);
+      return { error: error.message || 'Failed to create account' };
     }
   };
 

@@ -13,9 +13,6 @@ export default function IndustrySelectorModal({ onClose, canClose = true }: Indu
     const activeDomain = settings.domain || 'general';
 
     const domains = [
-        { id: 'general', icon: '📝', name: 'General', desc: 'Standard business layout' },
-        { id: 'freelance', icon: '💻', name: 'Freelance & Services', desc: 'Adds Project, Hours' },
-        { id: 'medical', icon: '⚕️', name: 'Medical & Clinic', desc: 'Adds Patient, Procedure' },
         { id: 'furniture', icon: '🛋️', name: 'Furniture', desc: 'Adds HSN, Material' },
         { id: 'clothing', icon: '👕', name: 'Clothing', desc: 'Adds Size, Color' },
         { id: 'hotel', icon: '🏨', name: 'Hotel', desc: 'Adds Room, Nights' }

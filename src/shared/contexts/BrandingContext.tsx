@@ -27,8 +27,16 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<BrandingSettings>(() => {
     try {
       const key = getUserKey('bill_branding_settings');
-      const saved = key ? safeGet(key) : null;
-      return saved ? JSON.parse(saved) : defaultBrandingSettings;
+      const cached = key ? safeGet(key) : null;
+      if (cached) return JSON.parse(cached);
+      
+      // Fallback: If we have user metadata domain (from signup), use it as initial domain
+      const metaDomain = user?.user_metadata?.domain;
+      if (metaDomain) {
+        return { ...defaultBrandingSettings, domain: metaDomain };
+      }
+      
+      return defaultBrandingSettings;
     } catch (e) {
       console.error('Error loading initial branding settings:', e);
       return defaultBrandingSettings;

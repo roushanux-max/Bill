@@ -56,9 +56,9 @@ export default function LoadingScreen({ message, type = 'default' }: LoadingScre
       />
       
       {/* Glassmorphic Container */}
-      <div className="relative z-10 flex flex-col items-center px-8 py-12 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/40 shadow-2xl max-w-xs w-full">
+      <div className="relative z-10 flex flex-col items-center px-10 py-16 rounded-[2.5rem] bg-white/60 backdrop-blur-2xl border border-white/50 shadow-2xl max-w-sm w-full mx-4">
         {/* Thematic Animation */}
-        <div className="relative w-24 h-24 mb-8">
+        <div className="relative w-32 h-32 mb-10">
           {type === 'printing' ? (
             <svg viewBox="0 0 100 100" className="w-full h-full">
               {/* Gears for "Machine" look */}

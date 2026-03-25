@@ -659,11 +659,24 @@ export const saveCustomer = async (customer: Customer) => {
   };
 
   try {
-    const upsertPromise = isUUID(customer.id)
-      ? supabase.from('customers').upsert({ id: customer.id, ...customerData })
+    // 1. Check if customer with this phone already exists for this user/store
+    const { data: existing } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('store_id', storeId!)
+      .eq('phone', customer.phone)
+      .maybeSingle();
+
+    const targetId = existing?.id || (isUUID(customer.id) ? customer.id : null);
+    
+    const upsertPromise = targetId
+      ? supabase.from('customers').upsert({ id: targetId, ...customerData })
       : supabase.from('customers').insert(customerData);
 
-    await upsertPromise;
+    const { data: savedData, error: saveError } = await (upsertPromise as any).select('id').single();
+    if (saveError) throw saveError;
+    
+    const finalId = savedData?.id || targetId || customer.id;
     
     // DB Success
     customer.isSynced = true;
@@ -840,11 +853,26 @@ export const saveProduct = async (product: Product) => {
   };
 
   try {
-    const upsertPromise = isUUID(product.id)
-      ? supabase.from('products').upsert({ id: product.id, ...productData })
+    // 1. Check if product with Name + Rate + HSN exists
+    const { data: existing } = await supabase
+      .from('products')
+      .select('id')
+      .eq('store_id', storeId!)
+      .eq('name', product.name)
+      .eq('rate', product.sellingPrice)
+      .eq('hsn_code', product.hsnCode || '')
+      .maybeSingle();
+
+    const targetId = existing?.id || (isUUID(product.id) ? product.id : null);
+
+    const upsertPromise = targetId
+      ? supabase.from('products').upsert({ id: targetId, ...productData })
       : supabase.from('products').insert(productData);
 
-    await upsertPromise;
+    const { data: savedData, error: saveError } = await (upsertPromise as any).select('id').single();
+    if (saveError) throw saveError;
+
+    const finalId = savedData?.id || targetId || product.id;
 
     product.isSynced = true;
     product.lastSyncedAt = new Date().toISOString();
@@ -1316,25 +1344,63 @@ export const deleteInvoice = async (id: string): Promise<boolean> => {
   }
 };
 
+export const getAndIncrementInvoiceNumber = async (): Promise<string> => {
+  try {
+    if (isGuestMode()) return await getNextInvoiceNumber();
+
+    const storeId = getActiveStoreId();
+    if (!storeId) return await getNextInvoiceNumber();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return '1001';
+
+    // 1. Get current last_invoice_number from store
+    const { data, error } = await supabase
+      .from('stores')
+      .select('last_invoice_number')
+      .eq('id', storeId)
+      .single();
+
+    let nextNum: number;
+
+    if (!error && data && data.last_invoice_number !== null) {
+      nextNum = Number(data.last_invoice_number) + 1;
+    } else {
+      // 2. Fallback: Calculate from existing invoices if no counter exists
+      const currentMax = await getNextInvoiceNumber();
+      nextNum = parseInt(currentMax, 10);
+    }
+
+    // 3. Update store record with the new number
+    await supabase.from('stores').update({ last_invoice_number: nextNum }).eq('id', storeId);
+    
+    return nextNum.toString();
+  } catch (e) {
+    console.error('getAndIncrementInvoiceNumber failed:', e);
+    return await getNextInvoiceNumber();
+  }
+};
+
 export const getNextInvoiceNumber = async (): Promise<string> => {
   try {
     let maxNum = 1000;
 
     // Check recent local caching primarily mapping current state
-    const { data: invoices } = await getInvoices();
-    if (invoices && invoices.length > 0) {
-      for (const inv of (invoices || [])) {
-        if (inv.invoiceNumber) {
-          const numStr = inv.invoiceNumber.replace(/\D/g, '');
-          if (numStr) {
-            const num = parseInt(numStr, 10);
-            if (!isNaN(num) && num > maxNum) maxNum = num;
+    const key = getUserKey('bill_invoices');
+    if (key) {
+        const invoices = getCachedData<Invoice[]>(key, []);
+        for (const inv of invoices) {
+          if (inv.invoiceNumber) {
+            const numStr = inv.invoiceNumber.replace(/\D/g, '');
+            if (numStr) {
+              const num = parseInt(numStr, 10);
+              if (!isNaN(num) && num > maxNum) maxNum = num;
+            }
           }
         }
-      }
     }
 
-    // Actively query DB for authoritative sequence regardless of local trimming
+    // Actively query DB for authoritative sequence
     const storeId = getActiveStoreId();
     const { data: { user } } = await supabase.auth.getUser();
     if (storeId && user) {
@@ -1344,7 +1410,7 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
         .eq('store_id', storeId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
         
       if (!error && data) {
         for (const row of data) {
@@ -1359,24 +1425,7 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
 
     return (maxNum + 1).toString();
   } catch (e) {
-    console.error('Error calculating next invoice number, falling back to local only:', e);
-    // Silent Fallback
-    try {
-      const { data: invoices } = await getInvoices();
-      let maxNum = 1000;
-      for (const inv of (invoices || [])) {
-         if (inv.invoiceNumber) {
-           const numStr = inv.invoiceNumber.replace(/\D/g, '');
-           if (numStr) {
-             const num = parseInt(numStr, 10);
-             if (!isNaN(num) && num > maxNum) maxNum = num;
-           }
-         }
-      }
-      return (maxNum + 1).toString();
-    } catch {
-      return '1001';
-    }
+    return '1001';
   }
 };
 
