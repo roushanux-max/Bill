@@ -83,11 +83,11 @@ export default function LandingPage() {
     }, []);
 
     return (
-        <div style={{ fontFamily: `var(--font-family, ${settings.fontFamily}), 'Google Sans', 'Inter', system-ui, sans-serif`, background: '#fff', color: '#1a1a2e', minHeight: '100vh', position: 'relative' }}>
+        <div style={{ fontFamily: `'Aptos', var(--font-family, ${settings.fontFamily}), 'Segoe UI', system-ui, sans-serif`, background: '#fff', color: '#1a1a2e', minHeight: '100vh', position: 'relative' }}>
 
             {/* ─── Hero ─── */}
             <header style={{
-                paddingTop: 140, paddingBottom: 60, textAlign: 'center', padding: '140px max(24px, calc((100vw - 800px)/2)) 60px', position: 'relative', overflow: 'hidden', zIndex: 2
+                paddingTop: 140, paddingBottom: 60, textAlign: 'center', padding: '140px max(16px, calc((100vw - 800px)/2)) 60px', position: 'relative', overflow: 'hidden', zIndex: 2
             }}>
                 {/* Gradient orbs */}
                 <div style={{
@@ -173,7 +173,7 @@ export default function LandingPage() {
             </header>
 
             {/* ─── Interactive Demo / Experience ─── */}
-            <section id="experience" style={{ padding: '60px max(20px, calc((100vw - 1100px)/2)) 80px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
+            <section id="experience" style={{ padding: '60px max(16px, calc((100vw - 1152px)/2)) 80px', background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)', position: 'relative' }}>
                 <div style={{ textAlign: 'center', marginBottom: 60 }}>
                     <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px', marginBottom: 20 }}>
                         Experience the Speed.
@@ -190,13 +190,13 @@ export default function LandingPage() {
                     </div>
                 </div>
 
-                <div className="max-w-[1100px] mx-auto px-6 py-12 md:py-24 my-24 md:my-40">
+                <div className="max-w-6xl mx-auto px-4 py-12 md:py-24 my-24 md:my-40">
                     <InvoiceForm />
                 </div>
             </section>
 
             {/* ─── Stats ─── */}
-            <section style={{ padding: '0 max(24px, calc((100vw - 1100px)/2)) 80px', marginTop: '48px', marginBottom: '48px', position: 'relative', zIndex: 2 }}>
+            <section style={{ padding: '0 max(16px, calc((100vw - 1152px)/2)) 80px', marginTop: '48px', marginBottom: '48px', position: 'relative', zIndex: 2 }}>
                 <AnimatedSection>
                     <div style={{
                         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -220,7 +220,7 @@ export default function LandingPage() {
             </section>
 
             {/* ─── Features ─── */}
-            <section id="features" style={{ padding: '120px max(24px, calc((100vw - 1100px)/2))', position: 'relative', zIndex: 2 }}>
+            <section id="features" style={{ padding: '120px max(16px, calc((100vw - 1152px)/2))', position: 'relative', zIndex: 2 }}>
                 <div style={{ textAlign: 'center', marginBottom: 100 }}>
                     <h2 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 800, color: '#0f172a', letterSpacing: '-1.5px', marginBottom: 24 }}>
                         Engineered for modern business.
@@ -289,7 +289,7 @@ export default function LandingPage() {
             {/* ─── Footer ─── */}
             <footer style={{
                 borderTop: '1px solid #f1f5f9',
-                padding: '32px max(24px, calc((100vw - 1100px)/2))',
+                padding: '32px max(16px, calc((100vw - 1152px)/2))',
                 background: '#fff', position: 'relative', zIndex: 2
             }}>
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">

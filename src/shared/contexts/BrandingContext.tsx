@@ -286,12 +286,6 @@ function adjustBrightness(color: string, percent: number): string {
  * Get CSS font-family string from setting
  */
 function getFontFamilyString(font: string): string {
-  switch (font) {
-    case 'aptos': return "'Aptos', 'Segoe UI', system-ui, sans-serif";
-    case 'inter': return "'Inter', sans-serif";
-    case 'roboto': return "'Roboto', sans-serif";
-    case 'lato': return "'Lato', sans-serif";
-    case 'opensans': return "'Open Sans', sans-serif";
-    default: return "'Aptos', 'Segoe UI', system-ui, sans-serif";
-  }
+  // Enforce Aptos globally per new branding guidelines
+  return "'Aptos', 'Segoe UI', system-ui, sans-serif";
 }

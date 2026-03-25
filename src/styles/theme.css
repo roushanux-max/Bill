@@ -5,7 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Homemade+Apple&display=swap');
 
 :root {
-  --font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-family: 'Aptos', 'Segoe UI', system-ui, sans-serif;
   --font-size: 16px;
   --background: #ffffff;
   --foreground: #252525;

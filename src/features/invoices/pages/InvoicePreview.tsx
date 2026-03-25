@@ -40,8 +40,21 @@ export default function InvoicePreview() {
             return;
           } else if (selectedInvoice) {
             console.warn('Invoice fetched from DB but missing items. Attempting local merge...');
-            // Don't return yet, allow it to fall through to local storage check which might have items
+            // Check local storage FIRST, if it has items, use local storage. Else just use selectedInvoice.
+            const invKey = getUserKey('previewInvoice');
+            const previewData = invKey ? safeGet(invKey) : null;
+            if (previewData) {
+               try {
+                   const parsedInvoice = JSON.parse(previewData);
+                   if (parsedInvoice.id === previewInvoiceId && parsedInvoice.items?.length > 0) {
+                       setInvoice(parsedInvoice);
+                       return;
+                   }
+               } catch (e) {}
+            }
+            // If local storage didn't help, STILL KEEP the DB invoice, do not fall back to sample!
             setInvoice(selectedInvoice);
+            return; // MUST RETURN HERE so it doesn't fall through to sample!
           }
         } catch (e) {
           console.error('Failed to load invoice by ID:', e);
@@ -270,7 +283,8 @@ export default function InvoicePreview() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={handleBack} 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              style={{ color: settings.primaryColor }}
+              className="flex items-center gap-1.5 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer hover:opacity-80"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -283,7 +297,8 @@ export default function InvoicePreview() {
               <Button
                 variant="default"
                 size="sm"
-                className="bg-amber-400 hover:bg-amber-500 text-slate-900 border-none px-4"
+                style={{ backgroundColor: settings.primaryColor, color: '#fff' }}
+                className="hover:opacity-90 border-none px-4"
                 disabled={isGenerating}
               >
                 <Pencil className="h-4 w-4 mr-2" />
@@ -294,7 +309,8 @@ export default function InvoicePreview() {
               variant="outline"
               size="sm"
               onClick={handlePrint}
-              className="text-amber-600 border-amber-200 hover:bg-amber-50"
+              style={{ color: settings.primaryColor, borderColor: settings.primaryColor }}
+              className="hover:opacity-90 bg-white"
               disabled={isGenerating}
             >
               <Printer className="h-4 w-4 mr-2" />
@@ -304,7 +320,8 @@ export default function InvoicePreview() {
               variant="outline"
               size="sm"
               onClick={handleDownload}
-              className="text-amber-600 border-amber-200 hover:bg-amber-50"
+              style={{ color: settings.primaryColor, borderColor: settings.primaryColor }}
+              className="hover:opacity-90 bg-white"
               disabled={isGenerating}
             >
               <Download className="h-4 w-4 mr-2" />
@@ -314,7 +331,8 @@ export default function InvoicePreview() {
               variant="default"
               size="sm"
               onClick={handleShare}
-              className="bg-amber-400 hover:bg-amber-500 text-slate-900"
+              style={{ backgroundColor: settings.primaryColor, color: '#fff' }}
+              className="hover:opacity-90 border-none"
               disabled={isGenerating}
             >
               <Share2 className="h-4 w-4 mr-2" />
@@ -322,13 +340,13 @@ export default function InvoicePreview() {
             </Button>
           </div>
 
-          {/* Mobile Actions */}
           <div className="flex sm:hidden items-center gap-2">
             <Button
               variant="default"
               size="sm"
               onClick={handleShare}
-              className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-3"
+              style={{ backgroundColor: settings.primaryColor, color: '#fff' }}
+              className="hover:opacity-90 border-none px-3"
               disabled={isGenerating}
             >
               <Share2 className="h-4 w-4" />
