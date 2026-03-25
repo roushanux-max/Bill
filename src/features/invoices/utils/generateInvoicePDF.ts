@@ -132,7 +132,7 @@ export function generateInvoicePDF(
     y = Math.max(y + 12, rightY + 5);
 
     // ── Invoice Details Section ───────────────────────────────────
-    pdf.text('BILL TO:', margin, y);
+    pdf.text('INVOICE TO:', margin, y);
     y += 8;
     if (invoice.customer?.name) {
         setFont('bold', 20, textDark);

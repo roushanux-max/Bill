@@ -108,9 +108,9 @@ describe('Invoice Flow Integration', () => {
     const addButton = screen.getByRole('button', { name: /add to invoice/i });
     fireEvent.click(addButton);
 
-    // 4. Verify item added to list (it shows "Bill Items (1)")
+    // 4. Verify item added to list (it shows "Invoice Items (1)")
     await waitFor(() => {
-      expect(screen.getByText(/Bill Items \(1\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Invoice Items \(1\)/i)).toBeInTheDocument();
     });
 
     // 5. Save Invoice

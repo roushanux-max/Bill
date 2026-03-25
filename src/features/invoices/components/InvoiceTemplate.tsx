@@ -100,7 +100,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
           <div>
-            <p style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Billed To</p>
+            <p style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Invoice To</p>
             <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#111', marginBottom: '4px' }}>{invoice.customer?.name || 'Customer Name'}</h2>
             <div style={{ fontSize: '11px', color: '#555', lineHeight: 1.5 }}>
               {invoice.customer?.address && <div>{invoice.customer.address}</div>}
@@ -230,7 +230,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 </div>
 
                 <div style={{ marginBottom: '40px' }}>
-                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>Billed To</p>
+                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>Invoice To</p>
                     <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>{invoice.customer?.name || 'Customer Name'}</p>
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
                         {invoice.customer?.address}<br/>

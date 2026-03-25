@@ -783,7 +783,7 @@ export default function AdminDashboard() {
                 {/* Customer Section */}
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                    <Users size={14} className="text-indigo-600" /> Billed To
+                    <Users size={14} className="text-indigo-600" /> Invoice To
                   </h4>
                   <div className="space-y-3">
                     <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{viewingInvoice.customer?.name}</p>

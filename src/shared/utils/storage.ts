@@ -6,7 +6,7 @@ import { parseDateFromDisplay } from '@/shared/utils/dateUtils';
 
 export const isGuestMode = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return window.sessionStorage.getItem('bill_guest_mode') === 'true';
+  return window.sessionStorage.getItem('invoice_guest_mode') === 'true';
 };
 
 /** Read a string value from localStorage or sessionStorage. Returns null if unavailable or on error. */
@@ -50,21 +50,21 @@ export const safeRemove = (key: string): void => {
 
 export const hasGuestDataToMigrate = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return !!window.sessionStorage.getItem('guest_mode_bill_invoices');
+  return !!window.sessionStorage.getItem('guest_mode_invoice_invoices');
 };
 
 export const migrateGuestDataToDatabase = async (): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
   
   // Temporarily disable guest mode so functions write to real DB
-  window.sessionStorage.removeItem('bill_guest_mode');
+  window.sessionStorage.removeItem('invoice_guest_mode');
   let success = true;
 
   try {
-    const custRaw = window.sessionStorage.getItem('guest_mode_bill_customers');
-    const prodRaw = window.sessionStorage.getItem('guest_mode_bill_products');
-    const invRaw = window.sessionStorage.getItem('guest_mode_bill_invoices');
-    const brandingRaw = window.sessionStorage.getItem('guest_mode_bill_branding_settings');
+    const custRaw = window.sessionStorage.getItem('guest_mode_invoice_customers');
+    const prodRaw = window.sessionStorage.getItem('guest_mode_invoice_products');
+    const invRaw = window.sessionStorage.getItem('guest_mode_invoice_invoices');
+    const brandingRaw = window.sessionStorage.getItem('guest_mode_invoice_branding_settings');
 
     if (custRaw) {
       const customers = JSON.parse(custRaw);
@@ -154,7 +154,7 @@ export interface SyncOperation {
 }
 
 export const addToSyncQueue = (type: SyncOperation['type'], payload: any) => {
-  const key = getUserKey('bill_sync_queue');
+  const key = getUserKey('invoice_sync_queue');
   if (!key) return;
   const queue = getCachedData<SyncOperation[]>(key, []);
   queue.push({
@@ -167,7 +167,7 @@ export const addToSyncQueue = (type: SyncOperation['type'], payload: any) => {
 };
 
 export const processSyncQueue = async () => {
-  const key = getUserKey('bill_sync_queue');
+  const key = getUserKey('invoice_sync_queue');
   if (!key) return;
   
   let queue = getCachedData<SyncOperation[]>(key, []);
@@ -194,7 +194,7 @@ export const processSyncQueue = async () => {
         if (error) throw error;
         
         // Update local object to synced
-        const cKey = getUserKey('bill_customers');
+        const cKey = getUserKey('invoice_customers');
         if (cKey) {
             const arr = getCachedData<Customer[]>(cKey, []);
             const idx = arr.findIndex(c => c.id === customerId);
@@ -209,7 +209,7 @@ export const processSyncQueue = async () => {
         const { error } = await req;
         if (error) throw error;
         
-        const pKey = getUserKey('bill_products');
+        const pKey = getUserKey('invoice_products');
         if (pKey) {
             const arr = getCachedData<Product[]>(pKey, []);
             const idx = arr.findIndex(p => p.id === productId);
@@ -242,7 +242,7 @@ export const processSyncQueue = async () => {
             await supabase.from('invoice_items').delete().eq('invoice_id', invId);
         }
         
-        const iKey = getUserKey('bill_invoices');
+        const iKey = getUserKey('invoice_invoices');
         if (iKey) {
             const arr = getCachedData<Invoice[]>(iKey, []);
             const idx = arr.findIndex(i => i.id === invId);
@@ -294,7 +294,7 @@ export const getUserKey = (key: string): string | null => {
   }
 
   // 1. Try immediate recall from our manual cache
-  let storedUser = safeGet('bill_user_id');
+  let storedUser = safeGet('invoice_user_id');
 
   // 2. If missing, try to extract from Supabase's own storage patterns
   if (!storedUser) {
@@ -307,7 +307,7 @@ export const getUserKey = (key: string): string | null => {
           const userId = parsed?.user?.id;
           if (userId) {
             storedUser = userId;
-            safeSet('bill_user_id', userId);
+            safeSet('invoice_user_id', userId);
           }
         }
       }
@@ -330,7 +330,7 @@ const getActiveStoreId = () => {
 export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => {
   // Try local first for instant recall
   if (!force) {
-    const key = getUserKey('bill_store_info');
+    const key = getUserKey('invoice_store_info');
     const localData = key ? safeGet(key) : null;
     if (localData) {
       try {
@@ -391,7 +391,7 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
       email: data.email || '',
       authDistributors: data.auth_distributors || '',
     };
-    const key = getUserKey('bill_store_info');
+    const key = getUserKey('invoice_store_info');
     if (key) safeSet(key, JSON.stringify(info));
     return info;
   }
@@ -401,13 +401,13 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
 
 export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
   // Update local storage first for immediate UI response
-  const key = getUserKey('bill_store_info');
+  const key = getUserKey('invoice_store_info');
   if (key) safeSet(key, JSON.stringify(info));
   
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     // ALWAYS ensure this is set for prefixes immediately
-    safeSet('bill_user_id', user.id); 
+    safeSet('invoice_user_id', user.id); 
 
     try {
       let storeId = getActiveStoreId();
@@ -458,7 +458,7 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
 export const getBrandingSettings = async (force = false): Promise<BrandingSettings> => {
   // Try local first
   if (!force) {
-    const key = getUserKey('bill_branding_settings');
+    const key = getUserKey('invoice_branding_settings');
     if (key) {
       const cached = getCachedData<BrandingSettings | null>(key, null);
       if (cached) return cached;
@@ -499,7 +499,7 @@ export const getBrandingSettings = async (force = false): Promise<BrandingSettin
   }
 
   const settings = data.branding_settings as BrandingSettings;
-  const key = getUserKey('bill_branding_settings');
+  const key = getUserKey('invoice_branding_settings');
   if (key) safeSet(key, JSON.stringify(settings));
   return settings;
 };
@@ -508,7 +508,7 @@ export const saveBrandingSettings = async (brandingSettings: BrandingSettings) =
   const storeId = getActiveStoreId();
 
   // Save local first
-  const key = getUserKey('bill_branding_settings');
+  const key = getUserKey('invoice_branding_settings');
   if (key) safeSet(key, JSON.stringify(brandingSettings));
 
   if (isGuestMode()) {
@@ -537,7 +537,7 @@ export interface ApiResult<T> {
 export const getCustomers = async (force = false, limit = 1000): Promise<ApiResult<Customer[]>> => {
   try {
     // Try local first for performance and offline resilience
-    const key = getUserKey('bill_customers');
+    const key = getUserKey('invoice_customers');
     if (key && !force) {
       const cached = getCachedData<Customer[]>(key, []);
       if (cached.length > 0) return { data: cached, loading: false, error: null };
@@ -632,7 +632,7 @@ export const saveCustomer = async (customer: Customer) => {
     ? (currentCustomers || []).map((c, i) => i === index ? customer : c)
     : [customer, ...(currentCustomers || [])];
 
-  const key = getUserKey('bill_customers');
+  const key = getUserKey('invoice_customers');
   if (key) safeSet(key, JSON.stringify(updatedCustomers));
 
   const storeId = getActiveStoreId();
@@ -695,7 +695,7 @@ export const saveCustomer = async (customer: Customer) => {
 
 export const deleteCustomer = async (id: string) => {
   // Remove from local storage immediately (targeted — don't wipe all customers)
-  const key = getUserKey('bill_customers');
+  const key = getUserKey('invoice_customers');
   if (key) {
     const customers = getCachedData<Customer[]>(key, []);
     if (customers.length > 0) {
@@ -731,7 +731,7 @@ export const deleteCustomer = async (id: string) => {
 export const getProducts = async (force = false, limit = 1000): Promise<ApiResult<Product[]>> => {
   try {
     // Try local first
-    const key = getUserKey('bill_products');
+    const key = getUserKey('invoice_products');
     if (key && !force) {
       const cached = getCachedData<Product[]>(key, []);
       if (cached.length > 0) return { data: cached, loading: false, error: null };
@@ -825,7 +825,7 @@ export const saveProduct = async (product: Product) => {
     ? (currentProducts || []).map((p, i) => i === index ? product : p)
     : [product, ...(currentProducts || [])];
 
-  const key = getUserKey('bill_products');
+  const key = getUserKey('invoice_products');
   if (key) safeSet(key, JSON.stringify(updatedProducts));
 
   const storeId = getActiveStoreId();
@@ -890,7 +890,7 @@ export const saveProduct = async (product: Product) => {
 
 export const deleteProduct = async (id: string) => {
   // Remove from local storage immediately (targeted — don't wipe all products)
-  const key = getUserKey('bill_products');
+  const key = getUserKey('invoice_products');
   if (key) {
     const products = getCachedData<Product[]>(key, []);
     if (products.length > 0) {
@@ -915,7 +915,7 @@ export const deleteProduct = async (id: string) => {
 export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> => {
   try {
     // Try local first
-    const key = getUserKey('bill_invoices');
+    const key = getUserKey('invoice_invoices');
     if (key && !force) {
       const cached = getCachedData<Invoice[]>(key, []);
       if (cached.length > 0) return { data: cached.filter(inv => inv && inv.id), loading: false, error: null };
@@ -1047,7 +1047,7 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
 
 export const getInvoice = async (id: string): Promise<Invoice | null> => {
   if (isGuestMode()) {
-    const key = getUserKey('bill_invoices');
+    const key = getUserKey('invoice_invoices');
     if (key) {
       const cached = getCachedData<Invoice[]>(key, []);
       const found = cached.find(inv => inv.id === id);
@@ -1143,7 +1143,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
   try {
     // 1. Always save to localStorage first so the app works offline / for preview
     try {
-      const key = getUserKey('bill_invoices');
+      const key = getUserKey('invoice_invoices');
       const localRaw = key ? safeGet(key) : null;
       const localInvoices: Invoice[] = localRaw ? JSON.parse(localRaw) : [];
       const idx = localInvoices.findIndex(i => i.id === invoice.id);
@@ -1287,7 +1287,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     // DB Success
     invoice.isSynced = true;
     invoice.lastSyncedAt = new Date().toISOString();
-    const invKey = getUserKey('bill_invoices');
+    const invKey = getUserKey('invoice_invoices');
     if (invKey) {
        const localRaw = safeGet(invKey);
        const localInvoices: Invoice[] = localRaw ? JSON.parse(localRaw) : [];
@@ -1320,7 +1320,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
 
 export const deleteInvoice = async (id: string): Promise<boolean> => {
   // Remove from localStorage first (targeted, don't wipe all invoices)
-  const key = getUserKey('bill_invoices');
+  const key = getUserKey('invoice_invoices');
   if (key) {
     const local = getCachedData<Invoice[]>(key, []);
     if (local.length > 0) {
@@ -1386,7 +1386,7 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
     let maxNum = 1000;
 
     // Check recent local caching primarily mapping current state
-    const key = getUserKey('bill_invoices');
+    const key = getUserKey('invoice_invoices');
     if (key) {
         const invoices = getCachedData<Invoice[]>(key, []);
         for (const inv of invoices) {
@@ -1731,7 +1731,7 @@ export const subscribeToInvoices = (callback: (payload: any) => void) => {
 export const subscribeToProducts = (callback: (payload: any) => void) => {
   const channel = supabase.channel('products-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-      const key = getUserKey('bill_products');
+      const key = getUserKey('invoice_products');
       if (key) {
         const current = getCachedData<Product[]>(key, []);
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
@@ -1770,7 +1770,7 @@ export const subscribeToProducts = (callback: (payload: any) => void) => {
 export const subscribeToCustomers = (callback: (payload: any) => void) => {
   const channel = supabase.channel('customers-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, (payload) => {
-      const key = getUserKey('bill_customers');
+      const key = getUserKey('invoice_customers');
       if (key) {
         const current = getCachedData<Customer[]>(key, []);
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
@@ -1809,8 +1809,8 @@ export const subscribeToCustomers = (callback: (payload: any) => void) => {
 export const subscribeToStores = (callback: (payload: any) => void) => {
   const channel = supabase.channel('stores-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stores' }, (payload) => {
-      const infoKey = getUserKey('bill_store_info');
-      const brandingKey = getUserKey('bill_branding_settings');
+      const infoKey = getUserKey('invoice_store_info');
+      const brandingKey = getUserKey('invoice_branding_settings');
       
       if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
         if (infoKey) {

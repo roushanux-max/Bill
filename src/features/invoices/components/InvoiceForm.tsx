@@ -348,7 +348,7 @@ export default function InvoiceForm() {
                     </div>
                     <div className="md:col-span-3">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Address</label>
-                        <input className="w-full bg-slate-50 p-3 rounded-xl border focus:border-slate-300 outline-none transition-colors" placeholder="Billing Address..." value={invoice.customer.address} onChange={e => updateCustomer({ address: e.target.value })} />
+                        <input className="w-full bg-slate-50 p-3 rounded-xl border focus:border-slate-300 outline-none transition-colors" placeholder="Invoicing Address..." value={invoice.customer.address} onChange={e => updateCustomer({ address: e.target.value })} />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Invoice No *</label>

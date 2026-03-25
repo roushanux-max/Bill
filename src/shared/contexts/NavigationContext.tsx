@@ -17,11 +17,12 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
 
   // Initialize from sessionStorage to survive refreshes
   useEffect(() => {
-    const savedStack = sessionStorage.getItem('bill_nav_history');
+    const savedStack = sessionStorage.getItem('invoice_nav_history');
     if (savedStack) {
       try {
         historyStack.current = JSON.parse(savedStack);
       } catch (e) {
+        console.warn('Failed to parse nav history:', e);
         historyStack.current = [];
       }
     }
@@ -30,8 +31,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   // Persist stack to sessionStorage
-  const saveStack = () => {
-    sessionStorage.setItem('bill_nav_history', JSON.stringify(historyStack.current));
+    const saveStack = () => {
+    sessionStorage.setItem('invoice_nav_history', JSON.stringify(historyStack.current));
   };
 
   const isNavigatingBack = useRef(false);

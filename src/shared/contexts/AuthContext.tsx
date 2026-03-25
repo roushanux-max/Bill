@@ -52,8 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const parsed = JSON.parse(tokenData);
             const userId = parsed?.user?.id;
             const userEmail = parsed?.user?.email;
-            if (userId && !safeGet('bill_user_id')) {
-              safeSet('bill_user_id', userId);
+            if (userId && !safeGet('invoice_user_id')) {
+              safeSet('invoice_user_id', userId);
               // Proactively log login for discovery
               logActivity('login_restored', 'user', userId, { email: userEmail });
             }
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
            return;
         }
         if (initialSession?.user) {
-          safeSet('bill_user_id', initialSession.user.id);
+          safeSet('invoice_user_id', initialSession.user.id);
           setLoading(true);
           await refreshHasStore(initialSession.user);
         }
