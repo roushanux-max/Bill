@@ -9,6 +9,8 @@ interface InvoicePreviewModalProps {
     items: any[];
     subtotal: number;
     tax: number;
+    discount: number;
+    transportCharges: number;
     grandTotal: number;
     notes: string;
     onClose: () => void;
@@ -16,7 +18,7 @@ interface InvoicePreviewModalProps {
 }
 
 export default function InvoicePreviewModal({ 
-    invoiceData, items, subtotal, tax, grandTotal, notes,
+    invoiceData, items, subtotal, tax, discount, transportCharges, grandTotal, notes,
     onClose, onDownload
 }: InvoicePreviewModalProps) {
     const { settings, storeInfo } = useBranding();
@@ -86,9 +88,9 @@ export default function InvoicePreviewModal({
                                     grandTotal: grandTotal,
                                     subtotal,
                                     taxTotal: tax,
-                                    discountTotal: 0,
+                                    discountTotal: discount,
                                     notes,
-                                    transportCharges: 0,
+                                    transportCharges: transportCharges,
                                     // For future: inject template selection here if InvoiceTemplate handles multiple 
                                     templateId: selectedTemplate
                                 }} 

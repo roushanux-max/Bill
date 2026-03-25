@@ -13,9 +13,12 @@ export default function IndustrySelectorModal({ onClose, canClose = true }: Indu
     const activeDomain = settings.domain || 'general';
 
     const domains = [
+        { id: 'general', icon: '📝', name: 'General', desc: 'Standard business layout' },
+        { id: 'freelance', icon: '💻', name: 'Freelance & Services', desc: 'Adds Project, Hours' },
+        { id: 'medical', icon: '⚕️', name: 'Medical & Clinic', desc: 'Adds Patient, Procedure' },
         { id: 'furniture', icon: '🛋️', name: 'Furniture', desc: 'Adds HSN, Material' },
         { id: 'clothing', icon: '👕', name: 'Clothing', desc: 'Adds Size, Color' },
-        { id: 'hotel', icon: '🏨', name: 'Hotel', desc: 'Adds Room, Days' }
+        { id: 'hotel', icon: '🏨', name: 'Hotel', desc: 'Adds Room, Nights' }
     ];
 
     return (
@@ -29,7 +32,7 @@ export default function IndustrySelectorModal({ onClose, canClose = true }: Indu
                         </button>
                     )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                     {domains.map(d => (
                         <button 
                             key={d.id}

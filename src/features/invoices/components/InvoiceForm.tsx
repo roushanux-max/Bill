@@ -32,10 +32,10 @@ export default function InvoiceForm() {
     });
     
     // --- State: Customer ---
-    const [customer, setCustomer] = useState<{name: string, mobile: string, email: string, address: string}>(() => {
-        if(typeof window === 'undefined') return { name: '', mobile: '', email: '', address: '' };
+    const [customer, setCustomer] = useState<{id?: string, name: string, mobile: string, email: string, address: string}>(() => {
+        if(typeof window === 'undefined') return { id: '', name: '', mobile: '', email: '', address: '' };
         const saved = sessionStorage.getItem(getDraftKey('customer'));
-        return saved ? JSON.parse(saved) : { name: '', mobile: '', email: '', address: '' };
+        return saved ? JSON.parse(saved) : { id: '', name: '', mobile: '', email: '', address: '' };
     });
     const [customerMatches, setCustomerMatches] = useState<any[]>([]);
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -43,6 +43,11 @@ export default function InvoiceForm() {
     // --- State: Details ---
     const [notes, setNotes] = useState(() => sessionStorage.getItem(getDraftKey('notes')) || 'Thank you for your business.');
     const [transportCharges, setTransportCharges] = useState<number>(() => Number(sessionStorage.getItem(getDraftKey('charges'))) || 0);
+    const [discount, setDiscount] = useState<number>(() => Number(sessionStorage.getItem(getDraftKey('discount'))) || 0);
+
+    // --- State: Product Search ---
+    const [productMatches, setProductMatches] = useState<any[]>([]);
+    const [activeProductIdx, setActiveProductIdx] = useState<number | null>(null);
 
     // --- State: Metadata ---
     const [invoiceNumber, setInvoiceNumber] = useState(() => sessionStorage.getItem(getDraftKey('inv_no')) || `INV-${Date.now().toString().slice(-6)}`);
@@ -52,7 +57,7 @@ export default function InvoiceForm() {
     // --- Derived Math ---
     const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const tax = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.taxRate / 100)), 0);
-    const grandTotal = subtotal + tax + Number(transportCharges);
+    const grandTotal = subtotal + tax + Number(transportCharges) - Number(discount);
 
     // --- Sync ---
     useEffect(() => {
@@ -61,6 +66,7 @@ export default function InvoiceForm() {
         sessionStorage.setItem(getDraftKey('customer'), JSON.stringify(customer));
         sessionStorage.setItem(getDraftKey('notes'), notes);
         sessionStorage.setItem(getDraftKey('charges'), transportCharges.toString());
+        sessionStorage.setItem(getDraftKey('discount'), discount.toString());
         sessionStorage.setItem(getDraftKey('inv_no'), invoiceNumber);
         sessionStorage.setItem(getDraftKey('inv_date'), invoiceDate);
         sessionStorage.setItem(getDraftKey('due_date'), dueDate);
@@ -77,6 +83,13 @@ export default function InvoiceForm() {
             if (i.color) extra.push(`Color: ${i.color}`);
         } else if (activeDomain === 'furniture') {
             if (i.material) extra.push(`Material: ${i.material}`);
+        } else if (activeDomain === 'freelance') {
+            if (i.project) extra.push(`Project: ${i.project}`);
+        } else if (activeDomain === 'medical') {
+            if (i.patient) extra.push(`Patient: ${i.patient}`);
+            if (i.procedure) extra.push(`Procedure: ${i.procedure}`);
+        } else if (activeDomain === 'hotel') {
+            if (i.room) extra.push(`Room: ${i.room}`);
         }
         const suffix = extra.length > 0 ? ` [${extra.join(', ')}]` : '';
         return { ...i, name: `${i.productName || 'Item'}${suffix}`, rate: i.unitPrice, amount: i.totalAmount, unit: i.unit || 'pcs' };
@@ -86,11 +99,12 @@ export default function InvoiceForm() {
         id: crypto.randomUUID(),
         invoiceNumber, date: invoiceDate, dueDate,
         store_id: currentStore?.id || 'draft',
-        customerId: 'draft_customer',
+        customerId: customer.id || null,
         status: 'unpaid',
-        customer: { name: customer.name || 'Walk-in', phone: customer.mobile, email: customer.email, address: customer.address },
+        customer: { id: customer.id, name: customer.name || 'Walk-in', phone: customer.mobile, email: customer.email, address: customer.address },
         items: getSerializedItems(),
-        subtotal, taxTotal: tax, discountTotal: 0, grandTotal, transportCharges, notes, 
+        subtotal, taxTotal: tax, discountTotal: Number(discount), grandTotal, transportCharges: Number(transportCharges), notes, 
+        templateId: typeof window !== 'undefined' ? localStorage.getItem('bill_default_template') || 'standard' : 'standard',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     });
@@ -131,7 +145,7 @@ export default function InvoiceForm() {
                 <InvoicePreviewModal 
                     invoiceData={{ invoiceNumber, date: invoiceDate, dueDate, customer }}
                     items={getSerializedItems()}
-                    subtotal={subtotal} tax={tax} grandTotal={grandTotal} notes={notes}
+                    subtotal={subtotal} tax={tax} discount={Number(discount)} transportCharges={Number(transportCharges)} grandTotal={grandTotal} notes={notes}
                     onClose={() => setShowPreviewModal(false)}
                     onDownload={handleDownloadPDF}
                 />
@@ -143,7 +157,7 @@ export default function InvoiceForm() {
                     <p className="text-sm text-slate-500">Fill out the structured form data. Changes save automatically.</p>
                 </div>
                 <button onClick={() => setShowDomainSelector(true)} className="text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-2">
-                    <span className="text-xl">{activeDomain === 'furniture' ? '🛋️' : activeDomain === 'clothing' ? '👕' : '🏢'}</span>
+                    <span className="text-xl">{activeDomain === 'furniture' ? '🛋️' : activeDomain === 'clothing' ? '👕' : activeDomain === 'freelance' ? '💻' : activeDomain === 'medical' ? '⚕️' : activeDomain === 'hotel' ? '🏨' : '📝'}</span>
                     Change Industry ({activeDomain})
                 </button>
             </div>
@@ -162,15 +176,39 @@ export default function InvoiceForm() {
                             onChange={async (e) => {
                                 const val = e.target.value;
                                 setCustomer({...customer, name: val});
-                                if (val.length >= 3) {
+                                if (val.trim().length >= 2) {
                                     const { searchCustomers } = await import('@/shared/utils/storage');
                                     setCustomerMatches(await searchCustomers(val));
                                     setShowCustomerDropdown(true);
                                 } else setShowCustomerDropdown(false);
                             }}
+                            onFocus={() => { if(customerMatches.length > 0) setShowCustomerDropdown(true); }}
                             onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
                         />
-                        {/* Dropdown omitted for brevity but logic applies */}
+                        {showCustomerDropdown && customerMatches.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
+                                {customerMatches.map((match) => (
+                                    <button
+                                        key={match.id}
+                                        className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            setCustomer({
+                                                id: match.id,
+                                                name: match.name,
+                                                mobile: match.phone || '',
+                                                email: match.email || '',
+                                                address: match.address || `${match.city ? match.city + ', ' : ''}${match.state || ''}`.trim()
+                                            });
+                                            setShowCustomerDropdown(false);
+                                        }}
+                                    >
+                                        <div className="font-bold text-slate-800">{match.name}</div>
+                                        <div className="text-xs text-slate-500">{match.phone} {match.email && `• ${match.email}`}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Phone Number</label>
@@ -201,8 +239,8 @@ export default function InvoiceForm() {
                         <table className="w-full text-left bg-white">
                             <thead className="bg-slate-50 border-b border-slate-200">
                                 <tr>
-                                    <th className="p-4 text-xs font-bold text-slate-500 uppercase">Item Description</th>
-                                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">Qty</th>
+                                    <th className="p-4 text-xs font-bold text-slate-500 uppercase">{activeDomain === 'medical' ? 'Consultation/Treatment' : activeDomain === 'freelance' ? 'Task/Service' : 'Item Description'}</th>
+                                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">{activeDomain === 'freelance' ? 'Hours' : activeDomain === 'hotel' ? 'Nights' : 'Qty'}</th>
                                     {(activeDomain === 'furniture' || activeDomain === 'clothing') && <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">HSN</th>}
                                     {activeDomain === 'clothing' && (
                                         <>
@@ -211,7 +249,15 @@ export default function InvoiceForm() {
                                         </>
                                     )}
                                     {activeDomain === 'furniture' && <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-28">Material</th>}
-                                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right w-32">Price</th>
+                                    {activeDomain === 'freelance' && <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">Project</th>}
+                                    {activeDomain === 'medical' && (
+                                        <>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">Patient</th>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">Procedure</th>
+                                        </>
+                                    )}
+                                    {activeDomain === 'hotel' && <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">Room No</th>}
+                                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right w-32">{activeDomain === 'freelance' ? 'Rate/Hr' : activeDomain === 'hotel' ? 'Rate/Night' : 'Price'}</th>
                                     <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right w-24">GST %</th>
                                     <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right w-32">Total</th>
                                     <th className="p-4 w-12"></th>
@@ -220,8 +266,57 @@ export default function InvoiceForm() {
                             <tbody>
                                 {items.map((item, idx) => (
                                     <tr key={item.id} className="border-b last:border-0 border-slate-100">
-                                        <td className="p-3">
-                                            <input className="w-full bg-slate-50 p-2 rounded-lg outline-none font-semibold text-slate-800" placeholder="Product name..." value={item.productName} onChange={e => { const n = [...items]; n[idx].productName = e.target.value; setItems(n); }} />
+                                        <td className="p-3 relative">
+                                            <input 
+                                                className="w-full bg-slate-50 p-2 rounded-lg outline-none font-semibold text-slate-800" 
+                                                placeholder="Product name..." 
+                                                value={item.productName} 
+                                                onChange={async e => { 
+                                                    const val = e.target.value;
+                                                    const n = [...items]; 
+                                                    n[idx].productName = val; 
+                                                    setItems(n); 
+                                                    
+                                                    if (val.trim().length >= 2) {
+                                                        const { searchProducts } = await import('@/shared/utils/storage');
+                                                        setProductMatches(await searchProducts(val));
+                                                        setActiveProductIdx(idx);
+                                                    } else {
+                                                        setActiveProductIdx(null);
+                                                    }
+                                                }}
+                                                onFocus={() => {
+                                                    if (item.productName.trim().length >= 2 && productMatches.length > 0) setActiveProductIdx(idx);
+                                                }}
+                                                onBlur={() => setTimeout(() => setActiveProductIdx(null), 200)}
+                                            />
+                                            {activeProductIdx === idx && productMatches.length > 0 && (
+                                                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
+                                                    {productMatches.map((match) => (
+                                                        <button
+                                                            key={match.id}
+                                                            className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                                                            onMouseDown={(e) => {
+                                                                e.preventDefault();
+                                                                const n = [...items];
+                                                                n[idx].productName = match.name;
+                                                                n[idx].unitPrice = match.sellingPrice || 0;
+                                                                n[idx].taxRate = match.gstRate || 0;
+                                                                if (match.hsnCode) n[idx].hsn = match.hsnCode;
+                                                                if (match.unit) n[idx].unit = match.unit;
+                                                                n[idx].totalAmount = n[idx].quantity * n[idx].unitPrice;
+                                                                setItems(n);
+                                                                setActiveProductIdx(null);
+                                                            }}
+                                                        >
+                                                            <div className="font-bold text-slate-800 text-sm truncate">{match.name}</div>
+                                                            <div className="text-xs text-slate-500 font-medium">
+                                                                ₹{match.sellingPrice?.toLocaleString()} • GST {match.gstRate}%
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="p-3 text-center">
                                             <input type="number" className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center font-bold" value={item.quantity || ''} onChange={e => { const n = [...items]; n[idx].quantity = Number(e.target.value); n[idx].totalAmount = n[idx].quantity * n[idx].unitPrice; setItems(n); }} />
@@ -244,6 +339,26 @@ export default function InvoiceForm() {
                                         {activeDomain === 'furniture' && (
                                             <td className="p-3 text-center">
                                                 <input className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center" placeholder="Wood" value={item.material || ''} onChange={e => { const n = [...items]; n[idx].material = e.target.value; setItems(n); }} />
+                                            </td>
+                                        )}
+                                        {activeDomain === 'freelance' && (
+                                            <td className="p-3 text-center">
+                                                <input className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center" placeholder="Website" value={item.project || ''} onChange={e => { const n = [...items]; n[idx].project = e.target.value; setItems(n); }} />
+                                            </td>
+                                        )}
+                                        {activeDomain === 'medical' && (
+                                            <>
+                                                <td className="p-3 text-center">
+                                                    <input className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center" placeholder="Jane Doe" value={item.patient || ''} onChange={e => { const n = [...items]; n[idx].patient = e.target.value; setItems(n); }} />
+                                                </td>
+                                                <td className="p-3 text-center">
+                                                    <input className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center" placeholder="C001" value={item.procedure || ''} onChange={e => { const n = [...items]; n[idx].procedure = e.target.value; setItems(n); }} />
+                                                </td>
+                                            </>
+                                        )}
+                                        {activeDomain === 'hotel' && (
+                                            <td className="p-3 text-center">
+                                                <input className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center" placeholder="204" value={item.room || ''} onChange={e => { const n = [...items]; n[idx].room = e.target.value; setItems(n); }} />
                                             </td>
                                         )}
                                         <td className="p-3 text-right">
@@ -272,22 +387,38 @@ export default function InvoiceForm() {
 
                 {/* 3. Totals & Notes */}
                 <div className="flex flex-col md:flex-row justify-between gap-10">
-                    <div className="flex-1">
-                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Terms & Notes</label>
-                        <textarea className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[120px]" placeholder="Payment terms..." value={notes} onChange={e => setNotes(e.target.value)} />
+                    <div className="flex-1 space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Terms & Notes</label>
+                            <textarea className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[120px]" placeholder="Payment terms..." value={notes} onChange={e => setNotes(e.target.value)} />
+                        </div>
                     </div>
-                    <div className="w-full md:w-80 bg-slate-50 p-6 rounded-2xl border border-slate-100 h-fit">
-                        <div className="flex justify-between items-center mb-4 text-slate-600 text-sm">
+                    <div className="w-full md:w-80 bg-slate-50 p-6 rounded-2xl border border-slate-100 h-fit space-y-4">
+                        <div className="flex justify-between items-center text-slate-600 text-sm pb-3 border-b border-slate-200/60">
                             <span className="font-bold">Subtotal:</span>
-                            <span className="font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
+                            <span className="font-bold">₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between items-center mb-4 text-slate-600 text-sm pb-4 border-b border-slate-200">
+                        <div className="flex justify-between items-center text-slate-600 text-sm pb-3 border-b border-slate-200/60">
                             <span className="font-bold">Total Tax:</span>
-                            <span className="font-bold">₹{tax.toLocaleString('en-IN')}</span>
+                            <span className="font-bold">₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between items-center text-slate-900 text-xl">
+                        <div className="flex justify-between items-center text-sm">
+                            <label className="font-bold text-slate-600">Discount (-):</label>
+                            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 w-32">
+                                <span className="text-slate-400">₹</span>
+                                <input type="number" min="0" className="w-full p-2 outline-none text-right font-bold text-slate-800" value={discount === 0 ? '' : discount} onChange={e => setDiscount(Number(e.target.value) || 0)} placeholder="0" />
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center text-sm pb-3 border-b border-slate-200/60">
+                            <label className="font-bold text-slate-600">Transport/Other (+):</label>
+                            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 w-32">
+                                <span className="text-slate-400">₹</span>
+                                <input type="number" min="0" className="w-full p-2 outline-none text-right font-bold text-slate-800" value={transportCharges === 0 ? '' : transportCharges} onChange={e => setTransportCharges(Number(e.target.value) || 0)} placeholder="0" />
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center text-slate-900 text-xl pt-2">
                             <span className="font-black">Total:</span>
-                            <span className="font-black tracking-tight">₹{Math.round(grandTotal).toLocaleString('en-IN')}</span>
+                            <span className="font-black tracking-tight" style={{ color: globalBranding.primaryColor }}>₹{Math.round(grandTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                     </div>
                 </div>
