@@ -223,13 +223,28 @@ function applyBrandingStyles(settings: BrandingSettings) {
 
   const dynamicTextColor = adjustBrightness(settings.primaryColor, -60);
   const dynamicSecondaryColor = adjustBrightness(settings.primaryColor, -40);
+  const primaryLight = adjustBrightness(settings.primaryColor, 85);
+  const primaryHover = adjustBrightness(settings.primaryColor, -15);
+  const primaryForeground = getContrastColor(settings.primaryColor);
 
   const themeCSS = `
+    :root {
+      --color-primary: ${settings.primaryColor};
+      --color-primary-hover: ${primaryHover};
+      --color-primary-light: ${primaryLight};
+      --color-primary-foreground: ${primaryForeground};
+      --primary: ${settings.primaryColor};
+      --primary-hover: ${primaryHover};
+      --primary-light: ${primaryLight};
+      --primary-foreground: ${primaryForeground};
+      --font-family: ${getFontFamilyString(settings.fontFamily)};
+    }
+
     .user-theme {
       --primary: ${settings.primaryColor};
-      --primary-hover: ${adjustBrightness(settings.primaryColor, -15)};
-      --primary-light: ${adjustBrightness(settings.primaryColor, 85)};
-      --primary-foreground: ${getContrastColor(settings.primaryColor)};
+      --primary-hover: ${primaryHover};
+      --primary-light: ${primaryLight};
+      --primary-foreground: ${primaryForeground};
       --font-family: ${getFontFamilyString(settings.fontFamily)};
     }
 

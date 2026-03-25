@@ -40,7 +40,14 @@ export default function SettingsPage() {
       ]);
 
       if (savedSettings) {
-        setSettings(savedSettings);
+        // Backfill T&C for existing users who have an empty string
+        const merged = {
+          ...savedSettings,
+          termsAndConditions: savedSettings.termsAndConditions?.trim()
+            ? savedSettings.termsAndConditions
+            : defaultBrandingSettings.termsAndConditions,
+        };
+        setSettings(merged);
       }
       setStoreInfo(savedStoreInfo);
     };
@@ -232,7 +239,7 @@ export default function SettingsPage() {
 
   const sections = [
     { id: 'store', label: 'Store Details', icon: Building2 },
-    { id: 'logo', label: 'Logo & Brand', icon: ImageIcon },
+    { id: 'logo', label: 'Logo & Color', icon: ImageIcon },
     { id: 'footer', label: 'Footer & Sign', icon: FileSignature },
     { id: 'terms', label: 'Terms & Notes', icon: Sparkles },
   ];
@@ -245,7 +252,8 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-1.5 text-amber-500 hover:text-amber-600 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              className="flex items-center gap-1.5 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              style={{ color: settings.primaryColor }}
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -344,10 +352,11 @@ export default function SettingsPage() {
                   }} 
                   disabled={isSaving}
                   size="sm" 
-                  className="gap-2 transition-all bg-amber-400 hover:bg-amber-500 text-slate-900 border-none" 
+                  className="gap-2 transition-all border-none text-white"
+                  style={{ backgroundColor: settings.primaryColor }}
                 >
                   {isSaving ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
@@ -432,7 +441,7 @@ export default function SettingsPage() {
                       Manage your business information that appears on invoices
                     </CardDescription>
                   </div>
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-5 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-3">
                         <Label htmlFor="business-name-input" className="text-sm font-semibold text-slate-700">Business Name <span className="text-red-500">*</span></Label>
@@ -575,13 +584,13 @@ export default function SettingsPage() {
                   <div style={{ backgroundColor: settings.primaryColor, color: getContrastColor(settings.primaryColor) }} className="px-6 py-4">
                     <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
                       <ImageIcon className="h-5 w-5" />
-                      Logo & Brand Identity
+                      Logo & Color
                     </CardTitle>
                     <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
                       Upload your logo and choose your brand color
                     </CardDescription>
                   </div>
-                  <CardContent className="p-6 space-y-8">
+                  <CardContent className="p-5 space-y-4">
                     {/* Logo Upload Area */}
                     <div className="space-y-3">
                       <Label className="text-sm font-semibold text-slate-700">Business Logo</Label>
@@ -668,7 +677,7 @@ export default function SettingsPage() {
                       Add custom footer and signature
                     </CardDescription>
                   </div>
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-5 space-y-4">
                     {/* Show Footer */}
                     <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                       <div className="flex items-center justify-between mb-4">
@@ -792,7 +801,7 @@ export default function SettingsPage() {
                       Manage default notes and terms for all invoices
                     </CardDescription>
                   </div>
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-5 space-y-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-semibold text-slate-700">Default Invoice Notes</Label>
@@ -806,17 +815,18 @@ export default function SettingsPage() {
                         <p className="text-xs text-slate-500 italic">These notes will appear at the bottom-left of every new invoice.</p>
                       </div>
 
-                      <div className="pt-4 border-t border-slate-100">
-                        <Label className="text-sm font-semibold text-slate-700 block mb-2">Terms & Conditions (Optional)</Label>
+                      <div className="pt-3 border-t border-slate-100">
+                        <Label className="text-sm font-semibold text-slate-700 block mb-2">Terms & Conditions</Label>
                         <Textarea
                           value={settings.termsAndConditions || ''}
                           onChange={(e) => updateSettings('termsAndConditions', e.target.value)}
-                          placeholder="1. Payment is due within 15 days.
-2. Please quote invoice number in payment."
-                          rows={4}
+                          placeholder="Terms & Conditions:
+1. All invoices generated are for record-keeping purposes.
+2. Users are responsible for ensuring the accuracy of entered data."
+                          rows={6}
                           className="resize-none text-sm border-slate-200"
                         />
-                        <p className="text-xs text-slate-500 italic">Standard terms that apply to your business transactions.</p>
+                        <p className="text-xs text-slate-500 italic mt-1">Standard terms that apply to your business transactions.</p>
                       </div>
                     </div>
                   </CardContent>
