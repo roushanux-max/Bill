@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Shield, Zap, FileText, Users, Package, ChevronDown, Plus, Trash2, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/shared/components/Logo';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { defaultBrandingSettings } from '@/shared/types/branding';
 import { supabase } from '@/shared/utils/supabase';
-import UnifiedInvoiceBuilder from '@/features/invoices/components/UnifiedInvoiceBuilder';
+import InvoiceForm from '@/features/invoices/components/InvoiceForm';
 
 // --- Utility: Intersection Observer Hook for scroll animations ---
 function useInView(threshold = 0.15) {
@@ -49,6 +49,7 @@ const stats = [
 
 export default function LandingPage() {
     const { settings } = useBranding();
+    const navigate = useNavigate();
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState<any>(null);
 
@@ -190,7 +191,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="max-w-[1100px] mx-auto px-6 py-12 md:py-24 my-24 md:my-40">
-                    <UnifiedInvoiceBuilder />
+                    <InvoiceForm />
                 </div>
             </section>
 
@@ -409,7 +410,7 @@ export default function LandingPage() {
                                     
                                     sessionStorage.setItem('guest_mode_bill_branding_settings', JSON.stringify(settings));
                                     sessionStorage.setItem('guest_mode_bill_store_info', JSON.stringify(storeInfo));
-                                    window.location.href = '/create-invoice';
+                                    navigate('/create-invoice');
                                 }}
                                 style={{ flex: 1, padding: 14, background: 'var(--color-primary, #6366f1)', color: '#fff', borderRadius: 12, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
                                 Start Billing

@@ -2,7 +2,7 @@ import { useAuth } from '@/shared/contexts/AuthContext';
 import { Button } from '@/shared/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigation } from '@/shared/contexts/NavigationContext';
-import UnifiedInvoiceBuilder from '@/features/invoices/components/UnifiedInvoiceBuilder';
+import InvoiceForm from '@/features/invoices/components/InvoiceForm';
 
 export default function CreateInvoice() {
   const { smartBack } = useNavigation();
@@ -25,11 +25,11 @@ export default function CreateInvoice() {
           <div className="mb-6">
             <h1 className="text-2xl font-black text-slate-900">Create Invoice</h1>
             <p className="text-slate-500 text-sm font-medium mt-1">
-              {user ? 'Edit branding and invoice details inline. Changes auto-save.' : 'Temporary session — download before closing this tab.'}
+              {user ? 'Fill out the details. Form data auto-saves as a draft.' : 'Temporary session — data will be lost if you refresh.'}
             </p>
           </div>
 
-          <UnifiedInvoiceBuilder />
+          <InvoiceForm />
        </main>
     </div>
   );
