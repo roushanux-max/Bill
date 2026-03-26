@@ -115,6 +115,10 @@ export default function LandingPage() {
         position: 'relative',
       }}
     >
+      {/* Visual Probe */}
+      <div style={{ background: 'red', color: 'white', padding: '10px', textAlign: 'center', fontWeight: 'bold', zIndex: 10000, position: 'fixed', top: 0, width: '100%' }}>
+        DEPLOYMENT VERIFICATION: IF YOU SEE THIS, THE SITE IS UPDATING.
+      </div>
       {/* ─── Hero ─── */}
       <header
         style={{
