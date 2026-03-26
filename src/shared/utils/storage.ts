@@ -1022,32 +1022,41 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
 
       if (isGuestMode()) return { data: [], loading: false, error: null };
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data: store } = await supabase
-          .from('stores')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1)
-          .single();
-        if (store) {
-          storeId = store.id;
-          const sKey = getUserKey('active_store_id');
-          if (sKey) safeSet(sKey, storeId!);
-        }
-      }
-
       if (!storeId) return { data: [], loading: false, error: null };
     }
+
+    // Authority check: ensure we have a valid session and store mapping
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user && !isGuestMode()) return { data: [], loading: false, error: null };
+
+    if (user && !safeGet('invoice_user_id')) {
+      safeSet('invoice_user_id', user.id);
+    }
+
+    if (!storeId && user) {
+      const { data: store } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (store) {
+        storeId = store.id;
+        const sKey = getUserKey('active_store_id');
+        if (sKey) safeSet(sKey, storeId!);
+      }
+    }
+
+    if (!storeId) return { data: [], loading: false, error: null };
 
     // 3. One-time Migration: Link orphaned invoices (store_id IS NULL) to activeStoreId
     // This helps users who had invoices before the multi-store architecture update.
     const migrationKey = getUserKey('invoice_migration_done');
     if (migrationKey && !safeGet(migrationKey)) {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
       if (user && storeId) {
         try {
           const { count, error: countError } = await supabase
@@ -1071,9 +1080,6 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
       }
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user || !storeId) return { data: [], loading: false, error: null };
 
     // Fetch metadata only for the list

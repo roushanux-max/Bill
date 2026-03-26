@@ -123,8 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const isNewSession = !safeGet('bill_user_id');
-        safeSet('bill_user_id', session.user.id);
+        const isNewSession = !safeGet('invoice_user_id');
+        safeSet('invoice_user_id', session.user.id);
 
         if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && isNewSession)) {
           logActivity('login', 'user', session.user.id, {
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
-        safeRemove('bill_user_id');
+        safeRemove('invoice_user_id');
         setHasStore(null);
       }
 
@@ -349,7 +349,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       'active_store_id',
       'hasCompletedOnboarding',
       'invoiceDraft',
-      'bill_user_id',
+      'invoice_user_id',
     ];
 
     // Clear only global/session keys. User-prefixed keys are preserved for instant recall upon same-user re-login.

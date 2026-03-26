@@ -609,11 +609,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
                   Date: {formatDateForDisplay(invoice.date)}
                 </div>
-                {invoice.dueDate && (
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>
-                    Due: {formatDateForDisplay(invoice.dueDate)}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1056,24 +1051,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   {invoice.invoiceNumber || 'INV-0001'}
                 </td>
               </tr>
-              {activeDomain !== 'furniture' && invoice.dueDate && (
-                <tr>
-                  <td
-                    style={{
-                      color: '#666',
-                      fontWeight: 600,
-                      paddingBottom: '4px',
-                      paddingRight: '16px',
-                      textAlign: 'right',
-                    }}
-                  >
-                    Due Date:
-                  </td>
-                  <td style={{ fontWeight: 700, color: '#1a1a2e', textAlign: 'right' }}>
-                    {formatDateForDisplay(invoice.dueDate)}
-                  </td>
-                </tr>
-              )}
               <tr>
                 <td
                   style={{

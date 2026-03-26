@@ -81,7 +81,6 @@ export default function InvoiceForm() {
             discountTotal: 0,
             invoiceNumber: '',
             date: new Date().toISOString().split('T')[0],
-            dueDate: '',
             status: 'unpaid',
             updatedAt: new Date().toISOString(),
           });
@@ -345,7 +344,6 @@ export default function InvoiceForm() {
     id: invoice.id || crypto.randomUUID(),
     invoiceNumber: invoice.invoiceNumber,
     date: invoice.date,
-    dueDate: invoice.dueDate,
     store_id: currentStore?.id || 'draft',
     customerId: invoice.customer.id || null,
     status: 'unpaid',
@@ -515,7 +513,6 @@ export default function InvoiceForm() {
           invoiceData={{
             invoiceNumber: invoice.invoiceNumber,
             date: invoice.date,
-            dueDate: invoice.dueDate,
             customer: invoice.customer,
           }}
           items={getSerializedItems()}
@@ -589,19 +586,6 @@ export default function InvoiceForm() {
                 onChange={(e) => updateInvoice({ date: e.target.value })}
               />
             </div>
-            {activeDomain !== 'furniture' && (
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Due Date
-                </label>
-                <input
-                  type="date"
-                  className="bg-slate-50 px-3 py-1.5 rounded-lg border-none font-bold text-slate-800 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--brand-color)]/20"
-                  value={invoice.dueDate}
-                  onChange={(e) => updateInvoice({ dueDate: e.target.value })}
-                />
-              </div>
-            )}
           </div>
         </div>
 
