@@ -16,7 +16,6 @@ import { validateInput, ValidationRules } from '@/shared/utils/validation';
 import { formatDateForDisplay } from '@/shared/utils/dateUtils';
 
 import InvoicePreviewModal from './InvoicePreviewModal';
-import InvoiceTemplate from './InvoiceTemplate';
 
 export default function InvoiceForm() {
   const { user } = useAuth();
@@ -516,36 +515,34 @@ export default function InvoiceForm() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-[1400px] mx-auto pb-12 px-4">
-      {/* LEFT COLUMN: FORM */}
-      <div className="flex flex-col gap-6">
-        {showPreviewModal && (
-          <InvoicePreviewModal
-            invoiceData={{
-              invoiceNumber: invoice.invoiceNumber,
-              date: invoice.date,
-              customer: invoice.customer,
-            }}
-            items={getSerializedItems()}
-            subtotal={subtotal}
-            tax={tax}
-            discount={Number(invoice.discountTotal)}
-            transportCharges={Number(invoice.transportCharges)}
-            grandTotal={grandTotal}
-            notes={invoice.notes}
-            onClose={() => setShowPreviewModal(false)}
-            onDownload={handleDownloadPDF}
-          />
-        )}
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
+      {showPreviewModal && (
+        <InvoicePreviewModal
+          invoiceData={{
+            invoiceNumber: invoice.invoiceNumber,
+            date: invoice.date,
+            customer: invoice.customer,
+          }}
+          items={getSerializedItems()}
+          subtotal={subtotal}
+          tax={tax}
+          discount={Number(invoice.discountTotal)}
+          transportCharges={Number(invoice.transportCharges)}
+          grandTotal={grandTotal}
+          notes={invoice.notes}
+          onClose={() => setShowPreviewModal(false)}
+          onDownload={handleDownloadPDF}
+        />
+      )}
 
-        <div className="flex justify-between items-center mb-2">
-          <div>
-            <h2 className="text-2xl font-black text-slate-800">Invoice Details</h2>
-            <p className="text-sm text-slate-500">
-              Fill out the structured form data. Changes save automatically.
-            </p>
-          </div>
+      <div className="flex justify-between items-center mb-2">
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">Invoice Details</h2>
+          <p className="text-sm text-slate-500">
+            Fill out the structured form data. Changes save automatically.
+          </p>
         </div>
+      </div>
 
       {/* FORM CONTAINER */}
       <div className="bg-white border text-sm border-slate-200 rounded-3xl shadow-sm p-8">
@@ -1074,47 +1071,6 @@ export default function InvoiceForm() {
               <Download className="h-5 w-5" />
               <span>Download Invoice</span>
             </Button>
-          </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN: LIVE STICKY PREVIEW */}
-      <div className="hidden lg:block">
-        <div className="sticky top-24 space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <div>
-              <h3 className="text-lg font-black text-slate-800">Live Preview</h3>
-              <p className="text-xs text-slate-400 font-medium">Real-time update as you type</p>
-            </div>
-          </div>
-
-          <div className="relative group overflow-hidden bg-slate-100 rounded-[32px] border border-slate-200/60 p-6 shadow-inner ring-1 ring-inset ring-white/40">
-            <div className="scale-[0.85] origin-top transform-gpu transition-transform duration-300 group-hover:scale-[0.87]">
-              <div className="bg-white shadow-2xl rounded-[2px] overflow-hidden min-h-[1000px] border border-slate-100">
-                <InvoiceTemplate
-                  invoice={{
-                    ...invoice,
-                    invoiceNumber: invoice.invoiceNumber,
-                    date: invoice.date,
-                    customer: invoice.customer,
-                    items: getSerializedItems(),
-                    grandTotal: grandTotal,
-                    subtotal,
-                    taxTotal: tax,
-                    discountTotal: Number(invoice.discountTotal),
-                    notes: invoice.notes,
-                    transportCharges: Number(invoice.transportCharges),
-                    templateId: 'standard',
-                  }}
-                  settings={globalBranding}
-                  storeInfo={currentStore}
-                />
-              </div>
-            </div>
-
-            {/* Subtle Overlay Decoration */}
-            <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-100/50 rounded-[32px]"></div>
           </div>
         </div>
       </div>
