@@ -109,7 +109,6 @@ export default function LandingPage() {
   return (
     <div
       style={{
-        fontFamily: `'Aptos', var(--font-family, ${settings.fontFamily}), 'Segoe UI', system-ui, sans-serif`,
         background: '#fff',
         color: '#1a1a2e',
         minHeight: '100vh',

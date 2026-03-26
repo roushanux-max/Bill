@@ -57,14 +57,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   const calculatedGrandTotal = subtotal + totalTax + transport - discount;
   const total = safeNum(invoice.grandTotal) || calculatedGrandTotal;
 
-  const fontFamilyMap: Record<string, string> = {
-    inter: 'Inter, sans-serif',
-    roboto: 'Roboto, sans-serif',
-    lato: 'Lato, sans-serif',
-    opensans: '"Open Sans", sans-serif',
-    aptos: 'Aptos, sans-serif',
-  };
-
   const activeDomain = settings.domain || 'general';
   const brandColor = settings.primaryColor || '#e53e3e';
 
@@ -136,7 +128,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
     return (
       <div
         style={{
-          fontFamily: fontFamilyMap[settings.fontFamily] || fontFamilyMap.inter,
           width: '210mm',
           margin: '0 auto',
           backgroundColor: '#fff',
@@ -467,7 +458,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             ) : (
               <div
                 style={{
-                  fontFamily: 'Homemade Apple, cursive',
                   fontSize: '24px',
                   color: '#333',
                   marginBottom: '4px',
@@ -490,7 +480,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
     return (
       <div
         style={{
-          fontFamily: fontFamilyMap[settings.fontFamily] || fontFamilyMap.inter,
           width: '210mm',
           margin: '0 auto',
           backgroundColor: '#f8fafc',
@@ -857,7 +846,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 ) : (
                   <div
                     style={{
-                      fontFamily: 'Homemade Apple, cursive',
                       fontSize: '20px',
                       color: '#0f172a',
                     }}
@@ -888,7 +876,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   return (
     <div
       style={{
-        fontFamily: fontFamilyMap[settings.fontFamily] || fontFamilyMap.inter,
         width: '210mm',
         margin: '0 auto',
         backgroundColor: '#fff',
@@ -1445,7 +1432,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           ) : (
             <div
               style={{
-                fontFamily: 'Homemade Apple, cursive',
                 fontSize: '28px',
                 color: '#1a1a2e',
                 opacity: 0.8,

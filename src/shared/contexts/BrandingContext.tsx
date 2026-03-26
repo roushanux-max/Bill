@@ -264,7 +264,6 @@ function applyBrandingStyles(settings: BrandingSettings) {
       --primary-active: ${primaryActive};
       --primary-light: ${primaryLight};
       --primary-foreground: ${primaryForeground};
-      --font-family: ${getFontFamilyString(settings.fontFamily)};
       --line-height-base: 1.5;
       --font-size-base: 14px;
       --font-size-lg: 16px;
@@ -280,12 +279,10 @@ function applyBrandingStyles(settings: BrandingSettings) {
       --brand-color-hover: ${primaryHover};
       --brand-color-light: ${primaryLight};
       --brand-color-foreground: ${primaryForeground};
-      --font-family: ${getFontFamilyString(settings.fontFamily)};
     }
 
     .user-theme {
       color: ${dynamicTextColor};
-      font-family: var(--font-family);
     }
 
     /* Input focus states */

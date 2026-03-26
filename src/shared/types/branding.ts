@@ -11,7 +11,6 @@ export interface BrandingSettings {
   showBorder: boolean;
 
   // Typography
-  fontFamily: 'aptos' | 'inter' | 'roboto' | 'lato' | 'opensans';
   fontSize: 'small' | 'medium' | 'large';
 
   // Footer
@@ -40,7 +39,6 @@ export const defaultBrandingSettings: BrandingSettings = {
   primaryColor: '#4f46e5',
   headerStyle: 'modern',
   showBorder: true,
-  fontFamily: 'aptos',
   fontSize: 'medium',
   showFooter: true,
   footerText: 'Thank you for your business!',

@@ -98,13 +98,7 @@ export function generateInvoicePDF(
     Math.round(255 - (255 - accentColorRgb[2]) * 0.08),
   ];
 
-  const fontMap: Record<string, string> = {
-    inter: 'helvetica',
-    roboto: 'helvetica',
-    lato: 'helvetica',
-    opensans: 'helvetica',
-  };
-  const activeFont = fontMap[settings.fontFamily] || 'helvetica';
+  const activeFont = 'helvetica'; // Fallback for Aptos natively in jsPDF
 
   let y = margin + 5; // Top padding
 
