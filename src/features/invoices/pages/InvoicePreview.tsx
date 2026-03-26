@@ -29,111 +29,84 @@ export default function InvoicePreview() {
   const loadInvoice = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Try to load from ID parameter (highest priority)
-      const previewInvoiceId = searchParams.get('id');
-      if (previewInvoiceId && previewInvoiceId !== 'sample') {
-        try {
-          const selectedInvoice = await getInvoice(previewInvoiceId);
-          if (selectedInvoice && selectedInvoice.items && selectedInvoice.items.length > 0) {
-            console.log('Loaded complete invoice from DB:', selectedInvoice.id);
-            setInvoice(selectedInvoice);
-            return;
-          } else if (selectedInvoice) {
-            console.warn('Invoice fetched from DB but missing items. Attempting local merge...');
-            // Check local storage FIRST, if it has items, use local storage. Else just use selectedInvoice.
-            const invKey = getUserKey('previewInvoice');
-            const previewData = invKey ? safeGet(invKey) : null;
-            if (previewData) {
-               try {
-                   const parsedInvoice = JSON.parse(previewData);
-                   if (parsedInvoice.id === previewInvoiceId && parsedInvoice.items?.length > 0) {
-                       setInvoice(parsedInvoice);
-                       return;
-                   }
-               } catch (e) {}
-            }
-            // If local storage didn't help, STILL KEEP the DB invoice, do not fall back to sample!
-            setInvoice(selectedInvoice);
-            return; // MUST RETURN HERE so it doesn't fall through to sample!
-          }
-        } catch (e) {
-          console.error('Failed to load invoice by ID:', e);
-        }
-      }
-
-      // 2. Try to load from localStorage previewInvoice (standard path)
+      // 1. Priority: Preview Data from localStorage (for real-time updates from Create/Settings)
       const invKey = getUserKey('previewInvoice');
       const previewData = invKey ? safeGet(invKey) : null;
       if (previewData) {
         try {
-          const parsedInvoice = JSON.parse(previewData);
-          if (!previewInvoiceId || parsedInvoice.id === previewInvoiceId || previewInvoiceId === 'sample') {
-            console.log('Loaded preview invoice from primary storage:', parsedInvoice.id);
-            setInvoice(parsedInvoice);
+          const parsed = JSON.parse(previewData);
+          if (parsed && parsed.items && parsed.items.length > 0) {
+            console.log('Loaded from preview storage');
+            setInvoice(parsed);
             return;
           }
-        } catch (error) {
-          console.error('Error parsing preview invoice:', error);
+        } catch (e) {
+          console.error('Failed to parse preview data', e);
         }
       }
 
-      // Fallback to sample data
-      setInvoice({
-        id: 'sample',
-        invoiceNumber: 'INV-2024-001',
-        date: formatDateForDisplay(new Date().toISOString()),
-        customerId: 'cust-1',
-        customer: {
-          id: 'cust-1',
-          name: 'Acme Corporation',
-          gstin: '27AABCU1234F1Z5',
-          address: '123 Business Park, Sector 62, Mumbai, MH - 400001',
-          state: 'Maharashtra',
-          phone: '+91 98765 43210',
-          email: 'finance@acme.com',
-          createdAt: new Date().toISOString()
-        },
-        items: [
-          {
-            id: 'item-1',
-            invoice_id: 'sample',
-            product_id: 'p-1',
-            productName: 'Professional Web Design Services',
-            quantity: 1,
-            unitPrice: 45000,
-            hsn: '998311',
-            taxRate: 18,
-            taxAmount: 8100,
-            discountAmount: 0,
-            totalAmount: 45000
-          },
-          {
-            id: 'item-2',
-            invoice_id: 'sample',
-            product_id: 'p-2',
-            productName: 'Premium Hosting (1 Year)',
-            quantity: 1,
-            unitPrice: 3000,
-            hsn: '998313',
-            taxRate: 18,
-            taxAmount: 540,
-            discountAmount: 0,
-            totalAmount: 3000
+      // 2. Priority: Database Data by ID
+      const previewInvoiceId = searchParams.get('id');
+      if (previewInvoiceId && previewInvoiceId !== 'sample' && previewInvoiceId !== 'preview') {
+        try {
+          const dbInvoice = await getInvoice(previewInvoiceId);
+          if (dbInvoice) {
+            console.log('Loaded from database');
+            setInvoice(dbInvoice);
+            return;
           }
-        ],
-        transportCharges: 0,
-        discountTotal: 0,
-        notes: 'Thank you for your business! Please pay within 15 days.',
-        subtotal: 48000,
-        taxTotal: 8640,
-        grandTotal: 56640,
-        status: 'unpaid',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        store_id: ''
-      });
+        } catch (e) {
+          console.error('Failed to fetch from DB', e);
+          toast.error('Could not find the requested invoice in database.');
+        }
+      }
+
+      // 3. Fallback: Sample Data (only if explicitly requested or everything else fails)
+      if (previewInvoiceId === 'sample' || !previewData) {
+        console.log('Falling back to sample data');
+        setInvoice({
+          id: 'sample',
+          invoiceNumber: 'INV-SAMPLE-001',
+          date: new Date().toISOString(),
+          customerId: 'cust-sample',
+          customer: {
+            id: 'cust-sample',
+            name: 'Sample Customer Ltd.',
+            gstin: '27AABCU1234F1Z5',
+            phone: '+91 9876543210',
+            address: '123, Sample Street, Business District, Mumbai, MH',
+            state: 'Maharashtra',
+            createdAt: new Date().toISOString()
+          },
+          items: [
+            {
+              id: 'itm-1',
+              invoice_id: 'sample',
+              productName: 'Sample Professional Services',
+              quantity: 1,
+              unitPrice: 5000,
+              taxRate: 18,
+              taxAmount: 900,
+              discountAmount: 0,
+              totalAmount: 5000,
+              hsn: '998311'
+            }
+          ],
+          subtotal: 5000,
+          taxTotal: 900,
+          discountTotal: 0,
+          transportCharges: 0,
+          grandTotal: 5900,
+          notes: 'This is a sample invoice for preview purposes.',
+          status: 'unpaid',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          store_id: ''
+        });
+      }
     } catch (e) {
-      console.error('Final fallback error:', e);
+      console.error('Critical loading error', e);
+      toast.error('An unexpected error occurred while loading the invoice preview.');
     } finally {
       setLoading(false);
     }
@@ -141,20 +114,30 @@ export default function InvoicePreview() {
 
   useEffect(() => {
     const init = async () => {
-      setSettings(globalSettings);
-      setStoreInfo(globalStoreInfo);
-
+      // 1. Priority: Preview Branding from localStorage
       const setKey = getUserKey('previewBrandingSettings');
       const storeKey = getUserKey('previewStoreInfo');
       const previewSettingsRaw = setKey ? safeGet(setKey) : null;
       const previewStoreRaw = storeKey ? safeGet(storeKey) : null;
 
+      let currentSettings = globalSettings;
+      let currentStore = globalStoreInfo;
+
       if (previewSettingsRaw) {
-        try { setSettings(JSON.parse(previewSettingsRaw)); } catch (e) {}
+        try { 
+          currentSettings = JSON.parse(previewSettingsRaw);
+          console.log('Using preview branding settings');
+        } catch (e) {}
       }
       if (previewStoreRaw) {
-        try { setStoreInfo(JSON.parse(previewStoreRaw)); } catch (e) {}
+        try { 
+          currentStore = JSON.parse(previewStoreRaw);
+          console.log('Using preview store info');
+        } catch (e) {}
       }
+
+      setSettings(currentSettings);
+      setStoreInfo(currentStore);
 
       const returnTo = searchParams.get('return');
       if (returnTo) setReturnPath(returnTo);
@@ -169,8 +152,13 @@ export default function InvoicePreview() {
     smartBack(returnPath);
   };
 
+  const isInvoiceValid = invoice && invoice.items && invoice.items.length > 0;
+
   const handleDownload = async () => {
-    if (!invoice) return;
+    if (!isInvoiceValid) {
+      toast.error('Cannot generate PDF for an incomplete invoice.');
+      return;
+    }
 
     setIsGenerating(true);
     const toastId = toast.loading('Generating PDF...');
@@ -308,7 +296,7 @@ export default function InvoicePreview() {
               size="sm"
               onClick={handlePrint}
               className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
-              disabled={isGenerating}
+              disabled={isGenerating || !isInvoiceValid}
             >
               <Printer className="h-4 w-4 mr-2" />
               Print Preview
@@ -318,7 +306,7 @@ export default function InvoicePreview() {
               size="sm"
               onClick={handleDownload}
               className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
-              disabled={isGenerating}
+              disabled={isGenerating || !isInvoiceValid}
             >
               <Download className="h-4 w-4 mr-2" />
               Save PDF
@@ -328,7 +316,7 @@ export default function InvoicePreview() {
               size="sm"
               onClick={handleShare}
               className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none"
-              disabled={isGenerating}
+              disabled={isGenerating || !isInvoiceValid}
             >
               <Share2 className="h-4 w-4 mr-2" />
               Share
@@ -350,26 +338,29 @@ export default function InvoicePreview() {
       </header>
 
       <main className="print:p-0 print:max-w-full">
-        {/* Mobile: Scaled down view for preview only */}
-        <div className="block sm:hidden w-full bg-slate-100 py-4 print:hidden flex justify-center overflow-hidden">
-          <div
-            style={{
-              transform: 'scale(0.45)',
-              transformOrigin: 'top center',
-              width: '210mm',
-              marginBottom: '-600px' // Adjust for scaled height properly
-            }}
-          >
-            <InvoiceTemplate invoice={invoice} settings={settings} storeInfo={storeInfo} />
+        {!isInvoiceValid && !loading ? (
+          <div className="max-w-2xl mx-auto mt-12 px-4">
+             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center shadow-sm">
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ArrowLeft className="h-8 w-8 text-amber-600 rotate-90" />
+                </div>
+                <h2 className="text-xl font-bold text-amber-900 mb-2">Incomplete Invoice Data</h2>
+                <p className="text-amber-700 mb-6">This invoice appears to be missing items or basic details. Please go back and ensure all fields are filled before previewing.</p>
+                <Button onClick={handleBack} className="bg-amber-600 hover:bg-amber-700 text-white border-none px-8">
+                  Go Back to Editor
+                </Button>
+             </div>
           </div>
-        </div>
-
-        {/* Desktop: Full size view for preview only */}
-        <div className="hidden sm:block px-4 py-8 max-w-full mx-auto print:hidden">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden mx-auto" style={{ maxWidth: '210mm' }}>
-            <InvoiceTemplate invoice={invoice} settings={settings} storeInfo={storeInfo} />
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* Template View with Horizontal Scroll for Mobile */}
+            <div className="w-full bg-slate-100 py-6 sm:py-12 print:hidden overflow-x-auto px-4 flex justify-start sm:justify-center min-h-[calc(100vh-80px)]">
+              <div className="bg-white rounded-lg shadow-2xl flex-shrink-0" style={{ width: '210mm', minHeight: '297mm' }}>
+                <InvoiceTemplate invoice={invoice!} settings={settings} storeInfo={storeInfo} />
+              </div>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

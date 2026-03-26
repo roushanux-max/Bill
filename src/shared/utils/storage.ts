@@ -787,7 +787,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
     .select('*')
     .eq('store_id', storeId)
     .eq('user_id', user.id)
-    .or(`name.ilike.${searchQuery},category.ilike.${searchQuery}`)
+    .or(`name.ilike.${searchQuery},category.ilike.${searchQuery},hsn_code.ilike.${searchQuery}`)
     .limit(20);
 
   if (error || !data) {
@@ -797,7 +797,8 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
     const lowQuery = query.toLowerCase();
     return all.filter(p => 
       p.name.toLowerCase().includes(lowQuery) || 
-      p.category.toLowerCase().includes(lowQuery)
+      p.category.toLowerCase().includes(lowQuery) ||
+      (p.hsnCode || '').toLowerCase().includes(lowQuery)
     ).slice(0, 20);
   }
 
@@ -853,13 +854,12 @@ export const saveProduct = async (product: Product) => {
   };
 
   try {
-    // 1. Check if product with Name + Rate + HSN exists
+    // 1. Check if product with Name + HSN exists (HSN is optional but creates uniqueness if present)
     const { data: existing } = await supabase
       .from('products')
       .select('id')
       .eq('store_id', storeId!)
       .eq('name', product.name)
-      .eq('rate', product.sellingPrice)
       .eq('hsn_code', product.hsnCode || '')
       .maybeSingle();
 

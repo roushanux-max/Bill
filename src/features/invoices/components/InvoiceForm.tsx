@@ -79,8 +79,14 @@ export default function InvoiceForm() {
     // UI-only states (not persisted to DB)
     const [customerMatches, setCustomerMatches] = useState<any[]>([]);
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+    const [activeCustomerIdx, setActiveCustomerIdx] = useState<number>(-1);
+    
     const [productMatches, setProductMatches] = useState<any[]>([]);
     const [activeProductIdx, setActiveProductIdx] = useState<number | null>(null);
+    const [activeProductMatchIdx, setActiveProductMatchIdx] = useState<number>(-1);
+
+    const customerSearchTimeout = useRef<any>(null);
+    const productSearchTimeout = useRef<any>(null);
 
     const activeDomain = globalBranding.domain || 'general';
 
@@ -156,6 +162,34 @@ export default function InvoiceForm() {
         if (updates.name !== undefined) newErrs.name = validateInput('name', updates.name);
         if (updates.mobile !== undefined) newErrs.mobile = validateInput('mobile', String(updates.mobile));
         setCustomerErrors(newErrs);
+
+        // Smart Search Trigger
+        if (updates.name !== undefined || updates.mobile !== undefined) {
+             if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
+             customerSearchTimeout.current = setTimeout(async () => {
+                 const query = (updates.name || updates.mobile || '').trim();
+                 if (query.length >= 2) {
+                     const { searchCustomers } = await import('@/shared/utils/storage');
+                     const matches = await searchCustomers(query);
+                     setCustomerMatches(matches);
+                     setShowCustomerDropdown(matches.length > 0);
+                     setActiveCustomerIdx(-1);
+                 } else {
+                     setShowCustomerDropdown(false);
+                 }
+             }, 300);
+        }
+    };
+
+    const selectCustomer = (match: any) => {
+        updateCustomer({
+            id: match.id,
+            name: match.name,
+            mobile: match.phone || '',
+            email: match.email || '',
+            address: match.address || `${match.city ? match.city + ', ' : ''}${match.state || ''}`.trim()
+        });
+        setShowCustomerDropdown(false);
     };
 
     const updateItem = (id: string, updates: any) => {
@@ -170,6 +204,36 @@ export default function InvoiceForm() {
         if (Object.keys(newErrs).length > 0) {
             setItemErrors(prev => ({ ...prev, [id]: newErrs }));
         }
+
+        // Product Search Trigger
+        if (updates.productName !== undefined) {
+            if (productSearchTimeout.current) clearTimeout(productSearchTimeout.current);
+            productSearchTimeout.current = setTimeout(async () => {
+                const val = updates.productName.trim();
+                if (val.length >= 2) {
+                    const { searchProducts } = await import('@/shared/utils/storage');
+                    const matches = await searchProducts(val);
+                    setProductMatches(matches);
+                    const idx = invoice.items.findIndex((i: any) => i.id === id);
+                    setActiveProductIdx(idx);
+                    setActiveProductMatchIdx(-1);
+                } else {
+                    setActiveProductIdx(null);
+                }
+            }, 300);
+        }
+    };
+
+    const selectProduct = (itemId: string, match: any) => {
+        updateItem(itemId, {
+            productName: match.name,
+            unitPrice: match.sellingPrice || 0,
+            taxRate: match.gstRate || 0,
+            hsn: match.hsnCode || '',
+            unit: match.unit || 'pcs',
+            totalAmount: (invoice.items.find((i: any) => i.id === itemId)?.quantity || 1) * (match.sellingPrice || 0)
+        });
+        setActiveProductIdx(null);
     };
 
     const addItem = () => {
@@ -275,6 +339,41 @@ export default function InvoiceForm() {
         const toastId = toast.loading('Saving invoice...');
         
         try {
+            // Auto-save new Customer/Product
+            const { saveCustomer, saveProduct } = await import('@/shared/utils/storage');
+            
+            // 1. Customer
+            if (invoice.customer && invoice.customer.name) {
+                await saveCustomer({
+                    id: invoice.customer.id || crypto.randomUUID(),
+                    name: invoice.customer.name,
+                    phone: invoice.customer.mobile || '',
+                    email: invoice.customer.email || '',
+                    address: invoice.customer.address || '',
+                    gstin: invoice.customer.gstin || '',
+                    state: '',
+                    isSynced: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            // 2. Products
+            for (const item of invoice.items) {
+                if (item.productName) {
+                    await saveProduct({
+                        id: item.product_id || crypto.randomUUID(),
+                        name: item.productName,
+                        category: 'Other',
+                        hsnCode: item.hsn || '',
+                        sellingPrice: item.unitPrice,
+                        gstRate: item.taxRate,
+                        unit: item.unit || 'pcs',
+                        isSynced: false,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            }
+
             const finalInvoice = {
                 ...buildInvoiceObj(), // Use buildInvoiceObj to get the full invoice data
                 updatedAt: new Date().toISOString(),
@@ -387,50 +486,6 @@ export default function InvoiceForm() {
 
                 {/* 1. Customer Details */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 pb-10 border-b border-slate-100">
-                    <div className="md:col-span-2 relative">
-                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Customer Name *</label>
-                        <input 
-                            className={`w-full bg-slate-50 p-3 rounded-xl font-bold text-slate-800 outline-none border transition-colors ${customerErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
-                            placeholder="Type customer name..."
-                            value={invoice.customer.name} 
-                            onChange={async (e) => {
-                                const val = e.target.value;
-                                updateCustomer({ name: val });
-                                if (val.trim().length >= 2) {
-                                    const { searchCustomers } = await import('@/shared/utils/storage');
-                                    setCustomerMatches(await searchCustomers(val));
-                                    setShowCustomerDropdown(true);
-                                } else setShowCustomerDropdown(false);
-                            }}
-                            onFocus={() => { if(customerMatches.length > 0) setShowCustomerDropdown(true); }}
-                            onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
-                        />
-                        {customerErrors.name && <p className="text-red-500 text-[10px] mt-1 font-semibold absolute -bottom-5 left-0">{customerErrors.name}</p>}
-                        {showCustomerDropdown && customerMatches.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
-                                {customerMatches.map((match: any) => (
-                                    <button
-                                        key={match.id}
-                                        className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            updateCustomer({
-                                                id: match.id,
-                                                name: match.name,
-                                                mobile: match.phone || '',
-                                                email: match.email || '',
-                                                address: match.address || `${match.city ? match.city + ', ' : ''}${match.state || ''}`.trim()
-                                            });
-                                            setShowCustomerDropdown(false);
-                                        }}
-                                    >
-                                        <div className="font-bold text-slate-800">{match.name}</div>
-                                        <div className="text-xs text-slate-500">{match.phone} {match.email && `• ${match.email}`}</div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
                     <div className="relative">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Phone Number</label>
                         <input 
@@ -443,8 +498,71 @@ export default function InvoiceForm() {
                                 const val = ValidationRules.mobile.format(e.target.value);
                                 updateCustomer({ mobile: val });
                             }} 
+                            onKeyDown={(e) => {
+                                if (showCustomerDropdown) {
+                                    if (e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        setActiveCustomerIdx(prev => Math.min(prev + 1, customerMatches.length - 1));
+                                    } else if (e.key === 'ArrowUp') {
+                                        e.preventDefault();
+                                        setActiveCustomerIdx(prev => Math.max(prev - 1, 0));
+                                    } else if (e.key === 'Enter' && activeCustomerIdx >= 0) {
+                                        e.preventDefault();
+                                        selectCustomer(customerMatches[activeCustomerIdx]);
+                                    } else if (e.key === 'Escape') {
+                                        setShowCustomerDropdown(false);
+                                    }
+                                }
+                            }}
                         />
                         {customerErrors.mobile && <p className="text-red-500 text-[10px] mt-1 font-semibold absolute -bottom-5 left-0">{customerErrors.mobile}</p>}
+                    </div>
+                    <div className="md:col-span-2 relative">
+                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Customer Name *</label>
+                        <input 
+                            className={`w-full bg-slate-50 p-3 rounded-xl font-bold text-slate-800 outline-none border transition-colors ${customerErrors.name ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
+                            placeholder="Type customer name..."
+                            value={invoice.customer.name} 
+                            onChange={(e) => updateCustomer({ name: e.target.value })}
+                            onFocus={() => { if(customerMatches.length > 0) setShowCustomerDropdown(true); }}
+                            onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
+                            onKeyDown={(e) => {
+                                if (showCustomerDropdown) {
+                                    if (e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        setActiveCustomerIdx(prev => Math.min(prev + 1, customerMatches.length - 1));
+                                    } else if (e.key === 'ArrowUp') {
+                                        e.preventDefault();
+                                        setActiveCustomerIdx(prev => Math.max(prev - 1, 0));
+                                    } else if (e.key === 'Enter' && activeCustomerIdx >= 0) {
+                                        e.preventDefault();
+                                        selectCustomer(customerMatches[activeCustomerIdx]);
+                                    } else if (e.key === 'Escape') {
+                                        setShowCustomerDropdown(false);
+                                    }
+                                }
+                            }}
+                        />
+                        {customerErrors.name && <p className="text-red-500 text-[10px] mt-1 font-semibold absolute -bottom-5 left-0">{customerErrors.name}</p>}
+                        
+                        {showCustomerDropdown && customerMatches.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
+                                {customerMatches.map((match: any, i: number) => (
+                                    <button
+                                        key={match.id}
+                                        className={`w-full text-left px-4 py-3 border-b border-slate-100 last:border-0 transition-colors ${activeCustomerIdx === i ? 'bg-[var(--brand-color)]/10 text-[var(--brand-color)]' : 'hover:bg-slate-50'}`}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            selectCustomer(match);
+                                        }}
+                                        onMouseEnter={() => setActiveCustomerIdx(i)}
+                                    >
+                                        <div className="font-bold text-slate-800">{match.name}</div>
+                                        <div className="text-xs text-slate-500">{match.phone} {match.email && `• ${match.email}`}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div className="md:col-span-3">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Address</label>
@@ -491,45 +609,43 @@ export default function InvoiceForm() {
                                                 className="w-full bg-slate-50 p-2 rounded-lg outline-none font-semibold text-slate-800" 
                                                 placeholder="Product name..." 
                                                 value={item.productName} 
-                                                onChange={async e => { 
-                                                    const val = e.target.value;
-                                                    updateItem(item.id, { productName: val });
-                                                    
-                                                    if (val.trim().length >= 2) {
-                                                        const { searchProducts } = await import('@/shared/utils/storage');
-                                                        setProductMatches(await searchProducts(val));
-                                                        setActiveProductIdx(idx);
-                                                    } else {
-                                                        setActiveProductIdx(null);
-                                                    }
-                                                }}
+                                                onChange={e => updateItem(item.id, { productName: e.target.value })}
                                                 onFocus={() => {
                                                     if ((item.productName || '').trim().length >= 2 && productMatches.length > 0) setActiveProductIdx(idx);
                                                 }}
                                                 onBlur={() => setTimeout(() => setActiveProductIdx(null), 200)}
+                                                onKeyDown={(e) => {
+                                                    if (activeProductIdx === idx && productMatches.length > 0) {
+                                                        if (e.key === 'ArrowDown') {
+                                                            e.preventDefault();
+                                                            setActiveProductMatchIdx(prev => Math.min(prev + 1, productMatches.length - 1));
+                                                        } else if (e.key === 'ArrowUp') {
+                                                            e.preventDefault();
+                                                            setActiveProductMatchIdx(prev => Math.max(prev - 1, 0));
+                                                        } else if (e.key === 'Enter' && activeProductMatchIdx >= 0) {
+                                                            e.preventDefault();
+                                                            selectProduct(item.id, productMatches[activeProductMatchIdx]);
+                                                        } else if (e.key === 'Escape') {
+                                                            setActiveProductIdx(null);
+                                                        }
+                                                    }
+                                                }}
                                             />
                                             {activeProductIdx === idx && productMatches.length > 0 && (
-                                                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
-                                                    {productMatches.map((match: any) => (
+                                                <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
+                                                    {productMatches.map((match: any, mIdx: number) => (
                                                         <button
                                                             key={match.id}
-                                                            className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                                                            className={`w-full text-left px-3 py-2 border-b border-slate-100 last:border-0 transition-colors ${activeProductMatchIdx === mIdx ? 'bg-[var(--brand-color)]/10 text-[var(--brand-color)]' : 'hover:bg-slate-50'}`}
                                                             onMouseDown={(e) => {
                                                                 e.preventDefault();
-                                                                updateItem(item.id, {
-                                                                    productName: match.name,
-                                                                    unitPrice: match.sellingPrice || 0,
-                                                                    taxRate: match.gstRate || 0,
-                                                                    hsn: match.hsnCode || '',
-                                                                    unit: match.unit || 'pcs',
-                                                                    totalAmount: item.quantity * (match.sellingPrice || 0)
-                                                                });
-                                                                setActiveProductIdx(null);
+                                                                selectProduct(item.id, match);
                                                             }}
+                                                            onMouseEnter={() => setActiveProductMatchIdx(mIdx)}
                                                         >
                                                             <div className="font-bold text-slate-800 text-sm truncate">{match.name}</div>
-                                                            <div className="text-xs text-slate-500 font-medium">
-                                                                ₹{match.sellingPrice?.toLocaleString()} • GST {match.gstRate}%
+                                                            <div className="text-[10px] text-slate-500 font-medium">
+                                                                {match.hsnCode && `HSN: ${match.hsnCode} • `}₹{match.sellingPrice?.toLocaleString()} • GST {match.gstRate}%
                                                             </div>
                                                         </button>
                                                     ))}

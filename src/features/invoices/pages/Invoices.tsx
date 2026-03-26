@@ -182,7 +182,10 @@ export default function Invoices() {
       toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF', { id: toastId });
+      const message = (error as Error).message.includes('Incomplete invoice') 
+        ? (error as Error).message 
+        : 'Failed to generate PDF';
+      toast.error(message, { id: toastId });
     } finally {
       setIsGenerating(false);
     }

@@ -33,6 +33,11 @@ export function generateInvoicePDF(
     storeInfo: StoreInfo,
     settings: BrandingSettings
 ): jsPDF {
+    // Safety check for incomplete invoice data
+    if (!invoice || !invoice.items || invoice.items.length === 0) {
+        throw new Error('Incomplete invoice: Items are required to generate a PDF.');
+    }
+
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageW = 210;
     const margin = 15;

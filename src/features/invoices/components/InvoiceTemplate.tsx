@@ -1,7 +1,13 @@
 import React from 'react';
 import { BrandingSettings } from '@/shared/types/branding';
-import { Invoice as InvoiceType, StoreInfo } from '@/features/invoices/types/invoice';
+import { Invoice as InvoiceType, StoreInfo, InvoiceItem } from '@/features/invoices/types/invoice';
 import { formatDateForDisplay } from '@/shared/utils/dateUtils';
+
+interface ExtendedInvoiceItem extends InvoiceItem {
+  color?: string;
+  material?: string;
+  size?: string;
+}
 
 interface InvoiceTemplateProps {
   invoice: InvoiceType & { templateId?: string };
@@ -10,19 +16,45 @@ interface InvoiceTemplateProps {
 }
 
 export default function InvoiceTemplate({ invoice, settings, storeInfo }: InvoiceTemplateProps) {
-  const subtotal = (invoice.items && invoice.items.length > 0)
-    ? invoice.items.reduce((sum, item) => sum + (item.totalAmount || (item as any).amount || 0), 0)
-    : (invoice.subtotal || 0);
+  // --- Robustness & Fallback ---
+  if (!invoice) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-slate-50 border border-slate-200 rounded-3xl text-slate-400">
+        <p className="font-bold">No invoice data currently available.</p>
+        <p className="text-xs mt-2">Check your connection or selected invoice.</p>
+      </div>
+    );
+  }
 
-  const totalTax = (invoice.items ?? []).reduce((sum, item) => {
-    const amt = item.totalAmount || (item as any).amount || 0;
-    return sum + (amt * item.taxRate) / 100;
+  const safeNum = (val: any): number => {
+    const n = Number(val);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const calculateItemTotals = (item: InvoiceItem) => {
+    const qty = safeNum(item.quantity);
+    const price = safeNum(item.unitPrice);
+    const taxRate = safeNum(item.taxRate);
+    const rawSubtotal = qty * price;
+    const taxAmount = (rawSubtotal * taxRate) / 100;
+    const totalAmount = rawSubtotal + taxAmount;
+    return { rawSubtotal, taxAmount, totalAmount };
+  };
+
+  const items = (invoice.items || []) as ExtendedInvoiceItem[];
+  const subtotal = items.length > 0
+    ? items.reduce((sum, item) => sum + (safeNum(item.unitPrice) * safeNum(item.quantity)), 0)
+    : safeNum(invoice.subtotal);
+
+  const totalTax = items.reduce((sum, item) => {
+    const { taxAmount } = calculateItemTotals(item);
+    return sum + taxAmount;
   }, 0);
 
-  const discount = Number(invoice.discountTotal) || 0;
-  const transport = Number(invoice.transportCharges) || 0;
+  const discount = safeNum(invoice.discountTotal);
+  const transport = safeNum(invoice.transportCharges);
   const calculatedGrandTotal = subtotal + totalTax + transport - discount;
-  const total = invoice.grandTotal || calculatedGrandTotal;
+  const total = safeNum(invoice.grandTotal) || calculatedGrandTotal;
 
   const fontFamilyMap: Record<string, string> = {
     inter: 'Inter, sans-serif',
@@ -75,8 +107,8 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: `2px solid #eaeaea`, paddingBottom: '20px', marginBottom: '24px' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '18px', fontWeight: 900, color: '#111', marginBottom: '8px' }}>INVOICE</div>
-            <div style={{ fontSize: 'var(--font-size-base)', color: '#666', marginBottom: '4px' }}><strong>No:</strong> {invoice.invoiceNumber || 'INV-0001'}</div>
-            <div style={{ fontSize: 'var(--font-size-base)', color: '#666', marginBottom: '4px' }}><strong>Date:</strong> {formatDateForDisplay(invoice.date)}</div>
+            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}><strong>No:</strong> {invoice.invoiceNumber || 'INV-0001'}</div>
+            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}><strong>Date:</strong> {formatDateForDisplay(invoice.date)}</div>
           </div>
           
           <div style={{ flex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -85,13 +117,13 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             ) : (
               <div style={{ color: '#111', fontWeight: 900, fontSize: '22px' }}>{storeInfo?.name?.toUpperCase() || 'COMPANY'}</div>
             )}
-            <div style={{ display: 'flex', gap: '16px', fontSize: 'var(--font-size-base)', color: '#666', fontWeight: 500 }}>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#666', fontWeight: 500 }}>
                {/* Store contact info moved to footer */}
             </div>
           </div>
 
           <div style={{ flex: 1, textAlign: 'right' }}>
-             <div style={{ fontSize: 'var(--font-size-base)', color: '#666', lineHeight: 1.5, maxWidth: '180px', marginLeft: 'auto' }}>
+             <div style={{ fontSize: '11px', color: '#666', lineHeight: 1.5, maxWidth: '180px', marginLeft: 'auto' }}>
                 {/* Store address moved to footer */}
              </div>
           </div>
@@ -112,7 +144,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             {settings.website && (
               <>
                 <p style={{ fontSize: '10px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Website</p>
-                <div style={{ fontSize: 'var(--font-size-base)', color: '#555', fontWeight: 600 }}>{settings.website}</div>
+                <div style={{ fontSize: '11px', color: '#555', fontWeight: 600 }}>{settings.website}</div>
               </>
             )}
           </div>
@@ -129,18 +161,17 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               </tr>
             </thead>
             <tbody>
-              {(invoice.items || []).map((item, idx) => {
-                const amt = item.totalAmount || (item as any).amount || 0;
-                const taxAmt = (amt * item.taxRate) / 100;
+              {items.map((item) => {
+                const { rawSubtotal, taxAmount, totalAmount } = calculateItemTotals(item);
                 return (
                   <tr key={item.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
                     <td style={{ padding: '14px 0', color: '#111' }}>
-                      <div style={{ fontWeight: 500 }}>{item.productName || (item as any).name}</div>
+                      <div style={{ fontWeight: 500 }}>{item.productName}</div>
                       {item.taxRate > 0 && <div style={{ color: '#999', fontSize: '9px', marginTop: '2px' }}>Includes {item.taxRate}% GST</div>}
                     </td>
                     <td style={{ padding: '14px 0', textAlign: 'center', color: '#444' }}>{item.quantity}</td>
-                    <td style={{ padding: '14px 0', textAlign: 'right', color: '#444' }}>₹{(item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    <td style={{ padding: '14px 0', textAlign: 'right', color: '#111', fontWeight: 600 }}>₹{Math.round(amt + taxAmt).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: '14px 0', textAlign: 'right', color: '#444' }}>₹{safeNum(item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: '14px 0', textAlign: 'right', color: '#111', fontWeight: 600 }}>₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 );
               })}
@@ -262,18 +293,17 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                             </tr>
                         </thead>
                         <tbody>
-                            {(invoice.items || []).map((item, idx) => {
-                                const amt = item.totalAmount || (item as any).amount || 0;
-                                const taxAmt = (amt * item.taxRate) / 100;
+                            {items.map((item) => {
+                                const { rawSubtotal, taxAmount, totalAmount } = calculateItemTotals(item);
                                 return (
                                 <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                     <td style={{ padding: '16px 0', color: '#334155' }}>
-                                        <div style={{ fontWeight: 600 }}>{item.productName || (item as any).name}</div>
+                                        <div style={{ fontWeight: 600 }}>{item.productName}</div>
                                         {item.taxRate > 0 && <div style={{ color: '#94a3b8', fontSize: '10px', marginTop: '4px' }}>GST: {item.taxRate}%</div>}
                                     </td>
                                     <td style={{ padding: '16px 0', textAlign: 'center', color: '#475569', fontWeight: 500 }}>{item.quantity}</td>
-                                    <td style={{ padding: '16px 0', textAlign: 'right', color: '#475569', fontWeight: 500 }}>₹{(item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                                    <td style={{ padding: '16px 0', textAlign: 'right', color: '#0f172a', fontWeight: 700 }}>₹{Math.round(amt + taxAmt).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    <td style={{ padding: '16px 0', textAlign: 'right', color: '#475569', fontWeight: 500 }}>₹{safeNum(item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    <td style={{ padding: '16px 0', textAlign: 'right', color: '#0f172a', fontWeight: 700 }}>₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                                 </tr>
                                 );
                             })}
@@ -342,14 +372,14 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       }}
     >
       {/* ── TOP HEADER BAR ─────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff', padding: '32px 28px', borderBottom: `4px solid var(--color-primary)` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff', padding: '32px 28px', borderBottom: `4px solid ${brandColor}` }}>
         {/* Logo Section */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
           {settings.logo ? (
             <img src={settings.logo} alt="Logo" style={{ height: '64px', objectFit: 'contain' }} />
           ) : (
-            <div style={{ width: '56px', height: '56px', borderRadius: '12px', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'var(--color-contrast-text)', fontWeight: 900, fontSize: '28px' }}>{storeInfo?.name?.[0]?.toUpperCase() || 'C'}</span>
+            <div style={{ width: '56px', height: '56px', borderRadius: '12px', backgroundColor: brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: '#ffffff', fontWeight: 900, fontSize: '28px' }}>{storeInfo?.name?.[0]?.toUpperCase() || 'C'}</span>
             </div>
           )}
           <div>
@@ -366,8 +396,8 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
         {/* Invoice Title aligned to right */}
         <div style={{ textAlign: 'right' }}>
-          <h1 style={{ fontSize: '42px', fontWeight: 900, color: 'var(--color-primary)', margin: 0, lineHeight: 1, letterSpacing: '-2px' }}>INVOICE</h1>
-          <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: '#64748b', marginTop: '4px' }}>#{invoice.invoiceNumber || 'INV-0001'}</div>
+          <h1 style={{ fontSize: '42px', fontWeight: 900, color: brandColor, margin: 0, lineHeight: 1, letterSpacing: '-2px' }}>INVOICE</h1>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: '#64748b', marginTop: '4px' }}>#{invoice.invoiceNumber || 'INV-0001'}</div>
         </div>
       </div>
 
@@ -382,7 +412,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           {invoice.customer?.gstin && (
             <p style={{ fontSize: '11px', color: '#555', marginBottom: '8px' }}>GSTIN: {invoice.customer.gstin}</p>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: 'var(--font-size-base)', color: '#555', lineHeight: '1.5' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '11px', color: '#555', lineHeight: '1.5' }}>
             {invoice.customer?.phone && <span>Phone: {invoice.customer.phone}</span>}
             {invoice.customer?.email && <span>Email: {invoice.customer.email}</span>}
             {invoice.customer?.address && <span>Address: {invoice.customer.address}</span>}
@@ -393,7 +423,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--brand-color)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
                 Payment Method
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: 'var(--font-size-base)', color: '#444', lineHeight: '1.5' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', color: '#444', lineHeight: '1.5' }}>
                 <p style={{ whiteSpace: 'pre-wrap' }}>{settings.paymentDetails}</p>
               </div>
             </div>
@@ -425,9 +455,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
 
       {/* ── ITEMS TABLE ────────────────────────────────────── */}
       <div style={{ padding: '0 28px', flex: 1 }}>
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-base)', lineHeight: '1.4' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', lineHeight: '1.4' }}>
           <thead>
-            <tr style={{ backgroundColor: 'var(--brand-color)', color: 'var(--color-contrast-text)' }}>
+            <tr style={{ backgroundColor: brandColor, color: '#ffffff' }}>
               <th style={{ padding: '12px 10px', textAlign: 'center', width: '36px', fontWeight: 900 }}>NO.</th>
               <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 900 }}>ITEM DESCRIPTION</th>
               {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
@@ -448,17 +478,15 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             </tr>
           </thead>
           <tbody>
-            {(invoice.items || []).map((item, idx) => {
-              const amt = item.totalAmount || (item as any).amount || 0;
-              const taxAmt = (amt * item.taxRate) / 100;
-              const rowTotal = amt + taxAmt;
+            {items.map((item, idx) => {
+              const { totalAmount } = calculateItemTotals(item);
               return (
                 <tr key={item.id} style={{ backgroundColor: idx % 2 === 1 ? '#fafafa' : '#fff', borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '10px', textAlign: 'center', color: '#555', fontWeight: 600 }}>
                     {String(idx + 1).padStart(2, '0')}
                   </td>
                   <td style={{ padding: '10px', color: '#222', fontWeight: 600 }}>
-                    {item.productName || (item as any).name}
+                    {item.productName}
                     {item.taxRate > 0 && (
                       <span style={{ color: '#999', fontSize: '10px', marginLeft: '6px' }}>({item.taxRate}% GST)</span>
                     )}
@@ -468,21 +496,21 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   )}
                   {activeDomain === 'clothing' && (
                     <>
-                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>{(item as any).unit || (item as any).size || '-'}</td>
-                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>{(item as any).color || '-'}</td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>{item.unit || '-'}</td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>{item.color || '-'}</td>
                     </>
                   )}
                   {activeDomain === 'furniture' && (
-                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>{(item as any).material || '-'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>{item.material || '-'}</td>
                   )}
                   <td style={{ padding: '10px', textAlign: 'right', color: '#555', fontWeight: 600 }}>
-                    ₹{(item.unitPrice || (item as any).rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    ₹{safeNum(item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                   <td style={{ padding: '10px', textAlign: 'center', color: '#222', fontWeight: 700 }}>
                     {item.quantity}
                   </td>
                   <td style={{ padding: '10px', textAlign: 'right', fontWeight: 800, color: '#1a1a2e', fontSize: '12px' }}>
-                    ₹{Math.round(rowTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
               );
@@ -532,12 +560,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             {totalTax > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '11px' }}>
                 <span style={{ color: '#666', fontWeight: 600 }}>Tax (GST):</span>
-                <span style={{ fontWeight: 700, color: '#1a1a2e' }}>₹{Math.round(totalTax).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span style={{ fontWeight: 700, color: '#1a1a2e' }}>₹{totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--color-primary)', padding: '14px 16px', borderRadius: '12px', marginTop: '8px' }}>
-              <span style={{ color: 'var(--color-contrast-text)', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>Total Amount</span>
-              <span style={{ color: 'var(--color-contrast-text)', fontWeight: 900, fontSize: '20px' }}>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: brandColor, padding: '14px 16px', borderRadius: '12px', marginTop: '8px' }}>
+              <span style={{ color: '#ffffff', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>Total Amount</span>
+              <span style={{ color: '#ffffff', fontWeight: 900, fontSize: '20px' }}>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
@@ -566,7 +594,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       </div>
 
       {/* ── REDESIGNED FOOTER: ICON BASED ────────────────────── */}
-      <div style={{ marginTop: 'auto', borderTop: `2px solid var(--color-primary-light)`, padding: '24px 28px', backgroundColor: '#fcfcfd' }}>
+      <div style={{ marginTop: 'auto', borderTop: `2px solid #eee`, padding: '24px 28px', backgroundColor: '#fcfcfd' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {storeInfo?.phone && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
