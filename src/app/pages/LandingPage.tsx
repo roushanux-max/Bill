@@ -248,31 +248,6 @@ export default function LandingPage() {
             >
               Start Invoicing Now <ArrowRight size={20} />
             </Link>
-            <a
-              href="#experience"
-              style={{
-                fontSize: 18,
-                fontWeight: 700,
-                color: 'var(--color-primary)',
-                textDecoration: 'none',
-                background: 'var(--color-primary-light)',
-                border: '1.5px solid var(--color-primary)',
-                cursor: 'pointer',
-                padding: '16px 36px',
-                borderRadius: 16,
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--color-primary-light)';
-                e.currentTarget.style.opacity = '0.9';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--color-primary-light)';
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              Try Live Demo
-            </a>
           </div>
 
           {/* Scroll hint */}
