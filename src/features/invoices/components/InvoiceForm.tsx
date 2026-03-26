@@ -1159,27 +1159,9 @@ export default function InvoiceForm() {
           </button>
         </div>
 
-        {/* 3. Totals & Notes */}
-        <div className="flex flex-col md:flex-row justify-between gap-10">
-          <div className="flex-1 space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
-                Terms & Notes
-              </label>
-              <textarea
-                className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[120px]"
-                placeholder="Payment terms..."
-                value={invoice.notes}
-                onChange={(e) => updateInvoice({ notes: e.target.value })}
-              />
-              {lastSaved && (
-                <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                  Last autosaved at {lastSaved}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="w-full md:w-80 bg-slate-50 p-6 rounded-2xl border border-slate-100 h-fit space-y-4">
+        {/* 3. Totals Summary — directly below items table */}
+        <div className="flex justify-end mt-2 mb-8">
+          <div className="w-full md:w-96 bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
             <div className="flex justify-between items-center text-slate-600 text-sm pb-3 border-b border-slate-200/60">
               <span className="font-bold">Subtotal:</span>
               <span className="font-bold">
@@ -1187,12 +1169,12 @@ export default function InvoiceForm() {
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-600 text-sm pb-3 border-b border-slate-200/60">
-              <span className="font-bold">Total Tax:</span>
+              <span className="font-bold">Total Tax (GST):</span>
               <span className="font-bold">
                 ₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex justify-between items-center text-sm pb-3 border-b border-slate-200/60">
               <label className="font-bold text-slate-600">Discount (-):</label>
               <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 w-32">
                 <span className="text-slate-400">₹</span>
@@ -1223,11 +1205,31 @@ export default function InvoiceForm() {
               </div>
             </div>
             <div className="flex justify-between items-center text-slate-900 text-xl pt-2">
-              <span className="font-black">Total:</span>
+              <span className="font-black">Total Amount:</span>
               <span className="font-black tracking-tight" style={{ color: 'var(--brand-color)' }}>
                 ₹{Math.round(grandTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* 4. Notes */}
+        <div className="flex-1 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
+              Terms & Notes
+            </label>
+            <textarea
+              className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[100px]"
+              placeholder="Payment terms, thank you notes..."
+              value={invoice.notes}
+              onChange={(e) => updateInvoice({ notes: e.target.value })}
+            />
+            {lastSaved && (
+              <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                Last autosaved at {lastSaved}
+              </p>
+            )}
           </div>
         </div>
       </div>
