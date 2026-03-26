@@ -126,17 +126,18 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   // --- MINIMALIST TEMPLATE ---
   if (templateType === 'minimalist') {
     return (
-      <div
-        style={{
-          width: '210mm',
-          margin: '0 auto',
-          backgroundColor: '#fff',
-          minHeight: '297mm',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '40px',
-        }}
-      >
+        <div
+          style={{
+            width: '210mm',
+            margin: '0 auto',
+            backgroundColor: '#fff',
+            minHeight: '297mm',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '40px',
+            fontFamily: '"Aptos", sans-serif',
+          }}
+        >
         <div
           style={{
             display: 'flex',
@@ -486,6 +487,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           minHeight: '297mm',
           display: 'flex',
           flexDirection: 'column',
+          fontFamily: '"Aptos", sans-serif',
         }}
       >
         <div style={{ display: 'flex', height: '100%', flex: 1 }}>
@@ -877,6 +879,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
         minHeight: '297mm',
         display: 'flex',
         flexDirection: 'column',
+        fontFamily: '"Aptos", sans-serif',
       }}
     >
       {/* ── TOP HEADER BAR ─────────────────────────────────── */}

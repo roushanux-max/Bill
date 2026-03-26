@@ -129,7 +129,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    font-family: var(--font-family);
+    font-family: "Aptos", ui-sans-serif, system-ui, sans-serif !important;
   }
 
   body {
@@ -182,6 +182,7 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+    font-family: "Aptos", ui-sans-serif, system-ui, sans-serif;
   }
 }
 
@@ -196,6 +197,7 @@
     margin: 0;
     padding: 0;
     background: white !important;
+    font-family: "Aptos", sans-serif !important; /* Ensure Aptos font for print */
   }
 
   /* Hide all non-invoice content when printing */
