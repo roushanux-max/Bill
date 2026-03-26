@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info, Download } from 'lucide-react';
+import { cn } from '@/shared/components/ui/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import {
@@ -14,6 +15,10 @@ import { useBranding } from '@/shared/contexts/BrandingContext';
 import { saveInvoice as dbSaveInvoice, getAndIncrementInvoiceNumber } from '@/shared/utils/storage';
 import { validateInput, ValidationRules } from '@/shared/utils/validation';
 import { formatDateForDisplay } from '@/shared/utils/dateUtils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
+import { Calendar } from '@/shared/components/ui/calendar';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 import InvoicePreviewModal from './InvoicePreviewModal';
 
@@ -565,12 +570,28 @@ export default function InvoiceForm() {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Issue Date
               </label>
-              <input
-                type="date"
-                className="bg-slate-50 px-3 py-1.5 rounded-lg border-none font-bold text-slate-800 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--brand-color)]/20"
-                value={invoice.date}
-                onChange={(e) => updateInvoice({ date: e.target.value })}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[180px] h-10 justify-start text-left font-bold border-none bg-slate-50 hover:bg-slate-100 transition-all rounded-xl",
+                      !invoice.date && "text-slate-400"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 text-[var(--brand-color)]" />
+                    {invoice.date ? format(new Date(invoice.date), "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-slate-100" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={invoice.date ? new Date(invoice.date) : undefined}
+                    onSelect={(date) => updateInvoice({ date: date?.toISOString().split('T')[0] })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>

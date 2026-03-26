@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router';
 import { Button } from '@/shared/components/ui/button';
-import { ArrowLeft, Download, Share2, Printer, Pencil } from 'lucide-react';
+import { ArrowLeft, Printer, Download, Share2, Pencil, ChevronLeft } from 'lucide-react';
+import Header from '@/shared/components/Header';
 import { BrandingSettings } from '@/shared/types/branding';
 import InvoiceTemplate from '@/features/invoices/components/InvoiceTemplate';
 import { Invoice, StoreInfo } from '@/features/invoices/types/invoice';
@@ -44,7 +45,7 @@ export default function InvoicePreview() {
       if (previewData) {
         try {
           const parsed = JSON.parse(previewData);
-          if (parsed && parsed.items && parsed.items.length > 0) {
+          if (parsed && parsed.items) {
             console.log('Loaded from preview storage');
             setInvoice(parsed);
             return;
@@ -161,13 +162,10 @@ export default function InvoicePreview() {
     smartBack(returnPath);
   };
 
-  const isInvoiceValid = invoice && invoice.items && invoice.items.length > 0;
+  const isInvoiceValid = invoice && invoice.items; // Allow empty items per user request
 
   const handleDownload = async () => {
-    if (!isInvoiceValid) {
-      toast.error('Cannot generate PDF for an incomplete invoice.');
-      return;
-    }
+    if (!invoice) return;
 
     setIsGenerating(true);
     const toastId = toast.loading('Generating PDF...');
@@ -285,108 +283,93 @@ export default function InvoicePreview() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       {isGenerating && <LoadingScreen type="printing" />}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden h-20">
-        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-6">
+      
+      {/* 1. MAIN GLOBAL HEADER */}
+      <Header />
+
+      {/* 2. SUB-HEADER: ACTIONS */}
+      <div className="bg-white border-b border-slate-100 py-6 sticky top-20 z-40 print:hidden shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <button
               onClick={handleBack}
-              className="flex items-center gap-1.5 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer hover:opacity-80 text-[var(--brand-color)]"
+              className="group flex items-center gap-1.5 transition-all text-amber-500 hover:text-amber-600 bg-transparent border-none p-0 cursor-pointer font-bold text-sm"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               <span>Back</span>
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoice Preview</h1>
+            <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Invoice Preview</h1>
           </div>
 
-          <div className="hidden sm:flex items-center gap-3">
-            <Link to={`/create-invoice?edit=${invoice.id}`}>
+          <div className="hidden md:flex items-center gap-4">
+            <Link to={`/create-invoice?edit=${invoice.id}`} className="no-underline">
               <Button
                 variant="default"
-                className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-6"
+                className="bg-amber-400 hover:bg-amber-500 text-white border-none h-12 px-8 rounded-2xl shadow-md shadow-amber-400/20 active:scale-95 transition-all font-black"
                 disabled={isGenerating}
               >
-                <Pencil className="h-4 w-4 mr-2" />
+                <Pencil className="h-4 w-4 mr-2" strokeWidth={3} />
                 Edit
               </Button>
             </Link>
             <Button
               variant="outline"
               onClick={handlePrint}
-              className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
-              disabled={isGenerating || !isInvoiceValid}
+              className="border-2 border-amber-400 text-amber-400 hover:bg-amber-400/5 bg-transparent h-12 px-8 rounded-2xl active:scale-95 transition-all font-black"
+              disabled={isGenerating}
             >
-              <Printer className="h-4 w-4 mr-2" />
+              <Printer className="h-4 w-4 mr-2" strokeWidth={3} />
               Print
             </Button>
             <Button
               variant="outline"
               onClick={handleDownload}
-              className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
-              disabled={isGenerating || !isInvoiceValid}
+              className="border-2 border-amber-400 text-amber-400 hover:bg-amber-400/5 bg-transparent h-12 px-8 rounded-2xl active:scale-95 transition-all font-black"
+              disabled={isGenerating}
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" strokeWidth={3} />
               Save PDF
             </Button>
             <Button
               variant="default"
               onClick={handleShare}
-              className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none"
-              disabled={isGenerating || !isInvoiceValid}
+              className="bg-amber-400 hover:bg-amber-500 text-white border-none h-12 px-8 rounded-2xl shadow-md shadow-amber-400/20 active:scale-95 transition-all font-black"
+              disabled={isGenerating}
             >
-              <Share2 className="h-4 w-4 mr-2" />
+              <Share2 className="h-4 w-4 mr-2" strokeWidth={3} />
               Share
             </Button>
           </div>
+        </div>
+      </div>
 
-          <div className="flex sm:hidden items-center gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleShare}
-              className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-3"
-              disabled={isGenerating}
+      {/* 3. INVOICE CONTENT */}
+      <main className="print:p-0 print:max-w-full print:mt-0">
+        <div className="w-full bg-slate-50 py-12 sm:py-20 print:p-0 print:bg-white min-h-screen">
+          <div className="max-w-6xl mx-auto px-4 flex justify-center overflow-x-auto sm:overflow-visible">
+            <article
+              className="bg-white shadow-2xl rounded-sm print:shadow-none flex-shrink-0"
+              style={{ width: '210mm', minHeight: '297mm' }}
             >
-              <Share2 className="h-4 w-4" />
-            </Button>
+              <InvoiceTemplate invoice={invoice!} settings={settings} storeInfo={storeInfo} />
+            </article>
           </div>
         </div>
-      </header>
 
-      <main className="print:p-0 print:max-w-full">
-        {!isInvoiceValid && !loading ? (
-          <div className="max-w-2xl mx-auto mt-12 px-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center shadow-sm">
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ArrowLeft className="h-8 w-8 text-amber-600 rotate-90" />
-              </div>
-              <h2 className="text-xl font-bold text-amber-900 mb-2">Incomplete Invoice Data</h2>
-              <p className="text-amber-700 mb-6">
-                This invoice appears to be missing items or basic details. Please go back and ensure
-                all fields are filled before previewing.
-              </p>
-              <Button
-                onClick={handleBack}
-                className="bg-amber-600 hover:bg-amber-700 text-white border-none px-8"
-              >
-                Go Back to Editor
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Template View with Horizontal Scroll for Mobile */}
-            <div className="w-full bg-slate-100 py-6 sm:py-12 print:hidden overflow-x-auto px-4 flex justify-start sm:justify-center min-h-[calc(100vh-80px)]">
-              <div
-                className="bg-white rounded-lg shadow-2xl flex-shrink-0"
-                style={{ width: '210mm', minHeight: '297mm' }}
-              >
-                <InvoiceTemplate invoice={invoice!} settings={settings} storeInfo={storeInfo} />
-              </div>
-            </div>
-          </>
-        )}
+        {/* Floating Mobile Actions */}
+        <div className="fixed bottom-8 left-0 right-0 md:hidden px-6 z-50 pointer-events-none flex justify-center gap-3">
+          <Button
+            variant="default"
+            onClick={handleShare}
+            className="pointer-events-auto bg-amber-400 hover:bg-amber-500 text-white border-none h-14 px-8 rounded-2xl shadow-2xl font-black"
+            disabled={isGenerating}
+          >
+            <Share2 className="h-5 w-5 mr-3" strokeWidth={3} />
+            Share Invoice
+          </Button>
+        </div>
       </main>
     </div>
   );
