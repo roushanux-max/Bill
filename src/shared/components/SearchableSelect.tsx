@@ -53,7 +53,7 @@ export function SearchableSelect({
                     role="combobox"
                     aria-expanded={open}
                     className={cn(
-                        "w-full justify-between font-normal text-sm h-10 px-3 bg-white/50 backdrop-blur-sm border-slate-200 hover:border-[var(--color-primary)] hover:bg-white/80 transition-all duration-300",
+                        "w-full justify-between font-normal text-sm h-10 px-3 bg-white/50 backdrop-blur-sm border-slate-200 hover:border-[var(--brand-color)] hover:bg-white/80 transition-all duration-300",
                         className
                     )}
                 >
@@ -96,7 +96,7 @@ export function SearchableSelect({
                                         onCreateNew();
                                         setOpen(false);
                                     }}
-                                    className="h-8 text-xs bg-[var(--color-primary)]/5 border-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
+                                    className="h-8 text-xs bg-[var(--brand-color)]/5 border-[var(--brand-color)]/20 text-[var(--brand-color)] hover:bg-[var(--brand-color)]/10"
                                 >
                                     Create New Entry
                                 </Button>
@@ -112,7 +112,7 @@ export function SearchableSelect({
                                         onValueChange(option.value);
                                         setOpen(false);
                                     }}
-                                    className="flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer aria-selected:bg-[var(--color-primary)]/10 aria-selected:text-[var(--color-primary)] transition-colors"
+                                    className="flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer aria-selected:bg-[var(--brand-color)]/10 aria-selected:text-[var(--brand-color)] transition-colors"
                                 >
                                     <div className="flex items-center justify-center w-5 h-5">
                                         {value === option.value && (

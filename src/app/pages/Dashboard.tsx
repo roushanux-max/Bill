@@ -133,7 +133,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
             <Button
               onClick={() => navigate('/create-invoice')}
-              className="hidden sm:flex bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] border-none font-semibold px-4"
+              className="hidden sm:flex bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none font-semibold px-4"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -141,7 +141,7 @@ export default function Dashboard() {
             </Button>
           </div>
           <p className="text-sm sm:text-base text-slate-500">
-            Welcome back <span className="font-semibold text-slate-800">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong className="text-[var(--color-primary)]">{storeInfo.name}</strong> : 'organization'} overview.
+            Welcome back <span className="font-semibold text-slate-800">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong className="text-[var(--brand-color)]">{storeInfo.name}</strong> : 'organization'} overview.
           </p>
         </div>
 
@@ -264,7 +264,7 @@ export default function Dashboard() {
             <AlertDialogCancel disabled={isMigrating} onClick={() => {
               // Discard 
               Object.keys(window.sessionStorage).forEach(k => k.startsWith('guest_mode_') && window.sessionStorage.removeItem(k));
-              window.sessionStorage.removeItem('bill_guest_mode');
+              window.sessionStorage.removeItem('invoice_guest_mode');
               setShowMigrationPrompt(false);
             }}>
               Discard

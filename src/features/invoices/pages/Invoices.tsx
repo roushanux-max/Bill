@@ -231,7 +231,7 @@ export default function Invoices() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-1.5 text-[var(--color-primary)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              className="flex items-center gap-1.5 text-[var(--brand-color)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -239,7 +239,7 @@ export default function Invoices() {
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoices</h1>
           </div>
           <Link to="/create-invoice" className="hidden sm:flex">
-            <Button size="sm" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] border-none font-semibold px-4">
+            <Button size="sm" className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none font-semibold px-4">
               <Plus className="h-4 w-4 mr-2" />
               Create Invoice
             </Button>
@@ -269,7 +269,7 @@ export default function Invoices() {
               variant={hasActiveFilters ? "default" : "outline"}
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className={hasActiveFilters ? "bg-[var(--color-primary)] hover:opacity-90" : ""}
+              className={hasActiveFilters ? "bg-[var(--brand-color)] hover:opacity-90" : ""}
               disabled={invoices.length === 0}
             >
               <Filter className="h-4 w-4 mr-2" />
@@ -390,7 +390,7 @@ export default function Invoices() {
                 </p>
                 {!searchTerm && (
                   <Link to="/create-invoice">
-                    <Button className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]">
+                    <Button className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white">
                       <Plus className="h-4 w-4 mr-2" />
                       Create Invoice
                     </Button>
@@ -462,7 +462,7 @@ export default function Invoices() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDownload(invoice)}
-                        className="h-8 w-8 p-0 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
+                        className="h-8 w-8 p-0 text-[var(--brand-color)] hover:bg-[var(--brand-color)]/10"
                         title="Download PDF"
                         disabled={isGenerating}
                       >

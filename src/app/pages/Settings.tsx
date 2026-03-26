@@ -283,15 +283,15 @@ export default function SettingsPage() {
           {/* Header Actions */}
           <div className="flex items-center gap-2">
             {hasChanges && (
-              <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-1 rounded-full border border-[var(--color-primary)]/20 mr-2">
-                <div className="w-1.5 h-1.5 bg-[var(--color-primary)] rounded-full animate-pulse" />
+              <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-[var(--brand-color)] bg-[var(--brand-color)]/10 px-2 py-1 rounded-full border border-[var(--brand-color)]/20 mr-2">
+                <div className="w-1.5 h-1.5 bg-[var(--brand-color)] rounded-full animate-pulse" />
                 Unsaved changes
               </span>
             )}
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2 hidden sm:flex border-slate-200 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5" 
+              className="gap-2 hidden sm:flex border-slate-200 text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5" 
               onClick={async () => {
                 // Prepare a preview invoice using current settings and storeInfo
                 try {
@@ -609,7 +609,7 @@ export default function SettingsPage() {
                     {/* Logo Upload Area */}
                     <div className="space-y-3">
                       <Label className="text-sm font-semibold text-slate-700">Business Logo</Label>
-                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all outline-none">
+                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50/50 hover:border-[var(--brand-color)]/50 hover:bg-[var(--brand-color)]/5 transition-all outline-none">
                         {settings.logo ? (
                           <div className="flex flex-col items-center gap-4">
                             <div className="relative group">
@@ -703,7 +703,7 @@ export default function SettingsPage() {
                         <Switch
                           checked={settings.showFooter}
                           onCheckedChange={(checked) => updateSettings('showFooter', checked)}
-                          className="data-[state=checked]:bg-[var(--color-primary)]"
+                          className="data-[state=checked]:bg-[var(--brand-color)]"
                         />
                       </div>
                       {settings.showFooter && (
@@ -730,7 +730,7 @@ export default function SettingsPage() {
                         <Switch
                           checked={settings.showSignature}
                           onCheckedChange={(checked) => updateSettings('showSignature', checked)}
-                          className="data-[state=checked]:bg-[var(--color-primary)]"
+                          className="data-[state=checked]:bg-[var(--brand-color)]"
                         />
                       </div>
                       {settings.showSignature && (
@@ -738,7 +738,7 @@ export default function SettingsPage() {
                           {/* Signature Image */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-slate-700">Signature Image (Optional)</Label>
-                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 bg-white hover:border-[var(--color-primary)]/50 transition-all">
+                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 bg-white hover:border-[var(--brand-color)]/50 transition-all">
                               {settings.signatureImage ? (
                                 <div className="flex flex-col items-center gap-3">
                                   <div className="relative group">

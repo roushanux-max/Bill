@@ -108,8 +108,8 @@ export default function Login() {
         <div className="hidden lg:flex lg:w-1/2 bg-slate-50 items-center justify-center p-12 relative overflow-hidden">
           {/* Subtle Background Decoration */}
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-primary)] blur-[120px]" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-primary-light)] blur-[120px]" />
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--brand-color)] blur-[120px]" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--brand-color-light)] blur-[120px]" />
           </div>
 
           <div className="relative z-10 w-full max-w-lg transform hover:scale-[1.02] transition-transform duration-700">
@@ -253,8 +253,8 @@ export default function Login() {
                       type="submit"
                       disabled={loading || !isFormValid}
                       style={{
-                        borderColor: 'var(--color-primary)',
-                        color: 'var(--color-primary)',
+                        borderColor: 'var(--brand-color)',
+                        color: 'var(--brand-color)',
                       }}
                       className="w-full py-3.5 rounded-xl font-semibold border hover:bg-slate-50 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >

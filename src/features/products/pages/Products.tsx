@@ -163,7 +163,7 @@ export default function Products() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-1.5 text-[var(--color-primary)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
+              className="flex items-center gap-1.5 text-[var(--brand-color)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -175,7 +175,7 @@ export default function Products() {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button size="sm" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] border-none px-4 font-semibold">
+                <Button size="sm" className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-4 font-semibold">
                   <Plus className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Add Product</span>
                 </Button>
@@ -243,7 +243,7 @@ export default function Products() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
                       Cancel
                     </Button>
-                    <Button type="submit" className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]" disabled={isSaving}>
+                    <Button type="submit" className="flex-1 bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white" disabled={isSaving}>
                       {isSaving ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -319,7 +319,7 @@ export default function Products() {
                   <div className="flex-1 space-y-1.5">
                     <Label htmlFor="filter-cat" className="text-xs font-medium text-slate-700">Category</Label>
                     <Select value={filterCategory} onValueChange={(e) => setFilterCategory(e)}>
-                      <SelectTrigger className={`w-full h-9 ${filterCategory !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
+                      <SelectTrigger className={`w-full h-9 ${filterCategory !== 'all' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}>
                         <SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -335,7 +335,7 @@ export default function Products() {
                   <div className="flex-1 space-y-1.5">
                     <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">GST Rate</Label>
                     <Select value={filterGstRate} onValueChange={(e) => setFilterGstRate(e)}>
-                      <SelectTrigger className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
+                      <SelectTrigger className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}>
                         <SelectValue>{filterGstRate === 'all' ? 'All GST Rates' : `${filterGstRate}%`}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -354,7 +354,7 @@ export default function Products() {
                     value={sortBy}
                     onValueChange={(e) => setSortBy(e as 'name' | 'price' | 'date')}
                   >
-                    <SelectTrigger className={`w-full h-9 ${sortBy !== 'date' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
+                    <SelectTrigger className={`w-full h-9 ${sortBy !== 'date' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}>
                       <SelectValue>
                         {sortBy === 'date' ? 'Newest First' : sortBy === 'name' ? 'Name (A-Z)' : 'Price (High-Low)'}
                       </SelectValue>

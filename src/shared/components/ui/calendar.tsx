@@ -42,15 +42,13 @@ function Calendar({
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-8 p-0 font-normal aria-selected:opacity-100 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors",
+          "size-8 p-0 font-normal aria-selected:opacity-100 hover:bg-[var(--brand-color-light)] hover:text-[var(--brand-color)] transition-colors",
         ),
-        day_range_start:
-          "day-range-start aria-selected:bg-primary aria-selected:text-primary-foreground",
-        day_range_end:
-          "day-range-end aria-selected:bg-primary aria-selected:text-primary-foreground",
+        day_range_start: "day-range-start",
+        day_range_end: "day-range-end",
         day_selected:
-          "bg-[linear-gradient(135deg,var(--color-primary),var(--color-primary-hover))] text-white hover:opacity-90 hover:text-white focus:text-white shadow-[0_4px_12px_-2px_var(--color-primary-light)] font-semibold border-0",
-        day_today: "bg-[var(--color-primary-light)] text-[var(--color-primary)] font-semibold",
+          "bg-[linear-gradient(135deg,var(--brand-color),var(--brand-color-hover))] text-white hover:opacity-90 hover:text-white focus:text-white shadow-[0_4px_12px_-2px_var(--brand-color-light)] font-semibold border-0",
+        day_today: "bg-[var(--brand-color-light)] text-[var(--brand-color)] font-semibold",
         day_outside:
           "day-outside text-muted-foreground aria-selected:text-muted-foreground",
         day_disabled: "text-muted-foreground opacity-50",

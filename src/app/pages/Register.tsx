@@ -128,8 +128,8 @@ export default function Register() {
         {/* Left Side: Illustration */}
         <div className="hidden lg:flex lg:w-1/2 bg-slate-50 items-center justify-center p-12 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-primary)] blur-[120px]" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-primary-light)] blur-[120px]" />
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--brand-color)] blur-[120px]" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--brand-color-light)] blur-[120px]" />
           </div>
           <div className="relative z-10 w-full max-w-2xl text-center">
             <div className="bg-white rounded-3xl p-4 shadow-2xl border border-slate-200 mb-8 inline-block">
@@ -150,7 +150,7 @@ export default function Register() {
         <div className="w-full lg:w-1/2 flex flex-col h-full bg-white relative overflow-y-auto">
           {authLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center">
-              <Loader2 className="w-12 h-12 text-[var(--color-primary)] animate-spin mb-4" />
+              <Loader2 className="w-12 h-12 text-[var(--brand-color)] animate-spin mb-4" />
               <p className="text-slate-600 text-lg">Checking your account...</p>
             </div>
           ) : (
@@ -166,8 +166,8 @@ export default function Register() {
                     onClick={handleGoogleLogin}
                     className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl transition-all font-bold shadow-lg shadow-primary/20 active:scale-[0.98]"
                     style={{
-                      backgroundColor: 'var(--color-primary)',
-                      color: 'var(--color-primary-foreground)',
+                      backgroundColor: 'var(--brand-color)',
+                      color: 'var(--brand-color-foreground)',
                     }}
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -290,9 +290,9 @@ export default function Register() {
                       type="submit"
                       disabled={loading || !isFormValid}
                       style={{
-                        backgroundColor: (name && email && mobile && dob && password && confirmPassword) ? 'var(--color-primary)' : 'white',
-                        color: (name && email && mobile && dob && password && confirmPassword) ? 'var(--color-primary-foreground)' : 'var(--color-primary)',
-                        border: (name && email && mobile && dob && password && confirmPassword) ? 'none' : '1px solid var(--color-primary)',
+                        backgroundColor: (name && email && mobile && dob && password && confirmPassword) ? 'var(--brand-color)' : 'white',
+                        color: (name && email && mobile && dob && password && confirmPassword) ? 'var(--brand-color-foreground)' : 'var(--brand-color)',
+                        border: (name && email && mobile && dob && password && confirmPassword) ? 'none' : '1px solid var(--brand-color)',
                       }}
                       className="w-full py-3.5 rounded-xl font-semibold hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
                     >

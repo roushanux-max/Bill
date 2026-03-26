@@ -40,7 +40,7 @@ const MobileNav: React.FC = () => {
               to={item.path}
               className={({ isActive }) => cn(
                 "flex flex-col items-center justify-center transition-all px-2 relative",
-                isActive ? "text-[var(--color-primary)]" : "text-slate-500"
+                isActive ? "text-[var(--brand-color)]" : "text-slate-500"
               )}
             >
               <Icon 

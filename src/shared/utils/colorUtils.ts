@@ -46,6 +46,27 @@ export function getAAAForeground(backgroundHex: string): string {
 }
 
 /**
+ * Alias for getAAAForeground used in some components
+ */
+export const getContrastColor = getAAAForeground;
+
+/**
+ * Returns a text color class based on the contrast of the provided background color.
+ */
+export const getTextColorClass = (bgColor: string) => {
+  const contrast = getContrastColor(bgColor);
+  return contrast === '#FFFFFF' ? 'text-white' : 'text-slate-900';
+};
+
+/**
+ * Returns a description color class based on the contrast of the provided background color.
+ */
+export const getDescriptionColorClass = (bgColor: string) => {
+  const contrast = getContrastColor(bgColor);
+  return contrast === '#FFFFFF' ? 'text-slate-100' : 'text-slate-500';
+};
+
+/**
  * Generate a secondary color based on a primary color
  * Usually a lighter or darker version that maintains harmony
  */

@@ -99,19 +99,19 @@ export default function Header() {
                                     style={{
                                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
                                         width: '44px', height: '44px', borderRadius: '12px',
-                                        background: 'var(--color-primary-light)',
-                                        color: 'var(--color-primary)',
+                                        background: 'var(--brand-color-light)',
+                                        color: 'var(--brand-color)',
                                         border: 'none', cursor: 'pointer',
                                         transition: 'all 0.2s',
                                         boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)',
                                     }}
                                     onMouseEnter={e => {
-                                        (e.currentTarget as HTMLElement).style.background = 'var(--color-primary)';
-                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-primary-foreground, white)';
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--brand-color)';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--brand-color-foreground, white)';
                                     }}
                                     onMouseLeave={e => {
-                                        (e.currentTarget as HTMLElement).style.background = 'var(--color-primary-light)';
-                                        (e.currentTarget as HTMLElement).style.color = 'var(--color-primary)';
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--brand-color-light)';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--brand-color)';
                                     }}
                                 >
                                     <div style={{ width: '20px', height: '2px', background: 'currentColor', borderRadius: '10px' }} />
@@ -126,14 +126,14 @@ export default function Header() {
                                 <DropdownMenuSeparator />
                                 {navItems.map(item => (
                                     <DropdownMenuItem key={item.path} asChild>
-                                        <Link
-                                            to={item.path}
-                                            style={{ textDecoration: 'none' }}
-                                            className={`flex items-center gap-3 cursor-pointer py-2 px-1 rounded-md transition-colors ${location.pathname === item.path ? 'font-semibold text-[var(--color-primary)] bg-[var(--color-primary-light)]/30' : 'text-slate-600 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/20'}`}
-                                        >
-                                            <item.icon className={`w-4 h-4 ${location.pathname === item.path ? 'text-[var(--color-primary)]' : 'text-slate-400'}`} />
-                                            {item.label}
-                                        </Link>
+                                <Link
+                                    to={item.path}
+                                    style={{ textDecoration: 'none' }}
+                                    className={`flex items-center gap-3 cursor-pointer py-2 px-1 rounded-md transition-colors ${location.pathname === item.path ? 'font-semibold text-[var(--brand-color)] bg-[var(--brand-color-light)]/30' : 'text-slate-600 hover:text-[var(--brand-color)] hover:bg-[var(--brand-color-light)]/20'}`}
+                                >
+                                    <item.icon className={`w-4 h-4 ${location.pathname === item.path ? 'text-[var(--brand-color)]' : 'text-slate-400'}`} />
+                                    {item.label}
+                                </Link>
                                     </DropdownMenuItem>
                                 ))}
                                 <DropdownMenuSeparator />
@@ -151,12 +151,12 @@ export default function Header() {
                     {!user && !isAuthPage && (
                         <div className="flex items-center gap-3">
                             <Link to="/register" style={{
-                                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))', 
+                                background: 'linear-gradient(135deg, var(--brand-color), var(--brand-color-hover))', 
                                 color: getContrastColor(primaryColor), 
                                 padding: '10px 24px', 
                                 borderRadius: 12,
                                 textDecoration: 'none', fontSize: 15, fontWeight: 700,
-                                boxShadow: '0 10px 20px -5px var(--color-primary-light)',
+                                boxShadow: '0 10px 20px -5px var(--brand-color-light)',
                                 transition: 'all 0.2s'
                             }}
                                 onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}

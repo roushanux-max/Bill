@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Eye, Save, Palette } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { saveInvoice as dbSaveInvoice, getAndIncrementInvoiceNumber } from '@/shared/utils/storage';
 import { validateInput, ValidationRules } from '@/shared/utils/validation';
+import { formatDateForDisplay } from '@/shared/utils/dateUtils';
 
 import InvoicePreviewModal from './InvoicePreviewModal';
 
@@ -207,28 +211,88 @@ export default function InvoiceForm() {
         customer: { id: invoice.customer.id, name: invoice.customer.name || 'Walk-in', phone: invoice.customer.mobile, email: invoice.customer.email, address: invoice.customer.address },
         items: getSerializedItems(),
         subtotal, taxTotal: tax, discountTotal: Number(invoice.discountTotal), grandTotal, transportCharges: Number(invoice.transportCharges), notes: invoice.notes, 
-        templateId: typeof window !== 'undefined' ? localStorage.getItem('bill_default_template') || 'standard' : 'standard',
+        templateId: typeof window !== 'undefined' ? localStorage.getItem('invoice_default_template') || 'standard' : 'standard',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     });
 
-    const handleSaveInvoice = async () => {
+    const validateForm = () => {
+        let isValid = true;
+        let newCustomerErrors = { ...customerErrors };
+        let newItemErrors: Record<string, {quantity?: string | null, unitPrice?: string | null}> = {};
+
+        // Validate customer name
+        if (!invoice.customer.name?.trim()) {
+            newCustomerErrors.name = 'Customer name is required.';
+            isValid = false;
+        } else {
+            newCustomerErrors.name = null;
+        }
+
+        // Validate items
+        if (!invoice.items || invoice.items.length === 0) {
+            toast.error('At least one item is required.');
+            isValid = false;
+        } else {
+            invoice.items.forEach((item: any) => {
+                let itemValid = true;
+                let errors: {quantity?: string | null, unitPrice?: string | null} = {};
+
+                if (!item.productName?.trim()) {
+                    toast.error(`Item "${item.id}" description is required.`);
+                    itemValid = false;
+                }
+                if (item.quantity <= 0) {
+                    errors.quantity = 'Quantity must be greater than 0.';
+                    itemValid = false;
+                }
+                if (item.unitPrice <= 0) {
+                    errors.unitPrice = 'Unit price must be greater than 0.';
+                    itemValid = false;
+                }
+                if (!itemValid) {
+                    newItemErrors[item.id] = errors;
+                    isValid = false;
+                }
+            });
+        }
+
+        setCustomerErrors(newCustomerErrors);
+        setItemErrors(newItemErrors);
+        return isValid;
+    };
+
+    const handlePreview = () => {
+        if (!validateForm()) return;
+        setShowPreviewModal(true);
+    };
+
+    const handleSave = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!validateForm()) return;
+        
         setIsSaving(true);
+        const toastId = toast.loading('Saving invoice...');
+        
         try {
-            const invoice = buildInvoiceObj();
-            if (!user) {
-                sessionStorage.setItem('bill_guest_mode', 'true');
-                await dbSaveInvoice(invoice);
-                // setSaveAlertOpen(true); -> For simplicity just returning them to login or dashboard
-                toast.success('Draft saved. Login to permanently save.');
-                navigate('/register');
-                return;
+            const finalInvoice = {
+                ...buildInvoiceObj(), // Use buildInvoiceObj to get the full invoice data
+                updatedAt: new Date().toISOString(),
+                status: invoice.status || 'unpaid'
+            };
+            
+            const result = await dbSaveInvoice(finalInvoice);
+            if (result) {
+                toast.success('Invoice saved successfully!', { id: toastId });
+                // Notify the user or redirect
+                setTimeout(() => navigate('/invoices'), 500);
             }
-            await dbSaveInvoice(invoice);
-            toast.success('Invoice saved successfully');
-            navigate('/dashboard');
-        } catch (e) { toast.error('Failed to save invoice'); } 
-        finally { setIsSaving(false); }
+        } catch (error) {
+            console.error('Error saving invoice:', error);
+            toast.error('Failed to save invoice', { id: toastId });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleDownloadPDF = (templateId: string) => {
@@ -284,8 +348,44 @@ export default function InvoiceForm() {
 
             {/* FORM CONTAINER */}
             <div className="bg-white border text-sm border-slate-200 rounded-3xl shadow-sm p-8">
-                
-                {/* 1. Header Details */}
+                {/* ─── NEW TOP BAR: INVOICE NO & DATE ─── */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-slate-100/80">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Invoice Number</label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400 font-bold">#</span>
+                            <input 
+                                className="bg-transparent border-none p-0 font-mono font-black text-xl text-slate-900 outline-none w-40" 
+                                value={invoice.invoiceNumber} 
+                                onChange={e => updateInvoice({ invoiceNumber: e.target.value })} 
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-6">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Issue Date</label>
+                            <input 
+                                type="date" 
+                                className="bg-slate-50 px-3 py-1.5 rounded-lg border-none font-bold text-slate-800 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--brand-color)]/20" 
+                                value={invoice.date} 
+                                onChange={e => updateInvoice({ date: e.target.value })} 
+                            />
+                        </div>
+                        {activeDomain !== 'furniture' && (
+                            <div className="flex flex-col gap-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Due Date</label>
+                                <input 
+                                    type="date" 
+                                    className="bg-slate-50 px-3 py-1.5 rounded-lg border-none font-bold text-slate-800 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--brand-color)]/20" 
+                                    value={invoice.dueDate} 
+                                    onChange={e => updateInvoice({ dueDate: e.target.value })} 
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 1. Customer Details */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 pb-10 border-b border-slate-100">
                     <div className="md:col-span-2 relative">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Customer Name *</label>
@@ -349,18 +449,6 @@ export default function InvoiceForm() {
                     <div className="md:col-span-3">
                         <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Address</label>
                         <input className="w-full bg-slate-50 p-3 rounded-xl border focus:border-slate-300 outline-none transition-colors" placeholder="Invoicing Address..." value={invoice.customer.address} onChange={e => updateCustomer({ address: e.target.value })} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Invoice No *</label>
-                        <input className="w-full bg-slate-50 p-3 font-mono font-bold rounded-xl border-none outline-none" value={invoice.invoiceNumber} onChange={e => updateInvoice({ invoiceNumber: e.target.value })} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Issue Date</label>
-                        <input type="date" className="w-full bg-slate-50 p-3 rounded-xl border-none outline-none" value={invoice.date} onChange={e => updateInvoice({ date: e.target.value })} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Due Date</label>
-                        <input type="date" className="w-full bg-slate-50 p-3 rounded-xl border-none outline-none" value={invoice.dueDate} onChange={e => updateInvoice({ dueDate: e.target.value })} />
                     </div>
                 </div>
 
@@ -549,7 +637,7 @@ export default function InvoiceForm() {
                         </div>
                         <div className="flex justify-between items-center text-slate-900 text-xl pt-2">
                             <span className="font-black">Total:</span>
-                            <span className="font-black tracking-tight" style={{ color: globalBranding.primaryColor }}>₹{Math.round(grandTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <span className="font-black tracking-tight" style={{ color: 'var(--brand-color)' }}>₹{Math.round(grandTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
                     </div>
                 </div>
@@ -561,23 +649,45 @@ export default function InvoiceForm() {
                 <div className="text-sm font-medium text-slate-500">
                     {/* Status hint removed for cleaner UI */}
                 </div>
-                <div className="flex gap-4 w-full md:w-auto">
-                    <button
-                        onClick={() => setShowPreviewModal(true)}
-                        disabled={!isReady}
-                        className="flex-1 md:flex-none px-6 py-3 bg-white border-2 hover:bg-slate-50 font-bold rounded-xl flex justify-center items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                        style={{ color: globalBranding.primaryColor, borderColor: globalBranding.primaryColor }}
+                {/* ACTIONS */}
+                <div className="flex flex-col sm:flex-row items-center justify-end gap-3 w-full">
+                    <Button 
+                        type="button"
+                        variant="ghost" 
+                        onClick={() => navigate('/invoices')}
+                        className="w-full sm:w-auto text-slate-500 font-bold hover:bg-slate-50 order-2 sm:order-1"
                     >
-                        <Eye size={18} /> Preview & Templates
-                    </button>
-                    <button
-                        onClick={handleSaveInvoice}
-                        disabled={isSaving || !isReady}
-                        className="flex-1 md:flex-none px-6 py-3 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
-                        style={{ backgroundColor: globalBranding.primaryColor }}
-                    >
-                        <Save size={18} /> Save Invoice
-                    </button>
+                        Discard
+                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto order-1 sm:order-2">
+                        <Button 
+                            type="button"
+                            variant="outline" 
+                            onClick={handlePreview}
+                            className="font-bold border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 px-8 py-6 rounded-2xl h-auto"
+                        >
+                            <Eye className="h-5 w-5 mr-2" />
+                            Preview
+                        </Button>
+                        <Button 
+                            type="submit"
+                            disabled={isSaving}
+                            onClick={handleSave}
+                            className="font-black bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white shadow-xl shadow-[var(--brand-color)]/20 px-10 py-6 rounded-2xl h-auto transition-all active:scale-95"
+                        >
+                            {isSaving ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Saving...</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Save className="h-5 w-5" />
+                                    <span>Save Invoice</span>
+                                </div>
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

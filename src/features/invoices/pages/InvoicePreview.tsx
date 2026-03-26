@@ -283,8 +283,7 @@ export default function InvoicePreview() {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={handleBack} 
-              style={{ color: settings.primaryColor }}
-              className="flex items-center gap-1.5 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer hover:opacity-80"
+              className="flex items-center gap-1.5 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer hover:opacity-80 text-[var(--brand-color)]"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -297,8 +296,7 @@ export default function InvoicePreview() {
               <Button
                 variant="default"
                 size="sm"
-                style={{ backgroundColor: settings.primaryColor, color: '#fff' }}
-                className="hover:opacity-90 border-none px-4"
+                className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-4"
                 disabled={isGenerating}
               >
                 <Pencil className="h-4 w-4 mr-2" />
@@ -309,8 +307,7 @@ export default function InvoicePreview() {
               variant="outline"
               size="sm"
               onClick={handlePrint}
-              style={{ color: settings.primaryColor, borderColor: settings.primaryColor }}
-              className="hover:opacity-90 bg-white"
+              className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
               disabled={isGenerating}
             >
               <Printer className="h-4 w-4 mr-2" />
@@ -320,8 +317,7 @@ export default function InvoicePreview() {
               variant="outline"
               size="sm"
               onClick={handleDownload}
-              style={{ color: settings.primaryColor, borderColor: settings.primaryColor }}
-              className="hover:opacity-90 bg-white"
+              className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
               disabled={isGenerating}
             >
               <Download className="h-4 w-4 mr-2" />
@@ -331,8 +327,7 @@ export default function InvoicePreview() {
               variant="default"
               size="sm"
               onClick={handleShare}
-              style={{ backgroundColor: settings.primaryColor, color: '#fff' }}
-              className="hover:opacity-90 border-none"
+              className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none"
               disabled={isGenerating}
             >
               <Share2 className="h-4 w-4 mr-2" />
@@ -345,8 +340,7 @@ export default function InvoicePreview() {
               variant="default"
               size="sm"
               onClick={handleShare}
-              style={{ backgroundColor: settings.primaryColor, color: '#fff' }}
-              className="hover:opacity-90 border-none px-3"
+              className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-3"
               disabled={isGenerating}
             >
               <Share2 className="h-4 w-4" />

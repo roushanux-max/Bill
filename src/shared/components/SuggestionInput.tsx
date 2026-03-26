@@ -100,7 +100,7 @@ export function SuggestionInput({
                                             setOpen(false);
                                             setIsFocused(false);
                                         }}
-                                        className="flex flex-col items-start px-3 py-2 rounded-lg cursor-pointer aria-selected:bg-[var(--color-primary)]/10 aria-selected:text-[var(--color-primary)] transition-all hover:bg-slate-50"
+                                        className="flex flex-col items-start px-3 py-2 rounded-lg cursor-pointer aria-selected:bg-[var(--brand-color)]/10 aria-selected:text-[var(--brand-color)] transition-all hover:bg-slate-50"
                                     >
                                         <span className="font-semibold text-sm">{suggestion[labelKey]}</span>
                                         <span className="text-[10px] opacity-70 italic">{suggestion[subLabelKey]}</span>

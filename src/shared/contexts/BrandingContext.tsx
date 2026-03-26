@@ -235,6 +235,10 @@ function applyBrandingStyles(settings: BrandingSettings) {
       --color-primary-active: ${primaryActive};
       --color-primary-light: ${primaryLight};
       --color-primary-foreground: ${primaryForeground};
+      --brand-color: ${settings.primaryColor};
+      --brand-color-hover: ${primaryHover};
+      --brand-color-light: ${primaryLight};
+      --brand-color-foreground: ${primaryForeground};
       --color-secondary: ${primaryLight};
       --color-contrast-text: ${primaryForeground};
       --primary: ${settings.primaryColor};
@@ -254,6 +258,10 @@ function applyBrandingStyles(settings: BrandingSettings) {
       --primary-active: ${primaryActive};
       --primary-light: ${primaryLight};
       --primary-foreground: ${primaryForeground};
+      --brand-color: ${settings.primaryColor};
+      --brand-color-hover: ${primaryHover};
+      --brand-color-light: ${primaryLight};
+      --brand-color-foreground: ${primaryForeground};
       --font-family: ${getFontFamilyString(settings.fontFamily)};
     }
 

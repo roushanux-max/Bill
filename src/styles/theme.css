@@ -89,10 +89,10 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-light: var(--primary-light);
-  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--brand-color);
+  --color-primary-hover: var(--brand-color-hover);
+  --color-primary-light: var(--brand-color-light);
+  --color-primary-foreground: var(--brand-color-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -262,7 +262,7 @@
 }
 
 .premium-focus {
-  @apply focus-within:ring-2 focus-within:ring-[var(--color-primary)]/30 focus-within:border-[var(--color-primary)] transition-all duration-200;
+  @apply focus-within:ring-2 focus-within:ring-[var(--brand-color)]/30 focus-within:border-[var(--brand-color)] transition-all duration-200;
 }
 
 .animate-fade-in-up {

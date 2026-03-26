@@ -390,7 +390,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
           
           {settings.paymentDetails && (
             <div style={{ marginTop: '16px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 800, color: 'var(--brand-color)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
                 Payment Method
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: 'var(--font-size-base)', color: '#444', lineHeight: '1.5' }}>
@@ -408,7 +408,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 <td style={{ color: '#666', fontWeight: 600, paddingBottom: '4px', paddingRight: '16px', textAlign: 'right' }}>Invoice No:</td>
                 <td style={{ fontWeight: 700, color: '#1a1a2e', textAlign: 'right' }}>{invoice.invoiceNumber || 'INV-0001'}</td>
               </tr>
-              {invoice.dueDate && (
+              {activeDomain !== 'furniture' && invoice.dueDate && (
                 <tr>
                   <td style={{ color: '#666', fontWeight: 600, paddingBottom: '4px', paddingRight: '16px', textAlign: 'right' }}>Due Date:</td>
                   <td style={{ fontWeight: 700, color: '#1a1a2e', textAlign: 'right' }}>{formatDateForDisplay(invoice.dueDate)}</td>
@@ -427,7 +427,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       <div style={{ padding: '0 28px', flex: 1 }}>
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-base)', lineHeight: '1.4' }}>
           <thead>
-            <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-contrast-text)' }}>
+            <tr style={{ backgroundColor: 'var(--brand-color)', color: 'var(--color-contrast-text)' }}>
               <th style={{ padding: '12px 10px', textAlign: 'center', width: '36px', fontWeight: 900 }}>NO.</th>
               <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 900 }}>ITEM DESCRIPTION</th>
               {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
