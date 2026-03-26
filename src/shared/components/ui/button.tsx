@@ -20,10 +20,10 @@ const buttonVariants = cva(
         link: 'text-[var(--brand-color)] underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-11 px-6 has-[>svg]:px-4',
-        sm: 'h-9 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-12 rounded-md px-8 has-[>svg]:px-6',
-        icon: 'size-11 rounded-md',
+        default: 'h-12 px-6 rounded-xl has-[>svg]:px-4',
+        sm: 'h-9 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5',
+        lg: 'h-14 rounded-2xl px-10 has-[>svg]:px-8',
+        icon: 'size-12 rounded-xl',
       },
     },
     defaultVariants: {

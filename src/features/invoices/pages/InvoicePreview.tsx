@@ -304,27 +304,24 @@ export default function InvoicePreview() {
             <Link to={`/create-invoice?edit=${invoice.id}`}>
               <Button
                 variant="default"
-                size="sm"
-                className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-4"
+                className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-6"
                 disabled={isGenerating}
               >
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit Invoice
+                Edit
               </Button>
             </Link>
             <Button
               variant="outline"
-              size="sm"
               onClick={handlePrint}
               className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
               disabled={isGenerating || !isInvoiceValid}
             >
               <Printer className="h-4 w-4 mr-2" />
-              Print Preview
+              Print
             </Button>
             <Button
               variant="outline"
-              size="sm"
               onClick={handleDownload}
               className="border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 bg-white"
               disabled={isGenerating || !isInvoiceValid}
@@ -334,7 +331,6 @@ export default function InvoicePreview() {
             </Button>
             <Button
               variant="default"
-              size="sm"
               onClick={handleShare}
               className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none"
               disabled={isGenerating || !isInvoiceValid}

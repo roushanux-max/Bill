@@ -193,7 +193,7 @@ export default function LandingPage() {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              I HAVE BEEN UPDATED.
+              effortless.
             </span>
           </h1>
 
@@ -229,21 +229,23 @@ export default function LandingPage() {
                 textDecoration: 'none',
                 background:
                   'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
-                padding: '16px 36px',
-                borderRadius: 16,
+                height: '60px',
+                padding: '0 40px',
+                borderRadius: 18,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                boxShadow: '0 15px 30px -10px var(--color-primary-light)',
-                transition: 'transform 0.2s, box-shadow 0.2s',
+                justifyContent: 'center',
+                gap: 10,
+                boxShadow: '0 12px 24px -8px var(--color-primary-light)',
+                transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 20px 40px -10px var(--color-primary-light)';
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -12px var(--color-primary-light)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 15px 30px -10px var(--color-primary-light)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 12px 24px -8px var(--color-primary-light)';
               }}
             >
               Start Invoicing Now <ArrowRight size={20} />

@@ -119,24 +119,26 @@ export default function Header() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '5px',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '14px',
                     background: 'var(--brand-color-light)',
                     color: 'var(--brand-color)',
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06)',
+                    boxShadow: '0 2px 8px -2px rgba(0,0,0,0.1)',
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.background = 'var(--brand-color)';
                     (e.currentTarget as HTMLElement).style.color =
                       'var(--brand-color-foreground, white)';
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.background = 'var(--brand-color-light)';
                     (e.currentTarget as HTMLElement).style.color = 'var(--brand-color)';
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                   }}
                 >
                   <div
@@ -175,22 +177,28 @@ export default function Header() {
                     <Link
                       to={item.path}
                       style={{ textDecoration: 'none' }}
-                      className={`flex items-center gap-3 cursor-pointer py-2 px-1 rounded-md transition-colors ${location.pathname === item.path ? 'font-semibold text-[var(--brand-color)] bg-[var(--brand-color-light)]/30' : 'text-slate-600 hover:text-[var(--brand-color)] hover:bg-[var(--brand-color-light)]/20'}`}
+                      className={`flex items-center gap-3 cursor-pointer py-3 px-3 rounded-xl transition-all ${
+                        location.pathname === item.path
+                          ? 'font-bold text-slate-900 bg-slate-50 shadow-sm border border-slate-100'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
+                      }`}
                     >
                       <item.icon
-                        className={`w-4 h-4 ${location.pathname === item.path ? 'text-[var(--brand-color)]' : 'text-slate-400'}`}
+                        className={`w-4 h-4 transition-colors ${
+                          location.pathname === item.path ? 'text-[var(--brand-color)]' : 'text-slate-400'
+                        }`}
                       />
-                      {item.label}
+                      <span className="text-[14px]">{item.label}</span>
                     </Link>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={signOut}
-                  className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                  className="text-slate-600 hover:text-red-600 hover:bg-red-50 cursor-pointer py-3 px-3 rounded-xl transition-all border border-transparent"
                 >
                   <LogOut className="w-4 h-4 mr-3" />
-                  Sign Out
+                  <span className="text-[14px]">Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -204,15 +212,19 @@ export default function Header() {
                   background:
                     'linear-gradient(135deg, var(--brand-color), var(--brand-color-hover))',
                   color: getContrastColor(primaryColor),
-                  padding: '10px 24px',
-                  borderRadius: 12,
+                  height: '48px',
+                  padding: '0 28px',
+                  borderRadius: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   textDecoration: 'none',
                   fontSize: 15,
                   fontWeight: 700,
-                  boxShadow: '0 10px 20px -5px var(--brand-color-light)',
+                  boxShadow: '0 8px 16px -4px var(--brand-color-light)',
                   transition: 'all 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
                 onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
               >
                 Get Started
