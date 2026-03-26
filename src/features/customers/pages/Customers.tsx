@@ -77,7 +77,7 @@ export default function Customers() {
   const navigate = useNavigate();
   const shouldOpenDialog = searchParams.get('add') === 'true';
 
-  const { storeInfo } = useBranding();
+  const { storeInfo, settings } = useBranding();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

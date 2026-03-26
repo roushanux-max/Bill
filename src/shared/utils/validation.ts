@@ -92,3 +92,12 @@ export const validateInput = (
   }
   return null;
 };
+
+/**
+ * Validates a mobile phone number specifically.
+ * @param phone The phone string to validate
+ * @returns boolean indication of validity
+ */
+export const validatePhone = (phone: string): boolean => {
+  return ValidationRules.mobile.pattern.test(phone);
+};
