@@ -291,7 +291,7 @@ export default function InvoicePreview() {
 
       {/* 2. SUB-HEADER: ACTIONS */}
       <div 
-        className="bg-white border-b border-slate-100 py-6 sticky top-20 z-50 print:hidden shadow-sm transition-all"
+        className="bg-white border-b border-slate-100 py-6 sticky top-20 z-[1100] print:hidden shadow-sm transition-all"
         style={{ top: '80px' }}
       >
         <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">

@@ -38,14 +38,15 @@ export default function InvoicePreviewModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white shadow-2xl w-full h-full sm:h-auto sm:max-h-[96vh] sm:max-w-6xl sm:rounded-3xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
         {/* HEAD */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-slate-100 shrink-0 bg-white">
           <div className="flex items-center gap-6">
             <button
               onClick={onClose}
-              className="group flex items-center gap-1.5 transition-all text-amber-500 hover:text-amber-600 bg-transparent border-none p-0 cursor-pointer font-bold text-sm"
+              className="group flex items-center gap-1.5 transition-all bg-transparent border-none p-0 cursor-pointer font-bold text-sm"
+              style={{ color: 'var(--brand-color, #f59e0b)' }}
             >
               <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               <span>Back</span>
@@ -55,7 +56,11 @@ export default function InvoicePreviewModal({
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleDownload}
-              className="px-6 sm:px-8 py-3 bg-amber-400 hover:bg-amber-500 text-white rounded-2xl text-sm font-black flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-amber-400/20"
+              className="px-6 sm:px-8 py-3 text-white rounded-2xl text-sm font-black flex items-center gap-2 transition-all active:scale-95 shadow-lg"
+              style={{ 
+                backgroundColor: 'var(--brand-color, #f59e0b)',
+                boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))'
+              }}
             >
               <Download size={18} strokeWidth={3} /> <span>Download PDF</span>
             </button>
