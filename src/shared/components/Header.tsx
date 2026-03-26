@@ -211,7 +211,7 @@ export default function Header() {
                 style={{
                   background:
                     'linear-gradient(135deg, var(--brand-color), var(--brand-color-hover))',
-                  color: getContrastColor(primaryColor),
+                  color: '#fff',
                   height: '48px',
                   padding: '0 28px',
                   borderRadius: 14,
