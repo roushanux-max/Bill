@@ -416,6 +416,14 @@ export default function InvoiceForm() {
     return isValid;
   };
 
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset all data and start over?')) {
+      const draftKey = getDraftKey();
+      localStorage.removeItem(draftKey);
+      window.location.reload(); // Simplest way to ensure all derived state & hooks reset
+    }
+  };
+
   const handlePreview = () => {
     if (!validateForm()) return;
     setShowPreviewModal(true);
@@ -1039,39 +1047,29 @@ export default function InvoiceForm() {
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 w-full">
           <Button
             type="button"
-            variant="ghost"
-            onClick={() => navigate('/invoices')}
-            className="w-full sm:w-auto text-slate-500 font-bold hover:bg-slate-50 order-2 sm:order-1"
+            variant="secondary"
+            onClick={handleReset}
+            className="w-full sm:w-auto font-bold h-12 px-8 rounded-xl order-2 sm:order-1"
           >
-            Discard
+            Reset
           </Button>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto order-1 sm:order-2">
             <Button
               type="button"
               variant="outline"
               onClick={handlePreview}
-              className="font-bold border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 px-8 py-6 rounded-2xl h-auto"
+              className="font-bold border-2 border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 h-12 px-8 rounded-xl"
             >
               <Eye className="h-5 w-5 mr-2" />
               Preview
             </Button>
             <Button
-              type="submit"
-              disabled={isSaving}
-              onClick={handleSave}
-              className="font-black bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white shadow-xl shadow-[var(--brand-color)]/20 px-10 py-6 rounded-2xl h-auto transition-all active:scale-95"
+              type="button"
+              onClick={() => handleDownloadPDF('standard')}
+              className="font-black bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white shadow-lg shadow-[var(--brand-color)]/20 h-12 px-10 rounded-xl transition-all active:scale-95 flex items-center gap-2"
             >
-              {isSaving ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Saving...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Save className="h-5 w-5" />
-                  <span>Save Invoice</span>
-                </div>
-              )}
+              <Download className="h-5 w-5" />
+              <span>Download Invoice</span>
             </Button>
           </div>
         </div>
