@@ -1301,7 +1301,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
         </div>
 
         {/* Right: Totals Box */}
-        <div style={{ minWidth: '200px' }}>
+        <div style={{ minWidth: '280px', flexShrink: 0 }}>
           <div style={{ borderTop: '1px solid #eee', paddingTop: '8px' }}>
             <div
               style={{
@@ -1366,6 +1366,8 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '8px',
                 backgroundColor: brandColor,
                 padding: '14px 16px',
                 borderRadius: '12px',
@@ -1382,7 +1384,16 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               >
                 Total Amount
               </span>
-              <span style={{ color: '#ffffff', fontWeight: 900, fontSize: '20px' }}>
+              <span
+                style={{
+                  color: '#ffffff',
+                  fontWeight: 900,
+                  fontSize: '20px',
+                  textAlign: 'right',
+                  flex: 1,
+                  wordBreak: 'break-word',
+                }}
+              >
                 ₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
