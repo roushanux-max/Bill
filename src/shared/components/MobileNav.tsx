@@ -45,7 +45,7 @@ const MobileNav: React.FC = () => {
               className={({ isActive }) =>
                 cn(
                   'flex flex-col items-center justify-center transition-all px-2 relative',
-                  isActive ? 'text-[var(--brand-color)]' : 'text-slate-500'
+                  isActive ? 'text-slate-900' : 'text-slate-500'
                 )
               }
             >
@@ -54,7 +54,6 @@ const MobileNav: React.FC = () => {
                   'w-6 h-6 mb-1 transition-transform',
                   location.pathname === item.path ? 'scale-110' : ''
                 )}
-                style={location.pathname === item.path ? { color: settings.primaryColor } : {}}
               />
               <span
                 className={cn(
@@ -67,8 +66,7 @@ const MobileNav: React.FC = () => {
 
               {location.pathname === item.path && (
                 <div
-                  className="absolute -bottom-1 w-1 h-1 rounded-full animate-pulse"
-                  style={{ backgroundColor: settings.primaryColor }}
+                  className="absolute -bottom-1 w-1 h-1 rounded-full animate-pulse bg-slate-400"
                 />
               )}
             </NavLink>

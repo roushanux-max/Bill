@@ -85,7 +85,7 @@ export default function Header() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid var(--color-primary-light)',
+              border: '1px solid rgba(0,0,0,0.08)',
               overflow: 'hidden',
             }}
             className="transition-transform group-hover:scale-105 shadow-sm"
@@ -185,7 +185,7 @@ export default function Header() {
                     >
                       <item.icon
                         className={`w-4 h-4 transition-colors ${
-                          location.pathname === item.path ? 'text-[var(--brand-color)]' : 'text-slate-400'
+                          location.pathname === item.path ? 'text-slate-900' : 'text-slate-400'
                         }`}
                       />
                       <span className="text-[14px]">{item.label}</span>

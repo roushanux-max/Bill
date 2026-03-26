@@ -291,13 +291,9 @@ function applyBrandingStyles(settings: BrandingSettings) {
       box-shadow: 0 0 0 2px ${settings.primaryColor}40 !important;
     }
 
-    /* Global link color */
-    .user-theme a {
-      color: ${settings.primaryColor};
-    }
-    
+    /* Keep links neutral and only show brand on subtle hovers/specific components */
     .user-theme a:hover {
-      color: var(--color-primary-light);
+      opacity: 0.8;
     }
 
     /* Ensure consistent heading colors */
