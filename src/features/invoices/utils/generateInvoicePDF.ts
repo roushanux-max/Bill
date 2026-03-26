@@ -123,13 +123,13 @@ export function generateInvoicePDF(
 
   // Header Content
   let logoX = margin;
-  let logoY = 8;
+  const logoY = 8;
   if (settings.logo) {
     try {
       const imgProps = pdf.getImageProperties(settings.logo);
       const imgRatio = imgProps.width / imgProps.height;
-      let finalH = 20;
-      let finalW = finalH * imgRatio;
+      const finalH = 20;
+      const finalW = finalH * imgRatio;
       pdf.addImage(settings.logo, 'PNG', logoX, logoY, finalW, finalH, undefined, 'FAST');
       logoX += finalW + 8;
     } catch (e) {}
@@ -171,7 +171,7 @@ export function generateInvoicePDF(
   }
 
   // Invoice Meta Info (Right side, below banner)
-  let rightY = y + 12;
+  const rightY = y + 12;
 
   // Ensure y is below both the left info and the right banner area
   y = Math.max(y + 12, rightY + 5);
@@ -259,7 +259,7 @@ export function generateInvoicePDF(
   setFont('bold', 8, [255, 255, 255]);
   let cx = margin;
   cols.forEach((col) => {
-    let tx = cx + (col.align === 'center' ? col.w / 2 : col.align === 'right' ? col.w - 4 : 4);
+    const tx = cx + (col.align === 'center' ? col.w / 2 : col.align === 'right' ? col.w - 4 : 4);
     pdf.text(col.label, tx, y + 6.5, { align: col.align as any });
     cx += col.w;
   });
@@ -300,7 +300,7 @@ export function generateInvoicePDF(
     let rcx = margin;
 
     cols.forEach((col) => {
-      let tx = rcx + (col.align === 'center' ? col.w / 2 : col.align === 'right' ? col.w - 4 : 4);
+      const tx = rcx + (col.align === 'center' ? col.w / 2 : col.align === 'right' ? col.w - 4 : 4);
       let val = '';
 
       if (col.label === 'QTY') val = String(item.quantity);

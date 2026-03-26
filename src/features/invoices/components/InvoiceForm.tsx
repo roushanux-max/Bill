@@ -194,7 +194,7 @@ export default function InvoiceForm() {
       customer: { ...prev.customer, ...updates },
     }));
 
-    let newErrs = { ...customerErrors };
+    const newErrs = { ...customerErrors };
     if (updates.name !== undefined) newErrs.name = validateInput('name', updates.name);
     if (updates.mobile !== undefined)
       newErrs.mobile = validateInput('mobile', String(updates.mobile));
@@ -297,7 +297,7 @@ export default function InvoiceForm() {
   // --- More logic follows (handleDownload, customer search etc.) ---
   const getSerializedItems = () =>
     invoice.items.map((i: any) => {
-      let extra = [];
+      const extra = [];
       if (activeDomain === 'clothing') {
         if (i.unit) extra.push(`Size: ${i.unit}`);
         if (i.color) extra.push(`Color: ${i.color}`);
@@ -353,8 +353,9 @@ export default function InvoiceForm() {
 
   const validateForm = () => {
     let isValid = true;
-    let newCustomerErrors = { ...customerErrors };
-    let newItemErrors: Record<string, { quantity?: string | null; unitPrice?: string | null }> = {};
+    const newCustomerErrors = { ...customerErrors };
+    const newItemErrors: Record<string, { quantity?: string | null; unitPrice?: string | null }> =
+      {};
 
     // Validate customer name
     if (!invoice.customer.name?.trim()) {
@@ -371,7 +372,7 @@ export default function InvoiceForm() {
     } else {
       invoice.items.forEach((item: any) => {
         let itemValid = true;
-        let errors: { quantity?: string | null; unitPrice?: string | null } = {};
+        const errors: { quantity?: string | null; unitPrice?: string | null } = {};
 
         if (!item.productName?.trim()) {
           toast.error(`Item "${item.id}" description is required.`);

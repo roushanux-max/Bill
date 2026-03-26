@@ -231,7 +231,7 @@ function applyBrandingStyles(settings: BrandingSettings) {
   const root = document.documentElement;
 
   // Create dynamic stylesheet for theme colors
-  let styleId = 'branding-theme-styles';
+  const styleId = 'branding-theme-styles';
   let existingStyle = document.getElementById(styleId) as HTMLStyleElement;
 
   if (!existingStyle) {

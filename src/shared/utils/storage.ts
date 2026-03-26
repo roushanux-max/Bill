@@ -188,7 +188,7 @@ export const processSyncQueue = async () => {
   const key = getUserKey('invoice_sync_queue');
   if (!key) return;
 
-  let queue = getCachedData<SyncOperation[]>(key, []);
+  const queue = getCachedData<SyncOperation[]>(key, []);
   if (queue.length === 0) return;
 
   emitSyncStart();

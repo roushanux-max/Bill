@@ -55,11 +55,14 @@ describe('Dashboard Integration', () => {
       </MemoryRouter>
     );
 
-    await waitFor(() => {
-      // After loading, stat cards should show '0' or '₹0'
-      const zeroElements = screen.queryAllByText('0');
-      expect(zeroElements.length).toBeGreaterThanOrEqual(1);
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        // After loading, stat cards should show '0' or '₹0'
+        const zeroElements = screen.queryAllByText('0');
+        expect(zeroElements.length).toBeGreaterThanOrEqual(1);
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('shows revenue content after clicking the toggle button', async () => {
@@ -90,10 +93,13 @@ describe('Dashboard Integration', () => {
     // Click to reveal revenue
     fireEvent.click(showButton);
 
-    await waitFor(() => {
-      // Revenue is now shown - check for the formatted value
-      const revenueEl = screen.queryAllByText(/1,500/);
-      expect(revenueEl.length).toBeGreaterThanOrEqual(1);
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        // Revenue is now shown - check for the formatted value
+        const revenueEl = screen.queryAllByText(/1,500/);
+        expect(revenueEl.length).toBeGreaterThanOrEqual(1);
+      },
+      { timeout: 5000 }
+    );
   });
 });

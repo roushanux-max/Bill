@@ -1,9 +1,9 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vitest/config'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
@@ -29,20 +29,20 @@ export default defineConfig({
             src: '/bill_software_icon.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/bill_software_icon.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/bill_software_icon.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
-          }
+            purpose: 'maskable',
+          },
         ],
         categories: ['business', 'finance', 'productivity'],
       },
@@ -59,19 +59,19 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
       devOptions: {
-        enabled: false
-      }
-    })
+        enabled: false,
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -89,4 +89,4 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
-})
+});
