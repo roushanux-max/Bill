@@ -290,12 +290,16 @@ export default function InvoicePreview() {
       <Header />
 
       {/* 2. SUB-HEADER: ACTIONS */}
-      <div className="bg-white border-b border-slate-100 py-6 sticky top-20 z-40 print:hidden shadow-sm">
+      <div 
+        className="bg-white border-b border-slate-100 py-6 sticky top-20 z-50 print:hidden shadow-sm transition-all"
+        style={{ top: '80px' }}
+      >
         <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
               onClick={handleBack}
-              className="group flex items-center gap-1.5 transition-all text-amber-500 hover:text-amber-600 bg-transparent border-none p-0 cursor-pointer font-bold text-sm"
+              className="group flex items-center gap-1.5 transition-all bg-transparent border-none p-0 cursor-pointer font-bold text-sm"
+              style={{ color: 'var(--brand-color, #f59e0b)' }}
             >
               <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               <span>Back</span>
@@ -307,7 +311,11 @@ export default function InvoicePreview() {
             <Link to={`/create-invoice?edit=${invoice.id}`} className="no-underline">
               <Button
                 variant="default"
-                className="bg-amber-400 hover:bg-amber-500 text-white border-none h-12 px-8 rounded-2xl shadow-md shadow-amber-400/20 active:scale-95 transition-all font-black"
+                className="text-white border-none h-12 px-8 rounded-2xl shadow-md active:scale-95 transition-all font-black"
+                style={{ 
+                  backgroundColor: 'var(--brand-color, #f59e0b)',
+                  boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))'
+                }}
                 disabled={isGenerating}
               >
                 <Pencil className="h-4 w-4 mr-2" strokeWidth={3} />
@@ -317,7 +325,11 @@ export default function InvoicePreview() {
             <Button
               variant="outline"
               onClick={handlePrint}
-              className="border-2 border-amber-400 text-amber-400 hover:bg-amber-400/5 bg-transparent h-12 px-8 rounded-2xl active:scale-95 transition-all font-black"
+              className="border-2 h-12 px-8 rounded-2xl active:scale-95 transition-all font-black bg-transparent"
+              style={{ 
+                borderColor: 'var(--brand-color, #f59e0b)',
+                color: 'var(--brand-color, #f59e0b)' 
+              }}
               disabled={isGenerating}
             >
               <Printer className="h-4 w-4 mr-2" strokeWidth={3} />
@@ -326,7 +338,11 @@ export default function InvoicePreview() {
             <Button
               variant="outline"
               onClick={handleDownload}
-              className="border-2 border-amber-400 text-amber-400 hover:bg-amber-400/5 bg-transparent h-12 px-8 rounded-2xl active:scale-95 transition-all font-black"
+              className="border-2 h-12 px-8 rounded-2xl active:scale-95 transition-all font-black bg-transparent"
+              style={{ 
+                borderColor: 'var(--brand-color, #f59e0b)',
+                color: 'var(--brand-color, #f59e0b)' 
+              }}
               disabled={isGenerating}
             >
               <Download className="h-4 w-4 mr-2" strokeWidth={3} />
@@ -335,7 +351,11 @@ export default function InvoicePreview() {
             <Button
               variant="default"
               onClick={handleShare}
-              className="bg-amber-400 hover:bg-amber-500 text-white border-none h-12 px-8 rounded-2xl shadow-md shadow-amber-400/20 active:scale-95 transition-all font-black"
+              className="text-white border-none h-12 px-8 rounded-2xl shadow-md active:scale-95 transition-all font-black"
+              style={{ 
+                backgroundColor: 'var(--brand-color, #f59e0b)',
+                boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))'
+              }}
               disabled={isGenerating}
             >
               <Share2 className="h-4 w-4 mr-2" strokeWidth={3} />
@@ -363,7 +383,11 @@ export default function InvoicePreview() {
           <Button
             variant="default"
             onClick={handleShare}
-            className="pointer-events-auto bg-amber-400 hover:bg-amber-500 text-white border-none h-14 px-8 rounded-2xl shadow-2xl font-black"
+            className="pointer-events-auto text-white border-none h-14 px-8 rounded-2xl shadow-2xl font-black"
+            style={{ 
+              backgroundColor: 'var(--brand-color, #f59e0b)',
+              boxShadow: '0 12px 24px -6px var(--brand-color-light, rgba(245, 158, 11, 0.3))'
+            }}
             disabled={isGenerating}
           >
             <Share2 className="h-5 w-5 mr-3" strokeWidth={3} />
