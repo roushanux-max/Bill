@@ -195,9 +195,9 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={signOut}
-                  className="text-slate-600 hover:text-red-600 hover:bg-red-50 cursor-pointer py-3 px-3 rounded-xl transition-all border border-transparent"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer py-3 px-3 rounded-xl transition-all border border-transparent font-bold"
                 >
-                  <LogOut className="w-4 h-4 mr-3" />
+                  <LogOut className="w-4 h-4 mr-3 text-red-500" />
                   <span className="text-[14px]">Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
