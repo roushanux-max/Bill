@@ -38,7 +38,13 @@ export default function InvoiceForm() {
   >({});
 
   // --- State: Single Source of Truth ---
-  const [invoice, setInvoice] = useState<any>(null); // Start null for loader
+  const [invoice, setInvoice] = useState<any>({
+    items: [],
+    customer: { name: '', mobile: '', email: '', address: '' },
+    transportCharges: 0,
+    discountTotal: 0,
+    invoiceNumber: '',
+  });
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
 
   // --- Restoration Logic ---
@@ -53,9 +59,6 @@ export default function InvoiceForm() {
         if (localDraft) {
           restored = JSON.parse(localDraft);
         }
-
-        // If logged in, we COULD fetch the latest "draft" invoice from DB here if needed
-        // but for now, localStorage is the primary "active work" buffer.
 
         if (restored) {
           setInvoice(restored);
@@ -108,22 +111,38 @@ export default function InvoiceForm() {
   const activeDomain = globalBranding.domain || 'general';
 
   // --- Derived Math ---
-  const subtotal = (invoice.items || []).reduce(
-    (sum: number, item: any) => sum + item.quantity * item.unitPrice,
-    0
-  );
-  const tax = (invoice.items || []).reduce(
-    (sum: number, item: any) => sum + item.quantity * item.unitPrice * (item.taxRate / 100),
-    0
-  );
-  const grandTotal =
-    subtotal + tax + Number(invoice.transportCharges) - Number(invoice.discountTotal);
+  const subtotal = useMemo(() => {
+    if (!invoice?.items) return 0;
+    return invoice.items.reduce(
+      (sum: number, item: any) => sum + (item.quantity || 0) * (item.unitPrice || 0),
+      0
+    );
+  }, [invoice?.items]);
+
+  const tax = useMemo(() => {
+    if (!invoice?.items) return 0;
+    return invoice.items.reduce(
+      (sum: number, item: any) =>
+        sum + (item.quantity || 0) * (item.unitPrice || 0) * ((item.taxRate || 0) / 100),
+      0
+    );
+  }, [invoice?.items]);
+
+  const grandTotal = useMemo(() => {
+    return (
+      subtotal +
+      tax +
+      Number(invoice?.transportCharges || 0) -
+      Number(invoice?.discountTotal || 0)
+    );
+  }, [subtotal, tax, invoice?.transportCharges, invoice?.discountTotal]);
 
   const isCustomerValid =
-    !Object.values(customerErrors).some((err) => err !== null) && invoice.customer?.name?.trim();
-  const areItemsValid =
-    invoice.items?.length > 0 &&
-    invoice.items.every((i: any) => {
+    !Object.values(customerErrors).some((err) => err !== null) && invoice?.customer?.name?.trim();
+
+  const areItemsValid = useMemo(() => {
+    if (!invoice?.items || invoice.items.length === 0) return false;
+    return invoice.items.every((i: any) => {
       const errs = itemErrors[i.id] || {};
       return (
         !errs.quantity &&
@@ -133,17 +152,18 @@ export default function InvoiceForm() {
         i.unitPrice > 0
       );
     });
+  }, [invoice?.items, itemErrors]);
 
   const isReady = Boolean(isCustomerValid && areItemsValid);
 
   // --- Fetch Next Invoice Number on Mount (if new) ---
   useEffect(() => {
-    if (!invoice.invoiceNumber) {
+    if (invoice && !invoice.invoiceNumber && !isLoadingDraft) {
       getAndIncrementInvoiceNumber().then((num) => {
         updateInvoice({ invoiceNumber: num });
       });
     }
-  }, []);
+  }, [isLoadingDraft]);
 
   // --- Autosave & Persistence ---
   useEffect(() => {
