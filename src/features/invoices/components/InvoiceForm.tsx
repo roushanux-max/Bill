@@ -534,27 +534,6 @@ export default function InvoiceForm() {
             Fill out the structured form data. Changes save automatically.
           </p>
         </div>
-        <button
-          onClick={() => {
-            /* No action, domain selector removed */
-          }}
-          className="text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-2"
-        >
-          <span className="text-xl">
-            {activeDomain === 'furniture'
-              ? '🛋️'
-              : activeDomain === 'clothing'
-                ? '👕'
-                : activeDomain === 'freelance'
-                  ? '💻'
-                  : activeDomain === 'medical'
-                    ? '⚕️'
-                    : activeDomain === 'hotel'
-                      ? '🏨'
-                      : '📝'}
-          </span>
-          Current Industry ({activeDomain})
-        </button>
       </div>
 
       {/* FORM CONTAINER */}
