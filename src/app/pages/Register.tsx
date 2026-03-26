@@ -383,9 +383,10 @@ export default function Register() {
 
                   <button
                     onClick={() => navigate('/create-invoice')}
-                    className="w-full py-3 rounded-xl font-bold border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl font-bold border-2 border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-slate-200 transition-all flex flex-col items-center justify-center gap-1"
                   >
-                    Try Guest Mode
+                    <span>Try without signing up (Guest Mode)</span>
+                    <span className="text-[10px] font-normal text-slate-400">Data will not be saved after session ends</span>
                   </button>
                 </div>
               </div>
