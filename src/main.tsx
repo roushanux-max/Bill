@@ -1,9 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Analytics } from "@vercel/analytics/react"
 import App from './app/App';
 import './styles/index.css';
 import './styles/print-friendly.css';
-import { Toaster } from '@/shared/components/ui/sonner';
 
 // Register PWA Service Worker
 if ('serviceWorker' in navigator) {
@@ -22,5 +22,6 @@ if ('serviceWorker' in navigator) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
+    <Analytics />
   </StrictMode>
 );
