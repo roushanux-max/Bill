@@ -193,7 +193,7 @@ export default function LandingPage() {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              effortless.
+              I HAVE BEEN UPDATED.
             </span>
           </h1>
 
