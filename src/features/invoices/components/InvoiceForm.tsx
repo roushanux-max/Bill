@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info } from 'lucide-react';
+import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import {
