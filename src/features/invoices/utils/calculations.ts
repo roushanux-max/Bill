@@ -8,7 +8,7 @@ export const calculateTotals = (
   let itemSubtotal = 0;
   let totalTax = 0;
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const rate = Number(item.unitPrice || (item as any).rate) || 0;
     const qty = Number(item.quantity) || 0;
     const tax = Number(item.taxRate) || 0;

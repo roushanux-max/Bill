@@ -44,7 +44,8 @@ export const defaultBrandingSettings: BrandingSettings = {
   fontSize: 'medium',
   showFooter: true,
   footerText: 'Thank you for your business!',
-  invoiceNotes: 'All Subject to Arrah Jurisdiction only.\nGoods once sold will not be taken back.\nAll works transit will be entertained.',
+  invoiceNotes:
+    'All Subject to Arrah Jurisdiction only.\nGoods once sold will not be taken back.\nAll works transit will be entertained.',
   termsAndConditions: `Terms & Conditions:
 1. All invoices generated are for record-keeping purposes.
 2. Users are responsible for ensuring the accuracy of entered data.

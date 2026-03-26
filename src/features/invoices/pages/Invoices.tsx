@@ -4,13 +4,45 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
-import { ArrowLeft, Plus, Search, Eye, Pencil, Download, Share2, Trash2, Filter, X, UserPlus, Cloud, CloudOff } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  Eye,
+  Pencil,
+  Download,
+  Share2,
+  Trash2,
+  Filter,
+  X,
+  UserPlus,
+  Cloud,
+  CloudOff,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Invoice } from '@/features/invoices/types/invoice';
-import { getInvoices, deleteInvoice, saveInvoice, getInvoice, getStoreInfo, getBrandingSettings, getUserKey, safeRemove } from '@/shared/utils/storage';
+import {
+  getInvoices,
+  deleteInvoice,
+  saveInvoice,
+  getInvoice,
+  getStoreInfo,
+  getBrandingSettings,
+  getUserKey,
+  safeRemove,
+} from '@/shared/utils/storage';
 import { BrandingSettings, defaultBrandingSettings } from '@/shared/types/branding';
-import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
+import {
+  generateInvoicePDF,
+  getInvoiceFilename,
+} from '@/features/invoices/utils/generateInvoicePDF';
 import { formatDateForDisplay, parseDateFromDisplay } from '@/shared/utils/dateUtils';
 
 export default function Invoices() {
@@ -104,16 +136,17 @@ export default function Invoices() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(invoice =>
-        (invoice.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (invoice.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (invoice.customer?.phone || '').includes(searchTerm)
+      filtered = filtered.filter(
+        (invoice) =>
+          (invoice.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (invoice.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (invoice.customer?.phone || '').includes(searchTerm)
       );
     }
 
     // Status filter
     if (filterStatus !== 'all') {
-      filtered = filtered.filter(invoice => {
+      filtered = filtered.filter((invoice) => {
         const status = (invoice.status || 'unpaid').toLowerCase();
         if (filterStatus === 'paid') return status === 'paid';
         if (filterStatus === 'pending') return status === 'unpaid' || status === 'pending';
@@ -124,7 +157,7 @@ export default function Invoices() {
 
     // Date range filter
     if (filterDateFrom || filterDateTo) {
-      filtered = filtered.filter(invoice =>
+      filtered = filtered.filter((invoice) =>
         isDateInRange(invoice.date, filterDateFrom, filterDateTo)
       );
     }
@@ -158,7 +191,8 @@ export default function Invoices() {
     toast.success('Filters cleared');
   };
 
-  const hasActiveFilters = filterStatus !== 'all' || filterDateFrom || filterDateTo || sortBy !== 'date';
+  const hasActiveFilters =
+    filterStatus !== 'all' || filterDateFrom || filterDateTo || sortBy !== 'date';
 
   const formatDate = (dateString: string) => {
     return formatDateForDisplay(dateString);
@@ -174,16 +208,16 @@ export default function Invoices() {
         return;
       }
       // Always fetch the full invoice with items to prevent empty PDFs
-      const fullInvoice = await getInvoice(invoice.id) || invoice;
-      const brandSettings = await getBrandingSettings() || defaultBrandingSettings;
+      const fullInvoice = (await getInvoice(invoice.id)) || invoice;
+      const brandSettings = (await getBrandingSettings()) || defaultBrandingSettings;
       const pdf = generateInvoicePDF(fullInvoice, storeInfo, brandSettings);
       const filename = getInvoiceFilename(fullInvoice);
       pdf.save(filename);
       toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      const message = (error as Error).message.includes('Incomplete invoice') 
-        ? (error as Error).message 
+      const message = (error as Error).message.includes('Incomplete invoice')
+        ? (error as Error).message
         : 'Failed to generate PDF';
       toast.error(message, { id: toastId });
     } finally {
@@ -197,8 +231,8 @@ export default function Invoices() {
     try {
       const storeInfo = await getStoreInfo();
       // Always fetch the full invoice with items to prevent sharing empty PDFs
-      const fullInvoice = await getInvoice(invoice.id) || invoice;
-      const brandSettings = await getBrandingSettings() || defaultBrandingSettings;
+      const fullInvoice = (await getInvoice(invoice.id)) || invoice;
+      const brandSettings = (await getBrandingSettings()) || defaultBrandingSettings;
       const pdf = generateInvoicePDF(fullInvoice, storeInfo!, brandSettings);
       const filename = getInvoiceFilename(fullInvoice);
       const pdfBlob = pdf.output('blob');
@@ -232,8 +266,8 @@ export default function Invoices() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <button 
-              onClick={() => navigate('/dashboard')} 
+            <button
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1.5 text-[var(--brand-color)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -242,7 +276,10 @@ export default function Invoices() {
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Invoices</h1>
           </div>
           <Link to="/create-invoice" className="hidden sm:flex">
-            <Button size="sm" className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none font-semibold px-4">
+            <Button
+              size="sm"
+              className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none font-semibold px-4"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Invoice
             </Button>
@@ -269,22 +306,20 @@ export default function Invoices() {
         <div className="mb-4 sm:mb-6">
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              variant={hasActiveFilters ? "default" : "outline"}
+              variant={hasActiveFilters ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className={hasActiveFilters ? "bg-[var(--brand-color)] hover:opacity-90" : ""}
+              className={hasActiveFilters ? 'bg-[var(--brand-color)] hover:opacity-90' : ''}
               disabled={invoices.length === 0}
             >
               <Filter className="h-4 w-4 mr-2" />
-              Filters {hasActiveFilters && `(${[filterStatus !== 'all', filterDateFrom, filterDateTo, sortBy !== 'date'].filter(Boolean).length})`}
+              Filters{' '}
+              {hasActiveFilters &&
+                `(${[filterStatus !== 'all', filterDateFrom, filterDateTo, sortBy !== 'date'].filter(Boolean).length})`}
             </Button>
 
             {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-              >
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
                 <X className="h-4 w-4 mr-2" />
                 Clear
               </Button>
@@ -299,7 +334,9 @@ export default function Invoices() {
                       <label className="text-xs font-medium text-slate-700">Status</label>
                       <Select
                         value={filterStatus}
-                        onValueChange={(value) => setFilterStatus(value as 'all' | 'paid' | 'pending' | 'overdue')}
+                        onValueChange={(value) =>
+                          setFilterStatus(value as 'all' | 'paid' | 'pending' | 'overdue')
+                        }
                       >
                         <SelectTrigger className="h-9 text-sm">
                           <SelectValue />
@@ -340,7 +377,9 @@ export default function Invoices() {
                       <label className="text-xs font-medium text-slate-700">Sort By</label>
                       <Select
                         value={sortBy}
-                        onValueChange={(value) => setSortBy(value as 'date' | 'amount' | 'customer')}
+                        onValueChange={(value) =>
+                          setSortBy(value as 'date' | 'amount' | 'customer')
+                        }
                       >
                         <SelectTrigger className="h-9 text-sm">
                           <SelectValue />
@@ -356,23 +395,16 @@ export default function Invoices() {
 
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-xs text-slate-600">
-                      {filteredInvoices.length} invoice{filteredInvoices.length !== 1 ? 's' : ''} found
+                      {filteredInvoices.length} invoice{filteredInvoices.length !== 1 ? 's' : ''}{' '}
+                      found
                     </span>
                     <div className="flex gap-2">
                       {hasActiveFilters && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearFilters}
-                        >
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
                           Clear All
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFilters(false)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setShowFilters(false)}>
                         Done
                       </Button>
                     </div>
@@ -402,7 +434,7 @@ export default function Invoices() {
               </CardContent>
             </Card>
           ) : (
-            filteredInvoices.map(invoice => (
+            filteredInvoices.map((invoice) => (
               <Card
                 key={invoice.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
@@ -413,22 +445,36 @@ export default function Invoices() {
                     <div className="flex-1 min-w-0 space-y-2">
                       {/* Header: Invoice number and date */}
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900 text-base">#{invoice.invoiceNumber || 'N/A'}</h3>
+                        <h3 className="font-semibold text-slate-900 text-base">
+                          #{invoice.invoiceNumber || 'N/A'}
+                        </h3>
                         <Badge variant="secondary" className="text-xs">
-                          {formatDate(invoice.date)} • {new Date(invoice.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {formatDate(invoice.date)} •{' '}
+                          {new Date(invoice.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </Badge>
                         {invoice.isSynced === false ? (
-                          <span title="Offline changes" className="flex shrink-0 ml-1"><CloudOff className="h-4 w-4 text-orange-500" /></span>
+                          <span title="Offline changes" className="flex shrink-0 ml-1">
+                            <CloudOff className="h-4 w-4 text-orange-500" />
+                          </span>
                         ) : (
-                          <span title="Synced" className="flex shrink-0 ml-1"><Cloud className="h-4 w-4 text-green-500" /></span>
+                          <span title="Synced" className="flex shrink-0 ml-1">
+                            <Cloud className="h-4 w-4 text-green-500" />
+                          </span>
                         )}
                       </div>
 
                       {/* Customer details */}
                       <div className="space-y-0.5">
-                        <p className="font-medium text-slate-900 text-sm">{invoice.customer?.name || 'Unknown Customer'}</p>
+                        <p className="font-medium text-slate-900 text-sm">
+                          {invoice.customer?.name || 'Unknown Customer'}
+                        </p>
                         {invoice.customer?.address && (
-                          <p className="text-xs text-slate-600 line-clamp-1">{invoice.customer.address}</p>
+                          <p className="text-xs text-slate-600 line-clamp-1">
+                            {invoice.customer.address}
+                          </p>
                         )}
                         {invoice.customer?.phone && (
                           <p className="text-xs text-slate-600">{invoice.customer.phone}</p>
@@ -437,7 +483,8 @@ export default function Invoices() {
 
                       {/* Item count */}
                       <p className="text-xs text-slate-600">
-                        {(invoice.items?.length || 0)} item{(invoice.items?.length || 0) !== 1 ? 's' : ''}
+                        {invoice.items?.length || 0} item
+                        {(invoice.items?.length || 0) !== 1 ? 's' : ''}
                       </p>
 
                       {/* Total amount */}
@@ -451,12 +498,7 @@ export default function Invoices() {
                     {/* Action buttons */}
                     <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
                       <Link to={`/create-invoice?edit=${invoice.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          title="Edit"
-                        >
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>

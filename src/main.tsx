@@ -8,11 +8,12 @@ import { Toaster } from '@/shared/components/ui/sonner';
 // Register PWA Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(registration => {
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .then((registration) => {
         console.log('✅ PWA Service Worker registered:', registration.scope);
       })
-      .catch(error => {
+      .catch((error) => {
         console.log('❌ PWA Service Worker registration failed:', error);
       });
   });
@@ -21,5 +22,5 @@ if ('serviceWorker' in navigator) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 );

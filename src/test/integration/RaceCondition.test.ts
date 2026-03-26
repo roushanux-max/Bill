@@ -16,10 +16,10 @@ describe('Race Condition & Duplicate Save Prevention', () => {
 
     // Simulate two rapid saves (like auto-save + manual save firing at once)
     const invoice = { id: 'test-race-123', invoiceNumber: 'INV-001' } as any;
-    
+
     // We expect the first call to proceed and subsequent ones to be blocked or merged
     // In our implementation, we use isSavingRef.current to prevent parallel calls
-    
+
     // Since we're testing the logic, we'll simulate the triggers
     const call1 = storage.saveInvoice(invoice);
     const call2 = storage.saveInvoice(invoice);

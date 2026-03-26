@@ -31,11 +31,25 @@ export default function Logo({ className = '', size = 32 }: LogoProps) {
         strokeLinejoin="round"
       />
       <defs>
-        <linearGradient id={id0} x1="315.416" y1="118.053" x2="42.3987" y2="432.041" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={id0}
+          x1="315.416"
+          y1="118.053"
+          x2="42.3987"
+          y2="432.041"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="var(--brand-color, #6366f1)" />
           <stop offset="1" stopColor="var(--brand-color-light, #8b5cf6)" />
         </linearGradient>
-        <linearGradient id={id1} x1="392.5" y1="72.5" x2="250" y2="236" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={id1}
+          x1="392.5"
+          y1="72.5"
+          x2="250"
+          y2="236"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="var(--brand-color, #6366f1)" />
           <stop offset="1" stopColor="var(--brand-color-light, #8b5cf6)" />
         </linearGradient>

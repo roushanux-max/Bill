@@ -36,7 +36,7 @@ export interface InvoiceItem {
   invoice_id: string;
   product_id?: string;
   productName: string; // Snapshot
-  unitPrice: number;   // Snapshot
+  unitPrice: number; // Snapshot
   quantity: number;
   hsn?: string;
   unit?: string;

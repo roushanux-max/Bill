@@ -65,12 +65,13 @@ export default function Login() {
     setPasswordError(validateInput('password', val));
   };
 
-  const isFormValid = !emailError && !passwordError && email.trim() !== '' && password.trim() !== '';
+  const isFormValid =
+    !emailError && !passwordError && email.trim() !== '' && password.trim() !== '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
-    
+
     setLoading(true);
 
     // Save credentials if "Remember Me" is checked
@@ -124,7 +125,8 @@ export default function Login() {
             <div className="mt-8 text-center text-slate-900">
               <h2 className="text-3xl font-bold mb-4">Streamline Your Business</h2>
               <p className="text-slate-600 text-lg max-w-md mx-auto">
-                Professional GST invoicing, inventory management, and customer tracking in one simple platform.
+                Professional GST invoicing, inventory management, and customer tracking in one
+                simple platform.
               </p>
             </div>
           </div>
@@ -156,7 +158,11 @@ export default function Login() {
                       backgroundColor: 'var(--color-primary)',
                       color: 'var(--color-primary-foreground)',
                     }}
-                    title={isOffline ? "You appear to be offline. Google Sign-in requires an internet connection." : ""}
+                    title={
+                      isOffline
+                        ? 'You appear to be offline. Google Sign-in requires an internet connection.'
+                        : ''
+                    }
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path
@@ -184,7 +190,9 @@ export default function Login() {
                       <div className="w-full border-t border-slate-100"></div>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="px-4 bg-white text-slate-400 font-medium tracking-wider">Or email login</span>
+                      <span className="px-4 bg-white text-slate-400 font-medium tracking-wider">
+                        Or email login
+                      </span>
                     </div>
                   </div>
 
@@ -200,7 +208,9 @@ export default function Login() {
                         value={email}
                         onChange={handleEmailChange}
                         className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 ${
-                          emailError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'
+                          emailError
+                            ? 'border-red-500 focus:border-red-500'
+                            : 'border-slate-200 focus:border-primary'
                         }`}
                         placeholder="name@company.com"
                       />
@@ -209,7 +219,10 @@ export default function Login() {
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
+                        <label
+                          htmlFor="password"
+                          className="block text-sm font-semibold text-slate-700"
+                        >
                           Password
                         </label>
                       </div>
@@ -221,7 +234,9 @@ export default function Login() {
                           value={password}
                           onChange={handlePasswordChange}
                           className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 pr-12 ${
-                            passwordError ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-primary'
+                            passwordError
+                              ? 'border-red-500 focus:border-red-500'
+                              : 'border-slate-200 focus:border-primary'
                           }`}
                           placeholder="••••••••"
                         />
@@ -233,7 +248,9 @@ export default function Login() {
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
-                      {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
+                      {passwordError && (
+                        <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -244,7 +261,10 @@ export default function Login() {
                         onChange={(e) => setRememberMe(e.target.checked)}
                         className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
                       />
-                      <label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer select-none">
+                      <label
+                        htmlFor="rememberMe"
+                        className="text-sm text-slate-600 cursor-pointer select-none"
+                      >
                         Keep me logged in
                       </label>
                     </div>
@@ -271,7 +291,10 @@ export default function Login() {
 
                   <p className="text-center text-slate-600 text-sm">
                     New to Invoice?{' '}
-                    <Link to="/register" className="text-primary font-bold hover:opacity-80 transition-all">
+                    <Link
+                      to="/register"
+                      className="text-primary font-bold hover:opacity-80 transition-all"
+                    >
                       Create an account
                     </Link>
                   </p>
@@ -281,7 +304,9 @@ export default function Login() {
                       <div className="w-full border-t border-slate-100"></div>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="px-4 bg-white text-slate-400 font-medium">Temporary Access</span>
+                      <span className="px-4 bg-white text-slate-400 font-medium">
+                        Temporary Access
+                      </span>
                     </div>
                   </div>
 

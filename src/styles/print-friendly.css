@@ -2,7 +2,6 @@
 /* This stylesheet converts Tailwind oklch() colors to RGB equivalents */
 
 @media print {
-
   /* Reset text colors to RGB equivalents */
   .text-gray-600 {
     color: rgb(75, 85, 99) !important;
@@ -64,7 +63,6 @@
 }
 
 .print-mode {
-
   /* Reset text colors to RGB equivalents */
   .text-gray-600 {
     color: rgb(75, 85, 99) !important;

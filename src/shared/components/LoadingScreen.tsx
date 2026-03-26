@@ -2,26 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useBranding } from '../contexts/BrandingContext';
 
 const defaultPhrases = [
-  "Stamping your invoices...",
-  "Polishing your ledger...",
-  "Organizing your business...",
-  "Calculating with precision...",
-  "Authenticating business data...",
-  "Preparing your dashboard...",
-  "Connecting to secure vault...",
-  "Arranging your customers...",
-  "Syncing your catalog..."
+  'Stamping your invoices...',
+  'Polishing your ledger...',
+  'Organizing your business...',
+  'Calculating with precision...',
+  'Authenticating business data...',
+  'Preparing your dashboard...',
+  'Connecting to secure vault...',
+  'Arranging your customers...',
+  'Syncing your catalog...',
 ];
 
 const printingPhrases = [
-  "Starting machine...",
-  "Warming up rollers...",
-  "Getting paper ready...",
-  "Ink levels checked...",
-  "Aligning print head...",
-  "Processing layout...",
-  "Almost there...",
-  "Printing your invoice..."
+  'Starting machine...',
+  'Warming up rollers...',
+  'Getting paper ready...',
+  'Ink levels checked...',
+  'Aligning print head...',
+  'Processing layout...',
+  'Almost there...',
+  'Printing your invoice...',
 ];
 
 interface LoadingScreenProps {
@@ -47,14 +47,14 @@ export default function LoadingScreen({ message, type = 'default' }: LoadingScre
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
       {/* Dynamic Animated Background */}
-      <div 
+      <div
         className="absolute inset-0 opacity-20 pointer-events-none transition-colors duration-1000"
-        style={{ 
+        style={{
           background: `radial-gradient(circle at 50% 50%, ${primaryColor} 0%, transparent 70%)`,
-          animation: 'pulse-bg 8s ease-in-out infinite'
+          animation: 'pulse-bg 8s ease-in-out infinite',
         }}
       />
-      
+
       {/* Glassmorphic Container */}
       <div className="relative z-10 flex flex-col items-center px-10 py-16 rounded-[2.5rem] bg-white/60 backdrop-blur-2xl border border-white/50 shadow-2xl max-w-sm w-full mx-4">
         {/* Thematic Animation */}
@@ -65,81 +65,218 @@ export default function LoadingScreen({ message, type = 'default' }: LoadingScre
               <g className="animate-spin-slow origin-center opacity-10">
                 <path d="M50 20l2 5h6l-4 4 2 6-6-4-6 4 2-6-4-4h6z" fill={primaryColor} />
               </g>
-              
+
               {/* Printer Tray */}
               <path d="M25 75h50v5H25z" fill="var(--color-slate-200)" />
-              
+
               {/* Printer Body with Depth */}
-              <rect x="20" y="55" width="60" height="20" rx="2" fill="white" stroke={primaryColor} strokeWidth="2" />
-              <rect x="25" y="45" width="50" height="15" rx="1" fill="white" stroke={primaryColor} strokeWidth="1.5" />
-              <rect x="35" y="38" width="30" height="8" rx="1" fill="white" stroke={primaryColor} strokeWidth="1" />
-              
+              <rect
+                x="20"
+                y="55"
+                width="60"
+                height="20"
+                rx="2"
+                fill="white"
+                stroke={primaryColor}
+                strokeWidth="2"
+              />
+              <rect
+                x="25"
+                y="45"
+                width="50"
+                height="15"
+                rx="1"
+                fill="white"
+                stroke={primaryColor}
+                strokeWidth="1.5"
+              />
+              <rect
+                x="35"
+                y="38"
+                width="30"
+                height="8"
+                rx="1"
+                fill="white"
+                stroke={primaryColor}
+                strokeWidth="1"
+              />
+
               {/* Rolling Paper Animation */}
               <g className="paper-roll-out">
-                <rect x="38" y="60" width="24" height="25" rx="1" fill="white" stroke={primaryColor} strokeWidth="0.5" />
-                <path d="M42 65h16M42 70h16M42 75h10" stroke={primaryColor} strokeWidth="0.5" opacity="0.4" strokeLinecap="round" />
+                <rect
+                  x="38"
+                  y="60"
+                  width="24"
+                  height="25"
+                  rx="1"
+                  fill="white"
+                  stroke={primaryColor}
+                  strokeWidth="0.5"
+                />
+                <path
+                  d="M42 65h16M42 70h16M42 75h10"
+                  stroke={primaryColor}
+                  strokeWidth="0.5"
+                  opacity="0.4"
+                  strokeLinecap="round"
+                />
               </g>
 
               {/* Glowing Status Indicator */}
               <circle cx="74" cy="65" r="1.5" fill={primaryColor} className="animate-pulse" />
-              <circle cx="70" cy="65" r="1" fill="#22c55e" className="animate-pulse" style={{ animationDelay: '0.5s' }} />
+              <circle
+                cx="70"
+                cy="65"
+                r="1"
+                fill="#22c55e"
+                className="animate-pulse"
+                style={{ animationDelay: '0.5s' }}
+              />
             </svg>
           ) : (
             <svg viewBox="0 0 100 100" className="w-full h-full">
               {/* Folder/Backing */}
               <rect x="20" y="30" width="60" height="50" rx="8" className="fill-white/80" />
-              
+
               {/* Floating Paper 1 */}
               <g className="paper-flow-1">
-                 <rect x="30" y="20" width="40" height="50" rx="4" fill="white" stroke={primaryColor} strokeWidth="2" />
-                 <line x1="38" y1="35" x2="62" y2="35" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
-                 <line x1="38" y1="45" x2="62" y2="45" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
+                <rect
+                  x="30"
+                  y="20"
+                  width="40"
+                  height="50"
+                  rx="4"
+                  fill="white"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                />
+                <line
+                  x1="38"
+                  y1="35"
+                  x2="62"
+                  y2="35"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+                <line
+                  x1="38"
+                  y1="45"
+                  x2="62"
+                  y2="45"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
               </g>
 
               {/* Floating Paper 2 */}
               <g className="paper-flow-2">
-                 <rect x="30" y="20" width="40" height="50" rx="4" fill="white" stroke={primaryColor} strokeWidth="2" />
-                 <line x1="38" y1="35" x2="62" y2="35" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
-                 <line x1="38" y1="45" x2="62" y2="45" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
-                 <path d="M55 55l3 3 7-7" fill="none" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <rect
+                  x="30"
+                  y="20"
+                  width="40"
+                  height="50"
+                  rx="4"
+                  fill="white"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                />
+                <line
+                  x1="38"
+                  y1="35"
+                  x2="62"
+                  y2="35"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+                <line
+                  x1="38"
+                  y1="45"
+                  x2="62"
+                  y2="45"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+                <path
+                  d="M55 55l3 3 7-7"
+                  fill="none"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </g>
 
               {/* Floating Paper 3 */}
               <g className="paper-flow-3">
-                 <rect x="30" y="20" width="40" height="50" rx="4" fill="white" stroke={primaryColor} strokeWidth="2" />
-                 <line x1="38" y1="35" x2="62" y2="35" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
-                 <line x1="38" y1="45" x2="62" y2="45" stroke={primaryColor} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
+                <rect
+                  x="30"
+                  y="20"
+                  width="40"
+                  height="50"
+                  rx="4"
+                  fill="white"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                />
+                <line
+                  x1="38"
+                  y1="35"
+                  x2="62"
+                  y2="35"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+                <line
+                  x1="38"
+                  y1="45"
+                  x2="62"
+                  y2="45"
+                  stroke={primaryColor}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
               </g>
             </svg>
           )}
-          
+
           {/* Central Pulse */}
-          <div 
+          <div
             className="absolute inset-0 m-auto w-12 h-12 rounded-full opacity-0 scale-50"
-            style={{ 
+            style={{
               border: `2px solid ${primaryColor}`,
-              animation: 'center-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite' 
+              animation: 'center-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite',
             }}
           />
         </div>
 
         {/* Status Text with Smooth Transition */}
         <div className="text-center h-6 overflow-hidden">
-          <p 
+          <p
             key={phraseIndex}
             className="text-slate-800 font-semibold tracking-tight animate-slide-up"
           >
             {message || phrases[phraseIndex]}
           </p>
         </div>
-        
+
         {/* Simple Progress Bar */}
         <div className="w-32 h-1 bg-slate-200/50 rounded-full mt-6 overflow-hidden">
-          <div 
+          <div
             className="h-full rounded-full transition-all duration-1000 ease-out"
-            style={{ 
+            style={{
               backgroundColor: primaryColor,
-              animation: 'progress-infinite 2s ease-in-out infinite' 
+              animation: 'progress-infinite 2s ease-in-out infinite',
             }}
           />
         </div>

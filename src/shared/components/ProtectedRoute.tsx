@@ -31,9 +31,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   return (
     <UserThemeProvider>
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <div className="flex-1">
-          {children}
-        </div>
+        <div className="flex-1">{children}</div>
       </div>
     </UserThemeProvider>
   );

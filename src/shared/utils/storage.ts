@@ -1,4 +1,15 @@
-import { Customer, Product, Invoice, StoreInfo, InvoiceItem, Payment, ActivityLog, CustomerPayload, ProductPayload, InvoicePayload } from '@/features/invoices/types/invoice';
+import {
+  Customer,
+  Product,
+  Invoice,
+  StoreInfo,
+  InvoiceItem,
+  Payment,
+  ActivityLog,
+  CustomerPayload,
+  ProductPayload,
+  InvoicePayload,
+} from '@/features/invoices/types/invoice';
 import { BrandingSettings, defaultBrandingSettings } from '@/shared/types/branding';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/utils/supabase';
@@ -55,7 +66,7 @@ export const hasGuestDataToMigrate = (): boolean => {
 
 export const migrateGuestDataToDatabase = async (): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
-  
+
   // Temporarily disable guest mode so functions write to real DB
   window.sessionStorage.removeItem('invoice_guest_mode');
   let success = true;
@@ -86,7 +97,7 @@ export const migrateGuestDataToDatabase = async (): Promise<boolean> => {
     }
 
     // Clean up session storage matching 'guest_mode_'
-    Object.keys(window.sessionStorage).forEach(key => {
+    Object.keys(window.sessionStorage).forEach((key) => {
       if (key.startsWith('guest_mode_')) window.sessionStorage.removeItem(key);
     });
 
@@ -95,7 +106,7 @@ export const migrateGuestDataToDatabase = async (): Promise<boolean> => {
     console.error('Guest migration failed:', e);
     success = false;
   }
-  
+
   return success;
 };
 
@@ -105,8 +116,9 @@ export const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c == 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 };
@@ -142,13 +154,19 @@ export const setCachedData = <T>(key: string, data: T): void => {
   safeSet(key, JSON.stringify(data));
 };
 
-
 // ─── Sync Tracking & Offline Queue ─────────────────────────────────────────────────────────────
 let activeSyncTasks = 0;
 
 export interface SyncOperation {
   id: string;
-  type: 'store' | 'customer' | 'product' | 'invoice' | 'customer_delete' | 'product_delete' | 'invoice_delete';
+  type:
+    | 'store'
+    | 'customer'
+    | 'product'
+    | 'invoice'
+    | 'customer_delete'
+    | 'product_delete'
+    | 'invoice_delete';
   payload: any;
   timestamp: string;
 }
@@ -161,7 +179,7 @@ export const addToSyncQueue = (type: SyncOperation['type'], payload: any) => {
     id: generateId(),
     type,
     payload,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
   setCachedData(key, queue);
 };
@@ -169,7 +187,7 @@ export const addToSyncQueue = (type: SyncOperation['type'], payload: any) => {
 export const processSyncQueue = async () => {
   const key = getUserKey('invoice_sync_queue');
   if (!key) return;
-  
+
   let queue = getCachedData<SyncOperation[]>(key, []);
   if (queue.length === 0) return;
 
@@ -187,77 +205,100 @@ export const processSyncQueue = async () => {
     try {
       if (op.type === 'customer') {
         const { customerData, isUuid, customerId } = op.payload;
-        const req = isUuid 
-            ? supabase.from('customers').upsert({ id: customerId, ...customerData }) 
-            : supabase.from('customers').insert(customerData);
+        const req = isUuid
+          ? supabase.from('customers').upsert({ id: customerId, ...customerData })
+          : supabase.from('customers').insert(customerData);
         const { error } = await req;
         if (error) throw error;
-        
+
         // Update local object to synced
         const cKey = getUserKey('invoice_customers');
         if (cKey) {
-            const arr = getCachedData<Customer[]>(cKey, []);
-            const idx = arr.findIndex(c => c.id === customerId);
-            if (idx >= 0) { arr[idx].isSynced = true; setCachedData(cKey, arr); }
+          const arr = getCachedData<Customer[]>(cKey, []);
+          const idx = arr.findIndex((c) => c.id === customerId);
+          if (idx >= 0) {
+            arr[idx].isSynced = true;
+            setCachedData(cKey, arr);
+          }
         }
-
       } else if (op.type === 'product') {
         const { productData, isUuid, productId } = op.payload;
-        const req = isUuid 
-            ? supabase.from('products').upsert({ id: productId, ...productData }) 
-            : supabase.from('products').insert(productData);
+        const req = isUuid
+          ? supabase.from('products').upsert({ id: productId, ...productData })
+          : supabase.from('products').insert(productData);
         const { error } = await req;
         if (error) throw error;
-        
+
         const pKey = getUserKey('invoice_products');
         if (pKey) {
-            const arr = getCachedData<Product[]>(pKey, []);
-            const idx = arr.findIndex(p => p.id === productId);
-            if (idx >= 0) { arr[idx].isSynced = true; setCachedData(pKey, arr); }
+          const arr = getCachedData<Product[]>(pKey, []);
+          const idx = arr.findIndex((p) => p.id === productId);
+          if (idx >= 0) {
+            arr[idx].isSynced = true;
+            setCachedData(pKey, arr);
+          }
         }
-
       } else if (op.type === 'store') {
         const { payload } = op.payload;
         const { error } = await supabase.from('stores').upsert(payload, { onConflict: 'id' });
         if (error) throw error;
-        
       } else if (op.type === 'invoice') {
         const { metadata, itemsPayload, invId } = op.payload;
-        const { error: invError } = await supabase.from('invoices').upsert({ id: invId, ...metadata }).select('id').single();
+        const { error: invError } = await supabase
+          .from('invoices')
+          .upsert({ id: invId, ...metadata })
+          .select('id')
+          .single();
         if (invError) throw invError;
-        
+
         if (itemsPayload && itemsPayload.length > 0) {
-            const { data: existingItems } = await supabase.from('invoice_items').select('id').eq('invoice_id', invId);
-            const { error: itemsError } = await supabase.from('invoice_items').upsert(itemsPayload, { onConflict: 'id' });
-            if (itemsError) throw itemsError;
-            
-            if (existingItems) {
-                const pIds = new Set(itemsPayload.map((i: any) => i.id));
-                const toDelete = existingItems.map(i => i.id).filter(id => !pIds.has(id));
-                if (toDelete.length > 0) {
-                    await supabase.from('invoice_items').delete().in('id', toDelete);
-                }
+          const { data: existingItems } = await supabase
+            .from('invoice_items')
+            .select('id')
+            .eq('invoice_id', invId);
+          const { error: itemsError } = await supabase
+            .from('invoice_items')
+            .upsert(itemsPayload, { onConflict: 'id' });
+          if (itemsError) throw itemsError;
+
+          if (existingItems) {
+            const pIds = new Set(itemsPayload.map((i: any) => i.id));
+            const toDelete = existingItems.map((i) => i.id).filter((id) => !pIds.has(id));
+            if (toDelete.length > 0) {
+              await supabase.from('invoice_items').delete().in('id', toDelete);
             }
+          }
         } else {
-            await supabase.from('invoice_items').delete().eq('invoice_id', invId);
+          await supabase.from('invoice_items').delete().eq('invoice_id', invId);
         }
-        
+
         const iKey = getUserKey('invoice_invoices');
         if (iKey) {
-            const arr = getCachedData<Invoice[]>(iKey, []);
-            const idx = arr.findIndex(i => i.id === invId);
-            if (idx >= 0) { arr[idx].isSynced = true; setCachedData(iKey, arr); }
+          const arr = getCachedData<Invoice[]>(iKey, []);
+          const idx = arr.findIndex((i) => i.id === invId);
+          if (idx >= 0) {
+            arr[idx].isSynced = true;
+            setCachedData(iKey, arr);
+          }
         }
-        
       } else if (op.type === 'customer_delete') {
-         const { data: { user } } = await supabase.auth.getUser();
-         if (user) await supabase.from('customers').delete().eq('id', op.payload.id).eq('user_id', user.id);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user)
+          await supabase.from('customers').delete().eq('id', op.payload.id).eq('user_id', user.id);
       } else if (op.type === 'product_delete') {
-         const { data: { user } } = await supabase.auth.getUser();
-         if (user) await supabase.from('products').delete().eq('id', op.payload.id).eq('user_id', user.id);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user)
+          await supabase.from('products').delete().eq('id', op.payload.id).eq('user_id', user.id);
       } else if (op.type === 'invoice_delete') {
-         const { data: { user } } = await supabase.auth.getUser();
-         if (user) await supabase.from('invoices').delete().eq('id', op.payload.id).eq('user_id', user.id);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user)
+          await supabase.from('invoices').delete().eq('id', op.payload.id).eq('user_id', user.id);
       }
     } catch (e) {
       console.warn(`Sync queue operation [${op.type}] failed:`, e);
@@ -268,7 +309,7 @@ export const processSyncQueue = async () => {
 
   setCachedData(key, remainingQueue);
   if (remainingQueue.length === 0 && queue.length > 0) {
-      toast.success('Offline changes synced to cloud!');
+    toast.success('Offline changes synced to cloud!');
   }
   emitSyncEnd(!hasError);
 };
@@ -299,7 +340,9 @@ export const getUserKey = (key: string): string | null => {
   // 2. If missing, try to extract from Supabase's own storage patterns
   if (!storedUser) {
     try {
-      const authKey = Object.keys(window.localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      const authKey = Object.keys(window.localStorage).find(
+        (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+      );
       if (authKey) {
         const tokenData = safeGet(authKey);
         if (tokenData) {
@@ -316,7 +359,7 @@ export const getUserKey = (key: string): string | null => {
     }
   }
 
-  // If we still don't have a user ID, we return null to prevent data mixing 
+  // If we still don't have a user ID, we return null to prevent data mixing
   // or storing data under non-user-prefixed keys.
   return storedUser ? `${storedUser}_${key}` : null;
 };
@@ -344,12 +387,15 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
   let storeId = getActiveStoreId();
 
   if (isGuestMode()) {
-     return null; // Local parsing happens above; if not found, return null
+    return null; // Local parsing happens above; if not found, return null
   }
 
   // If no storeId, we MUST try to fetch by user_id to restore persistence
   if (!storeId || storeId.startsWith('offline-')) {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (user && !authError) {
       // Aggressive lookup by user_id
       const { data, error } = await supabase
@@ -357,7 +403,7 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
-      
+
       if (data && !error) {
         storeId = data.id;
         const key = getUserKey('active_store_id');
@@ -372,11 +418,7 @@ export const getStoreInfo = async (force = false): Promise<StoreInfo | null> => 
   }
 
   // Fetch/Refresh with known storeId
-  const { data, error } = await supabase
-    .from('stores')
-    .select('*')
-    .eq('id', storeId)
-    .maybeSingle();
+  const { data, error } = await supabase.from('stores').select('*').eq('id', storeId).maybeSingle();
 
   if (data && !error) {
     const info: StoreInfo = {
@@ -403,25 +445,27 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
   // Update local storage first for immediate UI response
   const key = getUserKey('invoice_store_info');
   if (key) safeSet(key, JSON.stringify(info));
-  
-  const { data: { user } } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (user) {
     // ALWAYS ensure this is set for prefixes immediately
-    safeSet('invoice_user_id', user.id); 
+    safeSet('invoice_user_id', user.id);
 
     try {
       let storeId = getActiveStoreId();
-      
+
       // If no storeId or if it's a temporary offline ID, use user.id as a pivot
       if (!storeId || storeId.startsWith('offline-')) {
-        storeId = user.id; 
+        storeId = user.id;
         const key = getUserKey('active_store_id');
         if (key) safeSet(key, storeId);
       }
-      
+
       const payload: any = {
         id: storeId,
-        user_id: user.id,   // CRITICAL: ensures store is findable by user_id after re-login
+        user_id: user.id, // CRITICAL: ensures store is findable by user_id after re-login
         business_name: info.name,
         gstin: info.gstin,
         address: info.address,
@@ -431,7 +475,7 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
         phone: info.phone,
         email: info.email,
         auth_distributors: info.authDistributors,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       if (info.ownerName) payload.owner_name = info.ownerName;
@@ -439,13 +483,16 @@ export const saveStoreInfo = async (info: StoreInfo): Promise<StoreInfo> => {
       // Use a standard upsert - if id matches it updates, if not it inserts
       // The policy should allow based on user_id
       const { error } = await supabase.from('stores').upsert(payload, {
-        onConflict: 'id'
+        onConflict: 'id',
       });
 
       if (error) {
         console.error('Supabase store sync failed:', error, 'Payload:', payload);
         addToSyncQueue('store', { payload });
-        toast.error('Failed to sync to cloud: ' + (error.message || 'Unknown error. Working offline. Changes will sync later.'));
+        toast.error(
+          'Failed to sync to cloud: ' +
+            (error.message || 'Unknown error. Working offline. Changes will sync later.')
+        );
       }
     } catch (err) {
       console.error('Failed to sync store info:', err);
@@ -468,7 +515,9 @@ export const getBrandingSettings = async (force = false): Promise<BrandingSettin
   let storeId = getActiveStoreId();
 
   if (!storeId) {
-    const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+    const {
+      data: { user: supabaseUser },
+    } = await supabase.auth.getUser();
     const user = supabaseUser || { id: '00000000-0000-0000-0000-000000000000' };
     if (user) {
       const { data: stores } = await supabase
@@ -544,7 +593,9 @@ export const getCustomers = async (force = false, limit = 1000): Promise<ApiResu
     }
 
     const storeId = getActiveStoreId();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user || !storeId) {
       // If we have local data but no storeId or user, return the local data anyway
       return { data: key ? getCachedData<Customer[]>(key, []) : [], loading: false, error: null };
@@ -560,7 +611,7 @@ export const getCustomers = async (force = false, limit = 1000): Promise<ApiResu
 
     if (error) return { data: [], loading: false, error: error.message };
 
-    const customers = (data || []).map(c => ({
+    const customers = (data || []).map((c) => ({
       id: c.id,
       name: c.name,
       phone: c.phone || '',
@@ -580,14 +631,16 @@ export const getCustomers = async (force = false, limit = 1000): Promise<ApiResu
 
 export const searchCustomers = async (query: string): Promise<Customer[]> => {
   const storeId = getActiveStoreId();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || !storeId || !query.trim()) {
     const { data } = await getCustomers();
     return data || [];
   }
 
   const searchQuery = `%${query.trim()}%`;
-  
+
   const { data, error } = await supabase
     .from('customers')
     .select('*')
@@ -601,14 +654,17 @@ export const searchCustomers = async (query: string): Promise<Customer[]> => {
     const { data: all } = await getCustomers();
     if (!all) return [];
     const lowQuery = query.toLowerCase();
-    return all.filter(c => 
-      c.name.toLowerCase().includes(lowQuery) || 
-      c.phone.toLowerCase().includes(lowQuery) || 
-      c.state.toLowerCase().includes(lowQuery)
-    ).slice(0, 20);
+    return all
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(lowQuery) ||
+          c.phone.toLowerCase().includes(lowQuery) ||
+          c.state.toLowerCase().includes(lowQuery)
+      )
+      .slice(0, 20);
   }
 
-  return data.map(c => ({
+  return data.map((c) => ({
     id: c.id,
     name: c.name,
     phone: c.phone || '',
@@ -627,10 +683,11 @@ export const saveCustomer = async (customer: Customer) => {
 
   // Update local storage first for immediate UI response and offline resilience
   const { data: currentCustomers } = await getCustomers();
-  const index = (currentCustomers || []).findIndex(c => c.id === customer.id);
-  let updatedCustomers = index >= 0
-    ? (currentCustomers || []).map((c, i) => i === index ? customer : c)
-    : [customer, ...(currentCustomers || [])];
+  const index = (currentCustomers || []).findIndex((c) => c.id === customer.id);
+  let updatedCustomers =
+    index >= 0
+      ? (currentCustomers || []).map((c, i) => (i === index ? customer : c))
+      : [customer, ...(currentCustomers || [])];
 
   const key = getUserKey('invoice_customers');
   if (key) safeSet(key, JSON.stringify(updatedCustomers));
@@ -646,7 +703,9 @@ export const saveCustomer = async (customer: Customer) => {
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const customerData: CustomerPayload = {
     user_id: user!.id,
@@ -668,26 +727,32 @@ export const saveCustomer = async (customer: Customer) => {
       .maybeSingle();
 
     const targetId = existing?.id || (isUUID(customer.id) ? customer.id : null);
-    
+
     const upsertPromise = targetId
       ? supabase.from('customers').upsert({ id: targetId, ...customerData })
       : supabase.from('customers').insert(customerData);
 
-    const { data: savedData, error: saveError } = await (upsertPromise as any).select('id').single();
+    const { data: savedData, error: saveError } = await (upsertPromise as any)
+      .select('id')
+      .single();
     if (saveError) throw saveError;
-    
+
     const finalId = savedData?.id || targetId || customer.id;
-    
+
     // DB Success
     customer.isSynced = true;
     customer.lastSyncedAt = new Date().toISOString();
-    updatedCustomers = updatedCustomers.map(c => c.id === customer.id ? customer : c);
+    updatedCustomers = updatedCustomers.map((c) => (c.id === customer.id ? customer : c));
     if (key) safeSet(key, JSON.stringify(updatedCustomers));
-    
+
     emitSyncEnd(true);
   } catch (e) {
     console.warn('Supabase customer sync failed:', e);
-    addToSyncQueue('customer', { customerData, isUuid: isUUID(customer.id), customerId: customer.id });
+    addToSyncQueue('customer', {
+      customerData,
+      isUuid: isUUID(customer.id),
+      customerId: customer.id,
+    });
     toast('Working offline. Changes will sync later.');
     emitSyncEnd(false);
   }
@@ -699,7 +764,10 @@ export const deleteCustomer = async (id: string) => {
   if (key) {
     const customers = getCachedData<Customer[]>(key, []);
     if (customers.length > 0) {
-      setCachedData(key, customers.filter(c => c.id !== id));
+      setCachedData(
+        key,
+        customers.filter((c) => c.id !== id)
+      );
     }
   }
 
@@ -708,11 +776,14 @@ export const deleteCustomer = async (id: string) => {
   // Also attempt to remove from Supabase (best-effort)
   try {
     if (isGuestMode()) return;
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase.from('customers').delete().eq('id', id).eq('user_id', user.id);
     if (error) {
-      if (error.code === '23503') { // Foreign key violation
+      if (error.code === '23503') {
+        // Foreign key violation
         console.warn('Customer has linked invoices. Using local-only delete for now.');
         // This is a "soft-delete" on the frontend side since we can't easily add is_deleted column
         // The customer will remain in DB but won't show in the main list because we cleared them from localStorage
@@ -738,7 +809,9 @@ export const getProducts = async (force = false, limit = 1000): Promise<ApiResul
     }
 
     const storeId = getActiveStoreId();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user || !storeId) {
       // Return local data if available even if storeId or user is missing
       return { data: key ? getCachedData<Product[]>(key, []) : [], loading: false, error: null };
@@ -754,7 +827,7 @@ export const getProducts = async (force = false, limit = 1000): Promise<ApiResul
 
     if (error) return { data: [], loading: false, error: error.message };
 
-    const products = (data || []).map(p => ({
+    const products = (data || []).map((p) => ({
       id: p.id,
       name: p.name,
       category: p.category || 'Other',
@@ -774,7 +847,9 @@ export const getProducts = async (force = false, limit = 1000): Promise<ApiResul
 
 export const searchProducts = async (query: string): Promise<Product[]> => {
   const storeId = getActiveStoreId();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || !storeId || !query.trim()) {
     const { data } = await getProducts();
     return data || [];
@@ -795,14 +870,17 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
     const { data: all } = await getProducts();
     if (!all) return [];
     const lowQuery = query.toLowerCase();
-    return all.filter(p => 
-      p.name.toLowerCase().includes(lowQuery) || 
-      p.category.toLowerCase().includes(lowQuery) ||
-      (p.hsnCode || '').toLowerCase().includes(lowQuery)
-    ).slice(0, 20);
+    return all
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(lowQuery) ||
+          p.category.toLowerCase().includes(lowQuery) ||
+          (p.hsnCode || '').toLowerCase().includes(lowQuery)
+      )
+      .slice(0, 20);
   }
 
-  return data.map(p => ({
+  return data.map((p) => ({
     id: p.id,
     name: p.name,
     category: p.category || 'Other',
@@ -821,10 +899,11 @@ export const saveProduct = async (product: Product) => {
 
   // Update local storage first for immediate UI response
   const { data: currentProducts } = await getProducts();
-  const index = (currentProducts || []).findIndex(p => p.id === product.id);
-  let updatedProducts = index >= 0
-    ? (currentProducts || []).map((p, i) => i === index ? product : p)
-    : [product, ...(currentProducts || [])];
+  const index = (currentProducts || []).findIndex((p) => p.id === product.id);
+  let updatedProducts =
+    index >= 0
+      ? (currentProducts || []).map((p, i) => (i === index ? product : p))
+      : [product, ...(currentProducts || [])];
 
   const key = getUserKey('invoice_products');
   if (key) safeSet(key, JSON.stringify(updatedProducts));
@@ -840,7 +919,9 @@ export const saveProduct = async (product: Product) => {
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const productData: ProductPayload = {
     user_id: user!.id,
@@ -869,14 +950,16 @@ export const saveProduct = async (product: Product) => {
       ? supabase.from('products').upsert({ id: targetId, ...productData })
       : supabase.from('products').insert(productData);
 
-    const { data: savedData, error: saveError } = await (upsertPromise as any).select('id').single();
+    const { data: savedData, error: saveError } = await (upsertPromise as any)
+      .select('id')
+      .single();
     if (saveError) throw saveError;
 
     const finalId = savedData?.id || targetId || product.id;
 
     product.isSynced = true;
     product.lastSyncedAt = new Date().toISOString();
-    updatedProducts = updatedProducts.map(p => p.id === product.id ? product : p);
+    updatedProducts = updatedProducts.map((p) => (p.id === product.id ? product : p));
     if (key) safeSet(key, JSON.stringify(updatedProducts));
 
     emitSyncEnd(true);
@@ -894,7 +977,10 @@ export const deleteProduct = async (id: string) => {
   if (key) {
     const products = getCachedData<Product[]>(key, []);
     if (products.length > 0) {
-      setCachedData(key, products.filter(p => p.id !== id));
+      setCachedData(
+        key,
+        products.filter((p) => p.id !== id)
+      );
     }
   }
 
@@ -902,7 +988,9 @@ export const deleteProduct = async (id: string) => {
 
   try {
     if (isGuestMode()) return;
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     await supabase.from('products').delete().eq('id', id).eq('user_id', user.id);
   } catch (e) {
@@ -918,7 +1006,8 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
     const key = getUserKey('invoice_invoices');
     if (key && !force) {
       const cached = getCachedData<Invoice[]>(key, []);
-      if (cached.length > 0) return { data: cached.filter(inv => inv && inv.id), loading: false, error: null };
+      if (cached.length > 0)
+        return { data: cached.filter((inv) => inv && inv.id), loading: false, error: null };
     }
 
     let storeId = getActiveStoreId();
@@ -927,21 +1016,29 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
       // Return early with local data if available
       if (key) {
         const cached = getCachedData<Invoice[]>(key, []);
-        if (cached.length > 0) return { data: cached.filter(inv => inv && inv.id), loading: false, error: null };
+        if (cached.length > 0)
+          return { data: cached.filter((inv) => inv && inv.id), loading: false, error: null };
       }
-      
+
       if (isGuestMode()) return { data: [], loading: false, error: null };
-      
-      const { data: { user } } = await supabase.auth.getUser();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
-        const { data: store } = await supabase.from('stores').select('id').eq('user_id', user.id).limit(1).single();
+        const { data: store } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single();
         if (store) {
           storeId = store.id;
           const sKey = getUserKey('active_store_id');
           if (sKey) safeSet(sKey, storeId!);
         }
       }
-      
+
       if (!storeId) return { data: [], loading: false, error: null };
     }
 
@@ -958,7 +1055,7 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id)
             .is('store_id', null);
-          
+
           if (!countError && count && count > 0) {
             console.log(`Auto-migrating ${count} legacy invoices to store: ${storeId}`);
             await supabase
@@ -974,7 +1071,9 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
       }
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user || !storeId) return { data: [], loading: false, error: null };
 
     // Fetch metadata only for the list
@@ -991,7 +1090,7 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
     }
 
     const invoices = (data || [])
-      .map(inv => {
+      .map((inv) => {
         // Prefer live customer join; fall back to snapshot stored in invoice row.
         // This ensures names are always correct even if the customer was edited,
         // soft-deleted, or became inaccessible across users/RLS.
@@ -1032,7 +1131,7 @@ export const getInvoices = async (force = false): Promise<ApiResult<Invoice[]>> 
       })
       // Only hide TRUE ghost invoices: absolutely zero total AND zero items.
       // Never hide an invoice just because the customer join failed.
-      .filter(inv => {
+      .filter((inv) => {
         const isZeroTotal = Number(inv.grandTotal) === 0;
         const hasNoItems = (inv.items?.length || 0) === 0;
         return !(isZeroTotal && hasNoItems);
@@ -1050,13 +1149,15 @@ export const getInvoice = async (id: string): Promise<Invoice | null> => {
     const key = getUserKey('invoice_invoices');
     if (key) {
       const cached = getCachedData<Invoice[]>(key, []);
-      const found = cached.find(inv => inv.id === id);
+      const found = cached.find((inv) => inv.id === id);
       if (found) return found;
     }
     return null;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   // Fetch metadata and items in a single atomic join-request
@@ -1127,7 +1228,7 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
   invoice.lastSyncedAt = new Date().toISOString();
 
   // Wait if another save is in progress for this exact invoice protecting against race conditions
-  await new Promise<void>(resolve => {
+  await new Promise<void>((resolve) => {
     if (!isSavingMap[invoice.id]) {
       isSavingMap[invoice.id] = true;
       resolve();
@@ -1146,10 +1247,11 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       const key = getUserKey('invoice_invoices');
       const localRaw = key ? safeGet(key) : null;
       const localInvoices: Invoice[] = localRaw ? JSON.parse(localRaw) : [];
-      const idx = localInvoices.findIndex(i => i.id === invoice.id);
-      const updated = idx >= 0
-        ? localInvoices.map((i, n) => n === idx ? invoice : i)
-        : [invoice, ...localInvoices].slice(0, 50);
+      const idx = localInvoices.findIndex((i) => i.id === invoice.id);
+      const updated =
+        idx >= 0
+          ? localInvoices.map((i, n) => (n === idx ? invoice : i))
+          : [invoice, ...localInvoices].slice(0, 50);
       if (key) safeSet(key, JSON.stringify(updated));
     } catch (e) {
       console.warn('Local invoice save failed:', e);
@@ -1166,7 +1268,9 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
       return invoice.id;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       emitSyncEnd(false);
       return invoice.id;
@@ -1193,7 +1297,10 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     };
 
     // 1.5 Validation: Don't save if it's a completely empty ghost invoice
-    if (Number(invoice.grandTotal) === 0 && (!invoice.customer?.name || invoice.customer.name.includes('Missing Customer'))) {
+    if (
+      Number(invoice.grandTotal) === 0 &&
+      (!invoice.customer?.name || invoice.customer.name.includes('Missing Customer'))
+    ) {
       console.warn('Skipping save of ghost invoice');
       emitSyncEnd(true);
       return invoice.id;
@@ -1224,8 +1331,8 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
     // 3. Sync Invoice Items (Atomic fetch, compare, write)
     if (invoice.items && invoice.items.length > 0) {
       itemsPayload = invoice.items
-        .filter(item => (item.productName || (item as any).name))
-        .map(item => ({
+        .filter((item) => item.productName || (item as any).name)
+        .map((item) => ({
           id: isUUID(item.id) ? item.id : generateId(),
           user_id: user.id,
           invoice_id: invId,
@@ -1261,43 +1368,41 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
         throw new Error('Failed to save invoice items: ' + itemsError.message);
       } else if (!fetchError && existingItems) {
         // C. Explicitly delete *only* items that were removed
-        const payloadIds = new Set(itemsPayload.map(i => i.id));
-        const toDeleteIds = existingItems
-          .map(i => i.id)
-          .filter(id => !payloadIds.has(id));
+        const payloadIds = new Set(itemsPayload.map((i) => i.id));
+        const toDeleteIds = existingItems.map((i) => i.id).filter((id) => !payloadIds.has(id));
 
         if (toDeleteIds.length > 0) {
           const { error: deleteError } = await supabase
             .from('invoice_items')
             .delete()
             .in('id', toDeleteIds);
-            
+
           if (deleteError) {
             console.warn('Post-sync cleanup failed to delete removed items:', deleteError.message);
           }
         }
-        
+
         console.log(`Successfully synced ${itemsPayload.length} items for invoice ${invId}`);
       }
     } else {
       // 3b. Empty payload: delete all current items for this invoice safely
       await supabase.from('invoice_items').delete().eq('invoice_id', invId);
     }
-    
+
     // DB Success
     invoice.isSynced = true;
     invoice.lastSyncedAt = new Date().toISOString();
     const invKey = getUserKey('invoice_invoices');
     if (invKey) {
-       const localRaw = safeGet(invKey);
-       const localInvoices: Invoice[] = localRaw ? JSON.parse(localRaw) : [];
-       const idx = localInvoices.findIndex(i => i.id === invoice.id);
-       if (idx >= 0) {
-         localInvoices[idx] = invoice;
-         safeSet(invKey, JSON.stringify(localInvoices));
-       }
+      const localRaw = safeGet(invKey);
+      const localInvoices: Invoice[] = localRaw ? JSON.parse(localRaw) : [];
+      const idx = localInvoices.findIndex((i) => i.id === invoice.id);
+      if (idx >= 0) {
+        localInvoices[idx] = invoice;
+        safeSet(invKey, JSON.stringify(localInvoices));
+      }
     }
-    
+
     emitSyncEnd(true);
     return invId;
   } catch (e) {
@@ -1317,14 +1422,16 @@ export const saveInvoice = async (invoice: Invoice): Promise<string | undefined>
   }
 };
 
-
 export const deleteInvoice = async (id: string): Promise<boolean> => {
   // Remove from localStorage first (targeted, don't wipe all invoices)
   const key = getUserKey('invoice_invoices');
   if (key) {
     const local = getCachedData<Invoice[]>(key, []);
     if (local.length > 0) {
-      setCachedData(key, local.filter(inv => inv.id !== id));
+      setCachedData(
+        key,
+        local.filter((inv) => inv.id !== id)
+      );
     }
   }
 
@@ -1332,7 +1439,9 @@ export const deleteInvoice = async (id: string): Promise<boolean> => {
 
   // Best-effort Supabase delete
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return false;
     const { error } = await supabase.from('invoices').delete().eq('id', id).eq('user_id', user.id);
     if (error) throw error;
@@ -1351,7 +1460,9 @@ export const getAndIncrementInvoiceNumber = async (): Promise<string> => {
     const storeId = getActiveStoreId();
     if (!storeId) return await getNextInvoiceNumber();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return '1001';
 
     // 1. Get current last_invoice_number from store
@@ -1373,7 +1484,7 @@ export const getAndIncrementInvoiceNumber = async (): Promise<string> => {
 
     // 3. Update store record with the new number
     await supabase.from('stores').update({ last_invoice_number: nextNum }).eq('id', storeId);
-    
+
     return nextNum.toString();
   } catch (e) {
     console.error('getAndIncrementInvoiceNumber failed:', e);
@@ -1388,21 +1499,23 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
     // Check recent local caching primarily mapping current state
     const key = getUserKey('invoice_invoices');
     if (key) {
-        const invoices = getCachedData<Invoice[]>(key, []);
-        for (const inv of invoices) {
-          if (inv.invoiceNumber) {
-            const numStr = inv.invoiceNumber.replace(/\D/g, '');
-            if (numStr) {
-              const num = parseInt(numStr, 10);
-              if (!isNaN(num) && num > maxNum) maxNum = num;
-            }
+      const invoices = getCachedData<Invoice[]>(key, []);
+      for (const inv of invoices) {
+        if (inv.invoiceNumber) {
+          const numStr = inv.invoiceNumber.replace(/\D/g, '');
+          if (numStr) {
+            const num = parseInt(numStr, 10);
+            if (!isNaN(num) && num > maxNum) maxNum = num;
           }
         }
+      }
     }
 
     // Actively query DB for authoritative sequence
     const storeId = getActiveStoreId();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (storeId && user) {
       const { data, error } = await supabase
         .from('invoices')
@@ -1411,14 +1524,14 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
-        
+
       if (!error && data) {
         for (const row of data) {
-           const numStr = row.invoice_number?.replace(/\D/g, '');
-           if (numStr) {
-             const num = parseInt(numStr, 10);
-             if (!isNaN(num) && num > maxNum) maxNum = num;
-           }
+          const numStr = row.invoice_number?.replace(/\D/g, '');
+          if (numStr) {
+            const num = parseInt(numStr, 10);
+            if (!isNaN(num) && num > maxNum) maxNum = num;
+          }
         }
       }
     }
@@ -1430,16 +1543,18 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
 };
 
 export const getPayments = async (invoiceId?: string): Promise<Payment[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   let query = supabase.from('payments').select('*').eq('user_id', user.id);
   if (invoiceId) query = query.eq('invoice_id', invoiceId);
-  
+
   const { data, error } = await query.order('payment_date', { ascending: false });
   if (error) return [];
-  
-  return (data || []).map(p => ({
+
+  return (data || []).map((p) => ({
     id: p.id,
     user_id: p.user_id,
     invoice_id: p.invoice_id,
@@ -1453,7 +1568,9 @@ export const getPayments = async (invoiceId?: string): Promise<Payment[]> => {
 };
 
 export const savePayment = async (payment: Partial<Payment>) => {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return;
 
   const payload = {
@@ -1465,9 +1582,16 @@ export const savePayment = async (payment: Partial<Payment>) => {
   if (error) throw error;
 };
 
-export const logActivity = async (action: string, entityType: string, entityId?: string, metadata?: any) => {
+export const logActivity = async (
+  action: string,
+  entityType: string,
+  entityId?: string,
+  metadata?: any
+) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     // Use current session's email if possible, or fallback to metadata
@@ -1479,13 +1603,15 @@ export const logActivity = async (action: string, entityType: string, entityId?:
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
     };
 
-    await supabase.from('activity_logs').insert([{
-      user_id: user.id,
-      action,
-      entity_type: entityType,
-      entity_id: entityId,
-      metadata: refinedMetadata
-    }]);
+    await supabase.from('activity_logs').insert([
+      {
+        user_id: user.id,
+        action,
+        entity_type: entityType,
+        entity_id: entityId,
+        metadata: refinedMetadata,
+      },
+    ]);
   } catch (e) {
     console.warn('Silent log failure:', e);
   }
@@ -1497,7 +1623,7 @@ export const getAdminStats = async () => {
   try {
     // 1. Get total UNIQUE users from stores (primary source of truth)
     const { data: storeUsers } = await supabase.from('stores').select('user_id');
-    const totalUsers = new Set(storeUsers?.map(s => s.user_id)).size;
+    const totalUsers = new Set(storeUsers?.map((s) => s.user_id)).size;
 
     // 2. Get total invoices today (with created_at timestamp)
     const startOfDay = new Date();
@@ -1512,13 +1638,15 @@ export const getAdminStats = async () => {
       .from('invoices')
       .select('grand_total')
       .gt('grand_total', 0);
-    const totalRevenue = revenueData?.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0) || 0;
+    const totalRevenue =
+      revenueData?.reduce((sum, inv) => sum + Number(inv.grand_total || 0), 0) || 0;
 
     // 4. Get total receipts (payments)
     const { count: totalPaymentsCount, data: paymentsData } = await supabase
       .from('payments')
       .select('amount', { count: 'exact' });
-    const totalPaymentsAmount = paymentsData?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+    const totalPaymentsAmount =
+      paymentsData?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
 
     // 5. Get live users (DISTINCT user_id from activity_logs in last 15 minutes)
     const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -1527,7 +1655,7 @@ export const getAdminStats = async () => {
       .select('user_id')
       .gte('created_at', fifteenMinsAgo);
     const liveUsers = new Set(liveLogs?.map((l: any) => l.user_id)).size;
-    
+
     // 6. Get total invoices count (overall)
     const { count: totalInvoices } = await supabase
       .from('invoices')
@@ -1548,7 +1676,7 @@ export const getAdminStats = async () => {
       totalRevenue,
       totalPaymentsCount: totalPaymentsCount || 0,
       totalPaymentsAmount: totalPaymentsAmount || 0,
-      recentLogs: recentLogs || []
+      recentLogs: recentLogs || [],
     };
   } catch (e) {
     console.error('Admin stats failed:', e);
@@ -1571,25 +1699,25 @@ export const getAllUsers = async () => {
       .from('activity_logs')
       .select('user_id, metadata, created_at')
       .order('created_at', { ascending: false })
-      .limit(2000); 
+      .limit(2000);
 
     if (logError && (!stores || stores.length === 0)) return [];
 
     const userMap = new Map();
-    
+
     // Process stores first - stores have authoritative registration timestamps (created_at)
-    stores?.forEach(s => {
+    stores?.forEach((s) => {
       userMap.set(s.user_id, {
         ...s,
         registration_date: s.created_at,
         last_active: s.updated_at || s.created_at,
         is_pending: false,
-        source: 'store'
+        source: 'store',
       });
     });
 
     // Process logs to find potential users not in stores table
-    logs?.forEach(log => {
+    logs?.forEach((log) => {
       const existing = userMap.get(log.user_id);
       if (!existing) {
         // This is a user with activity but no store setup yet
@@ -1603,7 +1731,7 @@ export const getAllUsers = async () => {
           last_active: log.created_at,
           is_pending: true,
           invoices: [{ count: 0 }],
-          source: 'log'
+          source: 'log',
         });
       } else {
         // Update last_active if log is newer
@@ -1619,8 +1747,9 @@ export const getAllUsers = async () => {
       }
     });
 
-    return Array.from(userMap.values())
-      .sort((a, b) => new Date(b.registration_date).getTime() - new Date(a.registration_date).getTime());
+    return Array.from(userMap.values()).sort(
+      (a, b) => new Date(b.registration_date).getTime() - new Date(a.registration_date).getTime()
+    );
   } catch (e) {
     console.error('Failed to get users:', e);
     return [];
@@ -1632,7 +1761,8 @@ export const getAllInvoices = async (limit = 100) => {
     // Explicitly select all required fields to ensure completeness
     const { data, error } = await supabase
       .from('invoices')
-      .select(`
+      .select(
+        `
         id,
         invoice_number,
         user_id,
@@ -1656,7 +1786,8 @@ export const getAllInvoices = async (limit = 100) => {
           business_name,
           owner_name
         )
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -1676,17 +1807,17 @@ export const updateUserAccess = async (userId: string, isBlocked: boolean) => {
       .eq('user_id', userId);
 
     if (error) {
-       console.error('DATABASE ERROR updating user access:', error);
-       throw error;
+      console.error('DATABASE ERROR updating user access:', error);
+      throw error;
     }
-    
+
     await logActivity(isBlocked ? 'blocked_user' : 'unblocked_user', 'user', userId);
     return true;
   } catch (e: any) {
     console.error('Failed to update user access:', e);
     // Log detailed diagnostics for the 400 error
     if (e.message || e.details) {
-       toast.error(`Admin Error: ${e.message || 'Check console'}`);
+      toast.error(`Admin Error: ${e.message || 'Check console'}`);
     }
     return false;
   }
@@ -1710,7 +1841,8 @@ export const getUserActivity = async (userId: string) => {
 
 // Realtime subscriptions helpers
 export const subscribeToInvoices = (callback: (payload: any) => void) => {
-  const channel = supabase.channel('invoices-channel')
+  const channel = supabase
+    .channel('invoices-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, (payload) => {
       // Do NOT wipe localStorage here — that was causing saved invoices to disappear.
       // Just notify the component so it can decide what to reload.
@@ -1729,7 +1861,8 @@ export const subscribeToInvoices = (callback: (payload: any) => void) => {
 };
 
 export const subscribeToProducts = (callback: (payload: any) => void) => {
-  const channel = supabase.channel('products-channel')
+  const channel = supabase
+    .channel('products-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
       const key = getUserKey('invoice_products');
       if (key) {
@@ -1745,12 +1878,15 @@ export const subscribeToProducts = (callback: (payload: any) => void) => {
             unit: payload.new.unit || 'pcs',
             createdAt: payload.new.created_at,
           };
-          const idx = current.findIndex(p => p.id === payload.new.id);
+          const idx = current.findIndex((p) => p.id === payload.new.id);
           if (idx >= 0) current[idx] = newProduct;
           else current.unshift(newProduct);
           setCachedData(key, current.slice(0, 50));
         } else if (payload.eventType === 'DELETE') {
-          setCachedData(key, current.filter(p => p.id !== payload.old.id));
+          setCachedData(
+            key,
+            current.filter((p) => p.id !== payload.old.id)
+          );
         }
       }
       callback(payload);
@@ -1768,7 +1904,8 @@ export const subscribeToProducts = (callback: (payload: any) => void) => {
 };
 
 export const subscribeToCustomers = (callback: (payload: any) => void) => {
-  const channel = supabase.channel('customers-channel')
+  const channel = supabase
+    .channel('customers-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, (payload) => {
       const key = getUserKey('invoice_customers');
       if (key) {
@@ -1784,12 +1921,15 @@ export const subscribeToCustomers = (callback: (payload: any) => void) => {
             state: payload.new.state || '',
             createdAt: payload.new.created_at,
           };
-          const idx = current.findIndex(c => c.id === payload.new.id);
+          const idx = current.findIndex((c) => c.id === payload.new.id);
           if (idx >= 0) current[idx] = newCustomer;
           else current.unshift(newCustomer);
           setCachedData(key, current.slice(0, 50));
         } else if (payload.eventType === 'DELETE') {
-          setCachedData(key, current.filter(c => c.id !== payload.old.id));
+          setCachedData(
+            key,
+            current.filter((c) => c.id !== payload.old.id)
+          );
         }
       }
       callback(payload);
@@ -1807,11 +1947,12 @@ export const subscribeToCustomers = (callback: (payload: any) => void) => {
 };
 
 export const subscribeToStores = (callback: (payload: any) => void) => {
-  const channel = supabase.channel('stores-channel')
+  const channel = supabase
+    .channel('stores-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stores' }, (payload) => {
       const infoKey = getUserKey('invoice_store_info');
       const brandingKey = getUserKey('invoice_branding_settings');
-      
+
       if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
         if (infoKey) {
           const info: StoreInfo = {

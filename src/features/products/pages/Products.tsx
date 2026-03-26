@@ -4,12 +4,41 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/components/ui/dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, Filter, X, Loader2, Cloud, CloudOff } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/components/ui/dialog';
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Filter,
+  X,
+  Loader2,
+  Cloud,
+  CloudOff,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Product } from '@/features/invoices/types/invoice';
-import { getProducts, saveProduct, deleteProduct, subscribeToProducts } from '@/shared/utils/storage';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import {
+  getProducts,
+  saveProduct,
+  deleteProduct,
+  subscribeToProducts,
+} from '@/shared/utils/storage';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
 import { ListSkeleton } from '@/shared/components/SkeletonLoaders';
 
 const CATEGORIES = ['Furniture', 'Hardware', 'Electronics', 'Other'];
@@ -43,7 +72,9 @@ export default function Products() {
       loadProducts();
     });
 
-    return () => { if (unsubscribe) unsubscribe(); };
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const loadProducts = async () => {
@@ -114,26 +145,29 @@ export default function Products() {
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.hsnCode || '').includes(searchTerm)
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.hsnCode || '').includes(searchTerm)
   );
 
   // Check which filters are needed
-  const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
-  const uniqueGstRates = [...new Set(filteredProducts.map(p => p.gstRate))];
+  const uniqueCategories = [...new Set(products.map((p) => p.category).filter(Boolean))];
+  const uniqueGstRates = [...new Set(filteredProducts.map((p) => p.gstRate))];
   const showGstFilter = true; // Always show GST filter for clarity
   const showAnyFilter = filteredProducts.length > 0;
 
   // Apply category filter
-  const filteredByCategory = filterCategory === 'all'
-    ? filteredProducts
-    : filteredProducts.filter(product => product.category === filterCategory);
+  const filteredByCategory =
+    filterCategory === 'all'
+      ? filteredProducts
+      : filteredProducts.filter((product) => product.category === filterCategory);
 
   // Apply GST filter
-  const filteredByGst = filterGstRate === 'all'
-    ? filteredByCategory
-    : filteredByCategory.filter(product => product.gstRate === parseInt(filterGstRate));
+  const filteredByGst =
+    filterGstRate === 'all'
+      ? filteredByCategory
+      : filteredByCategory.filter((product) => product.gstRate === parseInt(filterGstRate));
 
   // Apply sorting
   const sortedProducts = filteredByGst.sort((a, b) => {
@@ -161,8 +195,8 @@ export default function Products() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <button 
-              onClick={() => navigate('/dashboard')} 
+            <button
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1.5 text-[var(--brand-color)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -170,93 +204,124 @@ export default function Products() {
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Products</h1>
           </div>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
               setIsDialogOpen(open);
               if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-4 font-semibold">
-                  <Plus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Add Product</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
-                  <DialogDescription>
-                    {editingProduct ? 'Update product information below.' : 'Add a new product to your catalog.'}
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none px-4 font-semibold"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Product</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
+                <DialogDescription>
+                  {editingProduct
+                    ? 'Update product information below.'
+                    : 'Add a new product to your catalog.'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm">
+                    Product Name *
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Iron Rack"
+                    required
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hsnCode" className="text-sm">
+                    HSN Code
+                  </Label>
+                  <Input
+                    id="hsnCode"
+                    value={formData.hsnCode}
+                    onChange={(e) => setFormData({ ...formData, hsnCode: e.target.value })}
+                    placeholder="9403 (optional)"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm">Product Name *</Label>
+                    <Label htmlFor="sellingPrice" className="text-sm">
+                      Selling Price *
+                    </Label>
                     <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g., Iron Rack"
+                      id="sellingPrice"
+                      type="number"
+                      value={formData.sellingPrice}
+                      onChange={(e) =>
+                        setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 })
+                      }
+                      inputMode="decimal"
+                      placeholder="0"
                       required
                       className="text-sm"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="hsnCode" className="text-sm">HSN Code</Label>
-                    <Input
-                      id="hsnCode"
-                      value={formData.hsnCode}
-                      onChange={(e) => setFormData({ ...formData, hsnCode: e.target.value })}
-                      placeholder="9403 (optional)"
-                      className="text-sm"
-                    />
+                    <Label htmlFor="gstRate" className="text-sm">
+                      GST Rate (%)
+                    </Label>
+                    <select
+                      id="gstRate"
+                      value={formData.gstRate}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gstRate: parseFloat(e.target.value) })
+                      }
+                      className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm"
+                    >
+                      <option value="0">0%</option>
+                      <option value="5">5%</option>
+                      <option value="12">12%</option>
+                      <option value="18">18%</option>
+                      <option value="28">28%</option>
+                    </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="sellingPrice" className="text-sm">Selling Price *</Label>
-                      <Input
-                        id="sellingPrice"
-                        type="number"
-                        value={formData.sellingPrice}
-                        onChange={(e) => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 })}
-                        inputMode="decimal"
-                        placeholder="0"
-                        required
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="gstRate" className="text-sm">GST Rate (%)</Label>
-                      <select
-                        id="gstRate"
-                        value={formData.gstRate}
-                        onChange={(e) => setFormData({ ...formData, gstRate: parseFloat(e.target.value) })}
-                        className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm"
-                      >
-                        <option value="0">0%</option>
-                        <option value="5">5%</option>
-                        <option value="12">12%</option>
-                        <option value="18">18%</option>
-                        <option value="28">28%</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="flex-1 bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white" disabled={isSaving}>
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        editingProduct ? 'Update Product' : 'Add Product'
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : editingProduct ? (
+                      'Update Product'
+                    ) : (
+                      'Add Product'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
 
@@ -282,8 +347,8 @@ export default function Products() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {showAnyFilter && (
-                <Button
-                    variant={showFilters ? "default" : "outline"}
+                  <Button
+                    variant={showFilters ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                     className="h-9"
@@ -299,12 +364,7 @@ export default function Products() {
                   </Button>
                 )}
                 {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-9"
-                  >
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
                     <X className="h-4 w-4 mr-2" />
                     Clear
                   </Button>
@@ -317,15 +377,23 @@ export default function Products() {
               <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 {showCategoryFilter && (
                   <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="filter-cat" className="text-xs font-medium text-slate-700">Category</Label>
+                    <Label htmlFor="filter-cat" className="text-xs font-medium text-slate-700">
+                      Category
+                    </Label>
                     <Select value={filterCategory} onValueChange={(e) => setFilterCategory(e)}>
-                      <SelectTrigger className={`w-full h-9 ${filterCategory !== 'all' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}>
-                        <SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue>
+                      <SelectTrigger
+                        className={`w-full h-9 ${filterCategory !== 'all' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}
+                      >
+                        <SelectValue>
+                          {filterCategory === 'all' ? 'All Categories' : filterCategory}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        {uniqueCategories.sort().map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        {uniqueCategories.sort().map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -333,30 +401,48 @@ export default function Products() {
                 )}
                 {showGstFilter && (
                   <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">GST Rate</Label>
+                    <Label htmlFor="filter-gst" className="text-xs font-medium text-slate-700">
+                      GST Rate
+                    </Label>
                     <Select value={filterGstRate} onValueChange={(e) => setFilterGstRate(e)}>
-                      <SelectTrigger className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}>
-                        <SelectValue>{filterGstRate === 'all' ? 'All GST Rates' : `${filterGstRate}%`}</SelectValue>
+                      <SelectTrigger
+                        className={`w-full h-9 ${filterGstRate !== 'all' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}
+                      >
+                        <SelectValue>
+                          {filterGstRate === 'all' ? 'All GST Rates' : `${filterGstRate}%`}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All GST Rates</SelectItem>
-                        {uniqueGstRates.sort((a, b) => a - b).map(rate => (
-                          <SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>
-                        ))}
+                        {uniqueGstRates
+                          .sort((a, b) => a - b)
+                          .map((rate) => (
+                            <SelectItem key={rate} value={rate.toString()}>
+                              {rate}%
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
                 )}
 
                 <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="sort" className="text-xs font-medium text-slate-700">Sort by</Label>
+                  <Label htmlFor="sort" className="text-xs font-medium text-slate-700">
+                    Sort by
+                  </Label>
                   <Select
                     value={sortBy}
                     onValueChange={(e) => setSortBy(e as 'name' | 'price' | 'date')}
                   >
-                    <SelectTrigger className={`w-full h-9 ${sortBy !== 'date' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}>
+                    <SelectTrigger
+                      className={`w-full h-9 ${sortBy !== 'date' ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/10' : ''}`}
+                    >
                       <SelectValue>
-                        {sortBy === 'date' ? 'Newest First' : sortBy === 'name' ? 'Name (A-Z)' : 'Price (High-Low)'}
+                        {sortBy === 'date'
+                          ? 'Newest First'
+                          : sortBy === 'name'
+                            ? 'Name (A-Z)'
+                            : 'Price (High-Low)'}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -384,7 +470,7 @@ export default function Products() {
               </CardContent>
             </Card>
           ) : (
-            sortedProducts.map(product => (
+            sortedProducts.map((product) => (
               <Card key={product.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -392,9 +478,13 @@ export default function Products() {
                       <h3 className="font-semibold text-slate-900 truncate flex items-center gap-2">
                         {product.name}
                         {product.isSynced === false ? (
-                          <span title="Offline changes" className="flex shrink-0"><CloudOff className="h-4 w-4 text-orange-500" /></span>
+                          <span title="Offline changes" className="flex shrink-0">
+                            <CloudOff className="h-4 w-4 text-orange-500" />
+                          </span>
                         ) : (
-                          <span title="Synced" className="flex shrink-0"><Cloud className="h-4 w-4 text-green-500" /></span>
+                          <span title="Synced" className="flex shrink-0">
+                            <Cloud className="h-4 w-4 text-green-500" />
+                          </span>
                         )}
                       </h3>
                       <div className="mt-1 flex flex-wrap gap-2 text-xs sm:text-sm text-slate-600">
@@ -403,7 +493,9 @@ export default function Products() {
                       <div className="mt-2 flex gap-4 text-sm">
                         <div>
                           <span className="text-slate-600">Price: </span>
-                          <span className="font-semibold">₹{product.sellingPrice.toLocaleString('en-IN')}</span>
+                          <span className="font-semibold">
+                            ₹{product.sellingPrice.toLocaleString('en-IN')}
+                          </span>
                         </div>
                         <div>
                           <span className="text-slate-600">GST: </span>

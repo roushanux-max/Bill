@@ -34,7 +34,7 @@
   --ring: #4f46e5;
   --radius: 0.5rem; /* 8px - User request */
   --radius-card: 0.75rem; /* 12px - User request */
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.06); /* User request */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06); /* User request */
   --sidebar: #f8fafc;
   --sidebar-foreground: #252525;
   --sidebar-primary: #030213;
@@ -232,8 +232,8 @@
 
   /* Make sure background colors print */
   table thead tr,
-  [style*="backgroundColor"],
-  [style*="background-color"] {
+  [style*='backgroundColor'],
+  [style*='background-color'] {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }

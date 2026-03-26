@@ -1,7 +1,16 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { BrandingSettings, defaultBrandingSettings } from '@/shared/types/branding';
 import { StoreInfo } from '@/features/invoices/types/invoice';
-import { getBrandingSettings, getStoreInfo, getUserKey, subscribeToStores, safeGet, safeSet, saveStoreInfo, saveBrandingSettings } from '@/shared/utils/storage';
+import {
+  getBrandingSettings,
+  getStoreInfo,
+  getUserKey,
+  subscribeToStores,
+  safeGet,
+  safeSet,
+  saveStoreInfo,
+  saveBrandingSettings,
+} from '@/shared/utils/storage';
 
 interface BrandingContextType {
   settings: BrandingSettings;
@@ -18,7 +27,11 @@ interface BrandingContextType {
 
 import { useAuth } from './AuthContext';
 import ConflictResolutionModal from '@/features/invoices/components/ConflictResolutionModal';
-import { getAAAForeground, generateSecondaryColor, adjustBrightness } from '@/shared/utils/colorUtils';
+import {
+  getAAAForeground,
+  generateSecondaryColor,
+  adjustBrightness,
+} from '@/shared/utils/colorUtils';
 
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
@@ -30,13 +43,13 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
       const key = getUserKey('bill_branding_settings');
       const cached = key ? safeGet(key) : null;
       if (cached) return JSON.parse(cached);
-      
+
       // Fallback: If we have user metadata domain (from signup), use it as initial domain
       const metaDomain = user?.user_metadata?.domain;
       if (metaDomain) {
         return { ...defaultBrandingSettings, domain: metaDomain };
       }
-      
+
       return defaultBrandingSettings;
     } catch (e) {
       console.error('Error loading initial branding settings:', e);
@@ -56,7 +69,10 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
   const [overrideSettings, setOverrideSettings] = useState<BrandingSettings | undefined>();
   const [overrideStoreInfo, setOverrideStoreInfo] = useState<StoreInfo | undefined>();
-  const [conflictData, setConflictData] = useState<{ guestBranding: BrandingSettings; guestStore: StoreInfo } | null>(null);
+  const [conflictData, setConflictData] = useState<{
+    guestBranding: BrandingSettings;
+    guestStore: StoreInfo;
+  } | null>(null);
 
   // Apply styles when settings change (prioritize override if present)
   useEffect(() => {
@@ -71,7 +87,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     try {
       const [savedSettings, savedStoreInfo] = await Promise.all([
         getBrandingSettings(true),
-        getStoreInfo(true)
+        getStoreInfo(true),
       ]);
 
       if (savedSettings) {
@@ -123,13 +139,13 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
             const newSettings = JSON.parse(se.newValue) as BrandingSettings;
             setSettings(newSettings);
             applyBrandingStyles(newSettings);
-          } catch (e) { }
+          } catch (e) {}
         }
         if (se.key === getUserKey('bill_store_info') && se.newValue) {
           try {
             const newStoreInfo = JSON.parse(se.newValue) as StoreInfo;
             setStoreInfo(newStoreInfo);
-          } catch (e) { }
+          } catch (e) {}
         }
       } else {
         // Custom 'storage' event - full refresh
@@ -143,10 +159,10 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleConflict = (e: any) => {
-        const { guestBranding, guestStore } = e.detail;
-        if (guestBranding || guestStore) {
-            setConflictData({ guestBranding, guestStore });
-        }
+      const { guestBranding, guestStore } = e.detail;
+      if (guestBranding || guestStore) {
+        setConflictData({ guestBranding, guestStore });
+      }
     };
     window.addEventListener('GUEST_LOGIN_CONFLICT', handleConflict);
     return () => window.removeEventListener('GUEST_LOGIN_CONFLICT', handleConflict);
@@ -169,32 +185,34 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const effectiveStoreInfo = overrideStoreInfo || storeInfo;
 
   return (
-    <BrandingContext.Provider value={{ 
-        settings: effectiveSettings, 
-        storeInfo: effectiveStoreInfo, 
-        updateSettings, 
-        updateStoreInfo, 
-        refreshBranding, 
+    <BrandingContext.Provider
+      value={{
+        settings: effectiveSettings,
+        storeInfo: effectiveStoreInfo,
+        updateSettings,
+        updateStoreInfo,
+        refreshBranding,
         loading,
         overrideSettings,
         overrideStoreInfo,
         setOverrideSettings,
-        setOverrideStoreInfo
-    }}>
+        setOverrideStoreInfo,
+      }}
+    >
       {children}
       {conflictData && (
-          <ConflictResolutionModal 
-              guestBranding={conflictData.guestBranding} 
-              guestStore={conflictData.guestStore} 
-              onResolve={(action) => {
-                  if (action === 'temp') {
-                      setOverrideSettings(conflictData.guestBranding || defaultBrandingSettings);
-                      setOverrideStoreInfo(conflictData.guestStore || null);
-                  }
-                  setConflictData(null);
-                  refreshBranding(); // Ensure DB sync if keep/discard
-              }}
-          />
+        <ConflictResolutionModal
+          guestBranding={conflictData.guestBranding}
+          guestStore={conflictData.guestStore}
+          onResolve={(action) => {
+            if (action === 'temp') {
+              setOverrideSettings(conflictData.guestBranding || defaultBrandingSettings);
+              setOverrideStoreInfo(conflictData.guestStore || null);
+            }
+            setConflictData(null);
+            refreshBranding(); // Ensure DB sync if keep/discard
+          }}
+        />
       )}
     </BrandingContext.Provider>
   );
@@ -211,7 +229,7 @@ export function useBranding() {
 function applyBrandingStyles(settings: BrandingSettings) {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;
-  
+
   // Create dynamic stylesheet for theme colors
   let styleId = 'branding-theme-styles';
   let existingStyle = document.getElementById(styleId) as HTMLStyleElement;

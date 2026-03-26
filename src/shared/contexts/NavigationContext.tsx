@@ -31,7 +31,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   // Persist stack to sessionStorage
-    const saveStack = () => {
+  const saveStack = () => {
     sessionStorage.setItem('invoice_nav_history', JSON.stringify(historyStack.current));
   };
 
@@ -56,15 +56,15 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         }
       }
     } else if (navigationType === 'REPLACE') {
-        // When replacing, we don't push anything to the stack
-        isNavigatingBack.current = false; 
+      // When replacing, we don't push anything to the stack
+      isNavigatingBack.current = false;
     } else if (navigationType === 'POP') {
-        // POP means we've gone back (or forward) via browser history
-        const prev = historyStack.current[historyStack.current.length - 1];
-        if (prev === currentPath) {
-            historyStack.current.pop();
-            saveStack();
-        }
+      // POP means we've gone back (or forward) via browser history
+      const prev = historyStack.current[historyStack.current.length - 1];
+      if (prev === currentPath) {
+        historyStack.current.pop();
+        saveStack();
+      }
     }
 
     lastPathRef.current = currentPath;
@@ -85,10 +85,12 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <NavigationContext.Provider value={{ 
-      previousPath: historyStack.current[historyStack.current.length - 1] || null,
-      smartBack 
-    }}>
+    <NavigationContext.Provider
+      value={{
+        previousPath: historyStack.current[historyStack.current.length - 1] || null,
+        smartBack,
+      }}
+    >
       {children}
     </NavigationContext.Provider>
   );

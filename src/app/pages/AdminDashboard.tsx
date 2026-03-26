@@ -1,19 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { useAuth } from '@/shared/contexts/AuthContext';
-import { 
-  getAdminStats, 
-  getAllUsers, 
-  updateUserAccess, 
+import {
+  getAdminStats,
+  getAllUsers,
+  updateUserAccess,
   getUserActivity,
   getAllInvoices,
-  deleteInvoice
+  deleteInvoice,
 } from '@/shared/utils/storage';
-import { Users, FileText, IndianRupee, AlertCircle, Shield, ShieldOff, Activity, Trash2, Eraser, Eye, X, Package, MapPin, Phone, Mail } from 'lucide-react';
+import {
+  Users,
+  FileText,
+  IndianRupee,
+  AlertCircle,
+  Shield,
+  ShieldOff,
+  Activity,
+  Trash2,
+  Eraser,
+  Eye,
+  X,
+  Package,
+  MapPin,
+  Phone,
+  Mail,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/shared/components/ui/dialog';
 import { Badge } from '@/shared/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table';
 import { getInvoice } from '@/shared/utils/storage';
 
 export default function AdminDashboard() {
@@ -21,7 +50,9 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'overview' | 'users' | 'revenue' | 'activity' | 'invoices'>('overview');
+  const [activeView, setActiveView] = useState<
+    'overview' | 'users' | 'revenue' | 'activity' | 'invoices'
+  >('overview');
   const [allInvoices, setAllInvoices] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -62,12 +93,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteInvoice = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
-    
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.'))
+      return;
+
     const success = await deleteInvoice(id);
     if (success) {
       toast.success('Invoice deleted successfully');
-      setAllInvoices(prev => prev.filter(inv => inv.id !== id));
+      setAllInvoices((prev) => prev.filter((inv) => inv.id !== id));
       // Refresh stats
       const s = await getAdminStats();
       setStats(s);
@@ -87,13 +119,14 @@ export default function AdminDashboard() {
     }
   };
   const handleCleanupErrors = async () => {
-    const errorInvoices = allInvoices.filter(inv => !inv.grand_total || inv.grand_total === 0);
+    const errorInvoices = allInvoices.filter((inv) => !inv.grand_total || inv.grand_total === 0);
     if (errorInvoices.length === 0) {
       toast.info('No erroneous invoices (₹0) found.');
       return;
     }
 
-    if (!confirm(`Found ${errorInvoices.length} invoices with ₹0 total. Delete all of them?`)) return;
+    if (!confirm(`Found ${errorInvoices.length} invoices with ₹0 total. Delete all of them?`))
+      return;
 
     setIsLoading(true);
     let deletedCount = 0;
@@ -103,7 +136,7 @@ export default function AdminDashboard() {
     }
 
     toast.success(`Successfully cleaned up ${deletedCount} erroneous invoices.`);
-    setAllInvoices(prev => prev.filter(inv => inv.grand_total > 0));
+    setAllInvoices((prev) => prev.filter((inv) => inv.grand_total > 0));
     const s = await getAdminStats();
     setStats(s);
     setIsLoading(false);
@@ -111,17 +144,17 @@ export default function AdminDashboard() {
 
   const calculateWorkingHours = (logs: any[]) => {
     if (!logs || logs.length === 0) return 0;
-    
+
     // Group by day
     const days: { [key: string]: any[] } = {};
-    logs.forEach(log => {
+    logs.forEach((log) => {
       const day = new Date(log.created_at).toDateString();
       if (!days[day]) days[day] = [];
       days[day].push(new Date(log.created_at).getTime());
     });
 
     let totalHours = 0;
-    Object.values(days).forEach(times => {
+    Object.values(days).forEach((times) => {
       const min = Math.min(...times);
       const max = Math.max(...times);
       const diff = (max - min) / (1000 * 60 * 60);
@@ -132,11 +165,12 @@ export default function AdminDashboard() {
     return totalHours.toFixed(1);
   };
 
-  const filteredUsers = users.filter(u => 
-    u.business_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.owner_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.user_id?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = users.filter(
+    (u) =>
+      u.business_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.owner_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.user_id?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!isAdmin) {
@@ -154,16 +188,19 @@ export default function AdminDashboard() {
       <header className="flex justify-between items-end">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-2">
-            <span 
+            <span
               className="hover:text-slate-900 cursor-pointer transition-colors"
-              onClick={() => { setActiveView('overview'); setSelectedUser(null); }}
+              onClick={() => {
+                setActiveView('overview');
+                setSelectedUser(null);
+              }}
             >
               Admin
             </span>
             {activeView !== 'overview' && (
               <>
                 <span>/</span>
-                <span 
+                <span
                   className="hover:text-slate-900 cursor-pointer transition-colors capitalize"
                   onClick={() => setSelectedUser(null)}
                 >
@@ -174,39 +211,54 @@ export default function AdminDashboard() {
             {selectedUser && (
               <>
                 <span>/</span>
-                <span className="text-slate-900 truncate max-w-[150px]">{selectedUser.business_name || selectedUser.user_id}</span>
+                <span className="text-slate-900 truncate max-w-[150px]">
+                  {selectedUser.business_name || selectedUser.user_id}
+                </span>
               </>
             )}
           </div>
           <h1 className="text-3xl font-bold text-slate-900">
-            {selectedUser ? 'User Insights' : 
-             activeView === 'overview' ? 'Admin Dashboard' : 
-             activeView === 'users' ? 'User Management' : 
-             activeView === 'revenue' ? 'Revenue Analytics' : 'Platform Activity'}
+            {selectedUser
+              ? 'User Insights'
+              : activeView === 'overview'
+                ? 'Admin Dashboard'
+                : activeView === 'users'
+                  ? 'User Management'
+                  : activeView === 'revenue'
+                    ? 'Revenue Analytics'
+                    : 'Platform Activity'}
           </h1>
           <p className="text-slate-500 mt-1">
-            {selectedUser ? `In-depth activity and engagement metrics for ${selectedUser.business_name}.` : 
-             activeView === 'overview' ? 'Monitor platform activity and manage users.' : 
-             activeView === 'users' ? 'Manage access and view store details for all registered users.' : 
-             activeView === 'revenue' ? 'Detailed breakdown of platform revenue and invoice generation.' : 
-             'Real-time feed of all platform events and user actions.'}
+            {selectedUser
+              ? `In-depth activity and engagement metrics for ${selectedUser.business_name}.`
+              : activeView === 'overview'
+                ? 'Monitor platform activity and manage users.'
+                : activeView === 'users'
+                  ? 'Manage access and view store details for all registered users.'
+                  : activeView === 'revenue'
+                    ? 'Detailed breakdown of platform revenue and invoice generation.'
+                    : 'Real-time feed of all platform events and user actions.'}
           </p>
         </div>
         <div className="flex gap-2">
           {(activeView !== 'overview' || selectedUser) && (
-            <button 
-              onClick={() => { setSelectedUser(null); if (selectedUser) return; setActiveView('overview'); }}
+            <button
+              onClick={() => {
+                setSelectedUser(null);
+                if (selectedUser) return;
+                setActiveView('overview');
+              }}
               className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
             >
               {selectedUser ? 'Back to List' : 'Overview'}
             </button>
           )}
-          <button 
+          <button
             onClick={loadData}
             className="p-2 text-slate-500 hover:text-slate-900 transition-colors bg-white border border-slate-200 rounded-lg"
             title="Refresh stats"
           >
-            <Activity size={20} className={isLoading ? "animate-spin" : ""} />
+            <Activity size={20} className={isLoading ? 'animate-spin' : ''} />
           </button>
         </div>
       </header>
@@ -214,68 +266,100 @@ export default function AdminDashboard() {
       {/* KPI Cards */}
       {!selectedUser && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <button 
+          <button
             onClick={() => setActiveView('users')}
             className="text-left transition-transform active:scale-95 duration-200 group"
           >
-            <Card className={`p-6 transition-all duration-300 ${activeView === 'users' ? 'ring-2 ring-indigo-500 shadow-lg' : 'hover:shadow-md'}`}>
+            <Card
+              className={`p-6 transition-all duration-300 ${activeView === 'users' ? 'ring-2 ring-indigo-500 shadow-lg' : 'hover:shadow-md'}`}
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">Registered Users</p>
-                  <h3 className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalUsers || 0}</h3>
+                  <p className="text-sm font-medium text-slate-500 group-hover:text-indigo-600 transition-colors">
+                    Registered Users
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-900 mt-1">
+                    {stats?.totalUsers || 0}
+                  </h3>
                 </div>
-                <div className={`p-3 rounded-xl transition-colors ${activeView === 'users' ? 'bg-indigo-500 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100'}`}>
+                <div
+                  className={`p-3 rounded-xl transition-colors ${activeView === 'users' ? 'bg-indigo-500 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100'}`}
+                >
                   <Users size={24} />
                 </div>
               </div>
             </Card>
           </button>
 
-          <button 
+          <button
             onClick={() => setActiveView('activity')}
             className="text-left transition-transform active:scale-95 duration-200 group"
           >
-            <Card className={`p-6 transition-all duration-300 ${activeView === 'activity' ? 'ring-2 ring-emerald-500 shadow-lg' : 'hover:shadow-md'}`}>
+            <Card
+              className={`p-6 transition-all duration-300 ${activeView === 'activity' ? 'ring-2 ring-emerald-500 shadow-lg' : 'hover:shadow-md'}`}
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 group-hover:text-emerald-600 transition-colors">Invoices Today</p>
-                  <h3 className="text-3xl font-bold text-slate-900 mt-1">{stats?.invoicesToday || 0}</h3>
+                  <p className="text-sm font-medium text-slate-500 group-hover:text-emerald-600 transition-colors">
+                    Invoices Today
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-900 mt-1">
+                    {stats?.invoicesToday || 0}
+                  </h3>
                 </div>
-                <div className={`p-3 rounded-xl transition-colors ${activeView === 'activity' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}>
+                <div
+                  className={`p-3 rounded-xl transition-colors ${activeView === 'activity' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}`}
+                >
                   <FileText size={24} />
                 </div>
               </div>
             </Card>
           </button>
 
-          <button 
+          <button
             onClick={() => setActiveView('revenue')}
             className="text-left transition-transform active:scale-95 duration-200 group"
           >
-            <Card className={`p-6 transition-all duration-300 ${activeView === 'revenue' ? 'ring-2 ring-amber-500 shadow-lg' : 'hover:shadow-md'}`}>
+            <Card
+              className={`p-6 transition-all duration-300 ${activeView === 'revenue' ? 'ring-2 ring-amber-500 shadow-lg' : 'hover:shadow-md'}`}
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 group-hover:text-amber-600 transition-colors">Total Revenue</p>
-                  <h3 className="text-3xl font-bold text-slate-900 mt-1">₹{(stats?.totalRevenue || 0).toLocaleString('en-IN')}</h3>
+                  <p className="text-sm font-medium text-slate-500 group-hover:text-amber-600 transition-colors">
+                    Total Revenue
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-900 mt-1">
+                    ₹{(stats?.totalRevenue || 0).toLocaleString('en-IN')}
+                  </h3>
                 </div>
-                <div className={`p-3 rounded-xl transition-colors ${activeView === 'revenue' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'}`}>
+                <div
+                  className={`p-3 rounded-xl transition-colors ${activeView === 'revenue' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'}`}
+                >
                   <IndianRupee size={24} />
                 </div>
               </div>
             </Card>
           </button>
 
-          <button 
+          <button
             onClick={() => setActiveView('invoices')}
             className="text-left transition-transform active:scale-95 duration-200 group"
           >
-            <Card className={`p-6 transition-all duration-300 ${activeView === 'invoices' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}>
+            <Card
+              className={`p-6 transition-all duration-300 ${activeView === 'invoices' ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'}`}
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 group-hover:text-blue-600 transition-colors">Total Receipts</p>
-                  <h3 className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalPaymentsCount || 0}</h3>
+                  <p className="text-sm font-medium text-slate-500 group-hover:text-blue-600 transition-colors">
+                    Total Receipts
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-900 mt-1">
+                    {stats?.totalPaymentsCount || 0}
+                  </h3>
                 </div>
-                <div className={`p-3 rounded-xl transition-colors ${activeView === 'invoices' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'}`}>
+                <div
+                  className={`p-3 rounded-xl transition-colors ${activeView === 'invoices' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'}`}
+                >
                   <FileText size={24} />
                 </div>
               </div>
@@ -308,13 +392,19 @@ export default function AdminDashboard() {
                 <Users size={40} />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{selectedUser.business_name}</h3>
-                <p className="text-slate-500 text-sm font-medium uppercase tracking-widest mt-1">{selectedUser.owner_name}</p>
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+                  {selectedUser.business_name}
+                </h3>
+                <p className="text-slate-500 text-sm font-medium uppercase tracking-widest mt-1">
+                  {selectedUser.owner_name}
+                </p>
               </div>
               <div className="pt-4 border-t border-slate-100 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="font-bold text-slate-400 uppercase">Registration ID</span>
-                  <span className="font-mono text-slate-900">{selectedUser.user_id.slice(0, 18)}...</span>
+                  <span className="font-mono text-slate-900">
+                    {selectedUser.user_id.slice(0, 18)}...
+                  </span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="font-bold text-slate-400 uppercase">Email</span>
@@ -326,14 +416,16 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="font-bold text-slate-400 uppercase">Location</span>
-                  <span className="font-medium text-slate-900">{selectedUser.city}, {selectedUser.state}</span>
+                  <span className="font-medium text-slate-900">
+                    {selectedUser.city}, {selectedUser.state}
+                  </span>
                 </div>
               </div>
               <button
                 onClick={() => handleToggleAccess(selectedUser.user_id, !!selectedUser.is_blocked)}
                 className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                  selectedUser.is_blocked 
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-200' 
+                  selectedUser.is_blocked
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-200'
                     : 'bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-200'
                 }`}
               >
@@ -343,32 +435,58 @@ export default function AdminDashboard() {
 
             <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Card className="p-8 border-slate-100 shadow-lg relative overflow-hidden group">
-                <FileText size={80} className="absolute -right-4 -bottom-4 text-emerald-50 opacity-10 group-hover:scale-110 transition-transform" />
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Total Output</p>
-                <h4 className="text-4xl font-black text-slate-900">{selectedUser.invoices?.[0]?.count || 0}</h4>
-                <p className="text-xs font-bold text-emerald-600 uppercase mt-4">Invoices Generated</p>
+                <FileText
+                  size={80}
+                  className="absolute -right-4 -bottom-4 text-emerald-50 opacity-10 group-hover:scale-110 transition-transform"
+                />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                  Total Output
+                </p>
+                <h4 className="text-4xl font-black text-slate-900">
+                  {selectedUser.invoices?.[0]?.count || 0}
+                </h4>
+                <p className="text-xs font-bold text-emerald-600 uppercase mt-4">
+                  Invoices Generated
+                </p>
               </Card>
 
               <Card className="p-8 border-slate-100 shadow-lg relative overflow-hidden group">
-                <Activity size={80} className="absolute -right-4 -bottom-4 text-indigo-50 opacity-10 group-hover:scale-110 transition-transform" />
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Platform Engagement</p>
-                <h4 className="text-4xl font-black text-slate-900">{calculateWorkingHours(selectedUserActivity)}h</h4>
-                <p className="text-xs font-bold text-indigo-600 uppercase mt-4">Estimated Working Hours</p>
+                <Activity
+                  size={80}
+                  className="absolute -right-4 -bottom-4 text-indigo-50 opacity-10 group-hover:scale-110 transition-transform"
+                />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                  Platform Engagement
+                </p>
+                <h4 className="text-4xl font-black text-slate-900">
+                  {calculateWorkingHours(selectedUserActivity)}h
+                </h4>
+                <p className="text-xs font-bold text-indigo-600 uppercase mt-4">
+                  Estimated Working Hours
+                </p>
               </Card>
 
               <Card className="p-8 md:col-span-2 border-slate-100 shadow-lg">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">User Activity Timeline</h4>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">
+                  User Activity Timeline
+                </h4>
                 <div className="space-y-6 max-h-[400px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-slate-200">
                   {selectedUserActivity.map((log: any, i) => (
                     <div key={log.id} className="flex gap-4 group">
                       <div className="flex flex-col items-center">
-                        <div className={`h-3 w-3 rounded-full ${
-                          log.action === 'login' ? 'bg-indigo-400' : 'bg-emerald-400'
-                        }`} />
-                        {i !== selectedUserActivity.length - 1 && <div className="w-px h-full bg-slate-100 my-1" />}
+                        <div
+                          className={`h-3 w-3 rounded-full ${
+                            log.action === 'login' ? 'bg-indigo-400' : 'bg-emerald-400'
+                          }`}
+                        />
+                        {i !== selectedUserActivity.length - 1 && (
+                          <div className="w-px h-full bg-slate-100 my-1" />
+                        )}
                       </div>
                       <div className="pb-6">
-                        <p className="text-sm font-bold text-slate-800 uppercase tracking-tight">{log.action.replace('_', ' ')}</p>
+                        <p className="text-sm font-bold text-slate-800 uppercase tracking-tight">
+                          {log.action.replace('_', ' ')}
+                        </p>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                           {log.entity_type} • {new Date(log.created_at).toLocaleString()}
                         </p>
@@ -381,7 +499,9 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                   {selectedUserActivity.length === 0 && (
-                    <p className="text-center py-12 text-slate-400 font-bold uppercase tracking-widest italic">No activity logs found</p>
+                    <p className="text-center py-12 text-slate-400 font-bold uppercase tracking-widest italic">
+                      No activity logs found
+                    </p>
                   )}
                 </div>
               </Card>
@@ -396,7 +516,7 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <Users size={20} /> Recent Users
               </h2>
-              <button 
+              <button
                 onClick={() => setActiveView('users')}
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
               >
@@ -408,24 +528,41 @@ export default function AdminDashboard() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50 border-b border-slate-100">
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600">Store / Owner</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600">Invoices</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600">Status</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600 text-right">Actions</th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600">
+                        Store / Owner
+                      </th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600">
+                        Invoices
+                      </th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-600 text-right">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {users.slice(0, 5).map((u) => (
                       <tr key={u.id} className="hover:bg-slate-50/30 transition-colors group">
-                        <td className="px-6 py-4 cursor-pointer" onClick={() => toggleUserDetail(u)}>
+                        <td
+                          className="px-6 py-4 cursor-pointer"
+                          onClick={() => toggleUserDetail(u)}
+                        >
                           <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase text-sm tracking-tight flex items-center gap-2">
                             {u.business_name || 'Unnamed Store'}
                             {u.is_pending && (
-                              <span className="text-[8px] bg-amber-50 text-amber-600 border border-amber-100 px-1 rounded uppercase font-black">Pending Setup</span>
+                              <span className="text-[8px] bg-amber-50 text-amber-600 border border-amber-100 px-1 rounded uppercase font-black">
+                                Pending Setup
+                              </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 lowercase opacity-80">{u.owner_name} • {u.email}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">Joined: {new Date(u.registration_date).toLocaleDateString()}</div>
+                          <div className="text-xs text-slate-500 lowercase opacity-80">
+                            {u.owner_name} • {u.email}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            Joined: {new Date(u.registration_date).toLocaleDateString()}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm font-medium text-slate-600">
                           {u.invoices?.[0]?.count || 0}
@@ -445,8 +582,8 @@ export default function AdminDashboard() {
                           <button
                             onClick={() => handleToggleAccess(u.user_id, !!u.is_blocked)}
                             className={`p-2 rounded-lg transition-all duration-300 ${
-                              u.is_blocked 
-                                ? 'text-emerald-500 hover:bg-emerald-50 hover:shadow-inner' 
+                              u.is_blocked
+                                ? 'text-emerald-500 hover:bg-emerald-50 hover:shadow-inner'
                                 : 'text-rose-500 hover:bg-rose-50 hover:shadow-inner'
                             }`}
                             title={u.is_blocked ? 'Unblock user' : 'Block user'}
@@ -468,7 +605,7 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <Activity size={20} /> Latest Actions
               </h2>
-              <button 
+              <button
                 onClick={() => setActiveView('activity')}
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
               >
@@ -479,11 +616,17 @@ export default function AdminDashboard() {
               <div className="space-y-6">
                 {stats?.recentLogs.slice(0, 10).map((log: any) => (
                   <div key={log.id} className="flex gap-4 group">
-                    <div className={`mt-1 h-3 w-3 rounded-full flex-shrink-0 transition-transform group-hover:scale-125 ${
-                      log.action === 'login' ? 'bg-indigo-400' : 
-                      log.action.includes('create') ? 'bg-emerald-400' : 
-                      log.action.includes('error') ? 'bg-rose-400' : 'bg-slate-400'
-                    }`} />
+                    <div
+                      className={`mt-1 h-3 w-3 rounded-full flex-shrink-0 transition-transform group-hover:scale-125 ${
+                        log.action === 'login'
+                          ? 'bg-indigo-400'
+                          : log.action.includes('create')
+                            ? 'bg-emerald-400'
+                            : log.action.includes('error')
+                              ? 'bg-rose-400'
+                              : 'bg-slate-400'
+                      }`}
+                    />
                     <div className="border-l-2 border-slate-50 pl-4 py-0.5">
                       <p className="text-sm font-bold text-slate-800 uppercase tracking-tighter">
                         {log.action.replace('_', ' ')}
@@ -495,7 +638,9 @@ export default function AdminDashboard() {
                   </div>
                 ))}
                 {(!stats?.recentLogs || stats.recentLogs.length === 0) && (
-                  <p className="text-center text-slate-500 py-8 text-sm italic">No recent activity</p>
+                  <p className="text-center text-slate-500 py-8 text-sm italic">
+                    No recent activity
+                  </p>
                 )}
               </div>
             </Card>
@@ -515,20 +660,33 @@ export default function AdminDashboard() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm pl-10"
               />
-              <Users size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Users
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
             </div>
           </div>
-          
+
           <Card className="overflow-hidden shadow-xl border-slate-100">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Store / Owner</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Registration ID</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Volume</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Location</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500 text-right">Access control</th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Store / Owner
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Registration ID
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Volume
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Location
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500 text-right">
+                      Access control
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -538,13 +696,20 @@ export default function AdminDashboard() {
                         <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight flex items-center gap-2">
                           {u.business_name || 'Unset Business Name'}
                           {u.is_pending && (
-                            <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded uppercase font-black">Pending Setup</span>
+                            <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded uppercase font-black">
+                              Pending Setup
+                            </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500 lowercase opacity-70 italic">{u.email}</div>
+                        <div className="text-xs text-slate-500 lowercase opacity-70 italic">
+                          {u.email}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-xs font-mono text-slate-400 truncate max-w-[120px]" title={u.user_id}>
+                        <div
+                          className="text-xs font-mono text-slate-400 truncate max-w-[120px]"
+                          title={u.user_id}
+                        >
                           {u.user_id}
                         </div>
                       </td>
@@ -552,17 +717,21 @@ export default function AdminDashboard() {
                         <div className="text-lg font-black text-slate-900 group-hover:scale-110 transition-transform origin-left inline-block">
                           {u.invoices?.[0]?.count || 0}
                         </div>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest -mt-1">Invoices</div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest -mt-1">
+                          Invoices
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-xs font-bold text-slate-700 uppercase">{u.city}, {u.state}</div>
+                        <div className="text-xs font-bold text-slate-700 uppercase">
+                          {u.city}, {u.state}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => handleToggleAccess(u.user_id, !!u.is_blocked)}
                           className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-300 border ${
-                            u.is_blocked 
-                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white' 
+                            u.is_blocked
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white'
                               : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-600 hover:text-white'
                           }`}
                         >
@@ -586,7 +755,9 @@ export default function AdminDashboard() {
               <div className="absolute top-0 right-0 p-8 opacity-5">
                 <IndianRupee size={120} />
               </div>
-              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Aggregate Growth</p>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                Aggregate Growth
+              </p>
               <h3 className="text-5xl font-black text-slate-900 mb-6 tracking-tighter">
                 ₹{(stats?.totalRevenue || 0).toLocaleString('en-IN')}
               </h3>
@@ -594,19 +765,34 @@ export default function AdminDashboard() {
                 <div className="h-full bg-amber-400 w-3/4 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
               </div>
             </Card>
-            
+
             <Card className="p-8 border-slate-100 shadow-xl">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Top Revenue Stores</h4>
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">
+                Top Revenue Stores
+              </h4>
               <div className="space-y-4">
-                {users.sort((a, b) => (b.invoices?.[0]?.count || 0) - (a.invoices?.[0]?.count || 0)).slice(0, 5).map((u, i) => (
-                  <div key={u.id} className="flex items-center justify-between group cursor-pointer" onClick={() => toggleUserDetail(u)}>
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs font-black text-slate-300 group-hover:text-amber-500 transition-colors">0{i+1}</span>
-                      <p className="text-sm font-bold text-slate-800 uppercase tracking-tight group-hover:text-indigo-600">{u.business_name}</p>
+                {users
+                  .sort((a, b) => (b.invoices?.[0]?.count || 0) - (a.invoices?.[0]?.count || 0))
+                  .slice(0, 5)
+                  .map((u, i) => (
+                    <div
+                      key={u.id}
+                      className="flex items-center justify-between group cursor-pointer"
+                      onClick={() => toggleUserDetail(u)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs font-black text-slate-300 group-hover:text-amber-500 transition-colors">
+                          0{i + 1}
+                        </span>
+                        <p className="text-sm font-bold text-slate-800 uppercase tracking-tight group-hover:text-indigo-600">
+                          {u.business_name}
+                        </p>
+                      </div>
+                      <p className="text-sm font-black text-slate-900">
+                        {u.invoices?.[0]?.count || 0} INVS
+                      </p>
                     </div>
-                    <p className="text-sm font-black text-slate-900">{u.invoices?.[0]?.count || 0} INVS</p>
-                  </div>
-                ))}
+                  ))}
               </div>
             </Card>
           </div>
@@ -633,70 +819,92 @@ export default function AdminDashboard() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all shadow-sm pl-10"
                 />
-                <FileText size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <FileText
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
               </div>
             </div>
           </div>
-          
+
           <Card className="overflow-hidden shadow-xl border-slate-100">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Invoice #</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Store / Business</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Customer</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Amount</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Date</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Status</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      Invoice #
+                    </th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      Store / Business
+                    </th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      Customer
+                    </th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {allInvoices.filter(inv => 
-                    inv.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    inv.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    inv.stores?.business_name?.toLowerCase().includes(searchQuery.toLowerCase())
-                  ).map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-xs font-bold text-slate-900">
-                        {inv.invoiceNumber}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-xs font-bold text-slate-800 uppercase tracking-tight">
-                          {inv.stores?.business_name || 'Missing Store'}
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-mono">ID: {inv.store_id?.slice(0, 8)}...</div>
-                      </td>
-                      <td className="px-6 py-4 text-xs font-medium text-slate-600">
-                        {inv.customers?.name || 'Unknown Customer'}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-black text-slate-900">
-                        ₹{inv.grand_total?.toLocaleString('en-IN') || 0}
-                      </td>
-                      <td className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase">
-                        {new Date(inv.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleViewInvoiceDetail(inv.id)}
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                            title="View Details"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteInvoice(inv.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                            title="Delete Invoice"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {allInvoices
+                    .filter(
+                      (inv) =>
+                        inv.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        inv.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        inv.stores?.business_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((inv) => (
+                      <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="px-6 py-4 font-mono text-xs font-bold text-slate-900">
+                          {inv.invoiceNumber}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-xs font-bold text-slate-800 uppercase tracking-tight">
+                            {inv.stores?.business_name || 'Missing Store'}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono">
+                            ID: {inv.store_id?.slice(0, 8)}...
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-medium text-slate-600">
+                          {inv.customers?.name || 'Unknown Customer'}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-black text-slate-900">
+                          ₹{inv.grand_total?.toLocaleString('en-IN') || 0}
+                        </td>
+                        <td className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase">
+                          {new Date(inv.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleViewInvoiceDetail(inv.id)}
+                              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              title="View Details"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteInvoice(inv.id)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              title="Delete Invoice"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   {allInvoices.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center text-slate-400 italic">
@@ -719,10 +927,18 @@ export default function AdminDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Timestamp</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Action</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">Entity Type</th>
-                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500 text-right">Metadata</th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Timestamp
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Action
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500">
+                      Entity Type
+                    </th>
+                    <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500 text-right">
+                      Metadata
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -732,11 +948,15 @@ export default function AdminDashboard() {
                         {new Date(log.created_at).toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
-                          log.action === 'login' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 
-                          log.action.includes('create') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
-                          'bg-slate-50 text-slate-600 border border-slate-100'
-                        }`}>
+                        <span
+                          className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
+                            log.action === 'login'
+                              ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                              : log.action.includes('create')
+                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                : 'bg-slate-50 text-slate-600 border border-slate-100'
+                          }`}
+                        >
                           {log.action.replace('_', ' ')}
                         </span>
                       </td>
@@ -770,7 +990,9 @@ export default function AdminDashboard() {
                   Issued on {viewingInvoice?.date}
                 </DialogDescription>
               </div>
-              <Badge className={`${viewingInvoice?.status === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'} text-white border-none px-3 py-1 font-black uppercase tracking-widest text-[10px]`}>
+              <Badge
+                className={`${viewingInvoice?.status === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'} text-white border-none px-3 py-1 font-black uppercase tracking-widest text-[10px]`}
+              >
                 {viewingInvoice?.status}
               </Badge>
             </div>
@@ -786,7 +1008,9 @@ export default function AdminDashboard() {
                     <Users size={14} className="text-indigo-600" /> Invoice To
                   </h4>
                   <div className="space-y-3">
-                    <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{viewingInvoice.customer?.name}</p>
+                    <p className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                      {viewingInvoice.customer?.name}
+                    </p>
                     <div className="space-y-1.5">
                       <div className="flex items-start gap-2 text-xs font-bold text-slate-600">
                         <MapPin size={12} className="mt-0.5 shrink-0 opacity-40" />
@@ -815,18 +1039,30 @@ export default function AdminDashboard() {
 
                 {/* Meta Section */}
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                   <div className="flex justify-between items-center py-3 border-b border-slate-200/50">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Store Owner</span>
-                      <span className="text-xs font-black text-slate-900 uppercase">{viewingInvoice.stores?.owner_name || 'Admin'}</span>
-                   </div>
-                   <div className="flex justify-between items-center py-3 border-b border-slate-200/50">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Store ID</span>
-                      <span className="text-[10px] font-mono text-slate-400">{viewingInvoice.store_id}</span>
-                   </div>
-                   <div className="flex justify-between items-center py-3">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Created At</span>
-                      <span className="text-xs font-black text-slate-900">{new Date(viewingInvoice.createdAt).toLocaleString()}</span>
-                   </div>
+                  <div className="flex justify-between items-center py-3 border-b border-slate-200/50">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Store Owner
+                    </span>
+                    <span className="text-xs font-black text-slate-900 uppercase">
+                      {viewingInvoice.stores?.owner_name || 'Admin'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-slate-200/50">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Store ID
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {viewingInvoice.store_id}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Created At
+                    </span>
+                    <span className="text-xs font-black text-slate-900">
+                      {new Date(viewingInvoice.createdAt).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -839,12 +1075,24 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader className="bg-slate-50/50">
                       <TableRow className="border-slate-100 hover:bg-transparent">
-                        <TableHead className="text-[10px] font-black uppercase text-slate-400 w-[40%]">Product</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-center">HSN</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-center">Qty</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">Rate</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">Tax</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">Total</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 w-[40%]">
+                          Product
+                        </TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-center">
+                          HSN
+                        </TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-center">
+                          Qty
+                        </TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">
+                          Rate
+                        </TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">
+                          Tax
+                        </TableHead>
+                        <TableHead className="text-[10px] font-black uppercase text-slate-400 text-right">
+                          Total
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -883,26 +1131,36 @@ export default function AdminDashboard() {
                 <div className="w-full md:w-80 space-y-4 relative z-10">
                   <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     <span>Subtotal</span>
-                    <span className="text-white">₹{viewingInvoice.subtotal?.toLocaleString('en-IN')}</span>
+                    <span className="text-white">
+                      ₹{viewingInvoice.subtotal?.toLocaleString('en-IN')}
+                    </span>
                   </div>
                   <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     <span>Total Tax</span>
-                    <span className="text-white">₹{viewingInvoice.taxTotal?.toLocaleString('en-IN')}</span>
+                    <span className="text-white">
+                      ₹{viewingInvoice.taxTotal?.toLocaleString('en-IN')}
+                    </span>
                   </div>
                   {viewingInvoice.transportCharges > 0 && (
                     <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                       <span>Transport</span>
-                      <span className="text-white">₹{viewingInvoice.transportCharges?.toLocaleString('en-IN')}</span>
+                      <span className="text-white">
+                        ₹{viewingInvoice.transportCharges?.toLocaleString('en-IN')}
+                      </span>
                     </div>
                   )}
                   {viewingInvoice.discountTotal > 0 && (
                     <div className="flex justify-between text-[10px] font-black text-rose-400 uppercase tracking-[0.2em]">
                       <span>Discount</span>
-                      <span className="text-rose-400">-₹{viewingInvoice.discountTotal?.toLocaleString('en-IN')}</span>
+                      <span className="text-rose-400">
+                        -₹{viewingInvoice.discountTotal?.toLocaleString('en-IN')}
+                      </span>
                     </div>
                   )}
                   <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">Grand Total</span>
+                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">
+                      Grand Total
+                    </span>
                     <span className="text-3xl font-black text-white tracking-tighter">
                       ₹{viewingInvoice.grandTotal?.toLocaleString('en-IN')}
                     </span>
@@ -912,7 +1170,9 @@ export default function AdminDashboard() {
 
               {viewingInvoice.notes && (
                 <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
-                  <h5 className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Admin Note / Remarks</h5>
+                  <h5 className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">
+                    Admin Note / Remarks
+                  </h5>
                   <p className="text-xs font-bold text-amber-900/70">{viewingInvoice.notes}</p>
                 </div>
               )}

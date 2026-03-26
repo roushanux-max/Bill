@@ -5,8 +5,17 @@ import { ArrowLeft, Download, Share2, Printer, Pencil } from 'lucide-react';
 import { BrandingSettings } from '@/shared/types/branding';
 import InvoiceTemplate from '@/features/invoices/components/InvoiceTemplate';
 import { Invoice, StoreInfo } from '@/features/invoices/types/invoice';
-import { getInvoice, getStoreInfo, getBrandingSettings, getUserKey, safeGet } from '@/shared/utils/storage';
-import { generateInvoicePDF, getInvoiceFilename } from '@/features/invoices/utils/generateInvoicePDF';
+import {
+  getInvoice,
+  getStoreInfo,
+  getBrandingSettings,
+  getUserKey,
+  safeGet,
+} from '@/shared/utils/storage';
+import {
+  generateInvoicePDF,
+  getInvoiceFilename,
+} from '@/features/invoices/utils/generateInvoicePDF';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { toast } from 'sonner';
 import { formatDateForDisplay } from '@/shared/utils/dateUtils';
@@ -76,7 +85,7 @@ export default function InvoicePreview() {
             phone: '+91 9876543210',
             address: '123, Sample Street, Business District, Mumbai, MH',
             state: 'Maharashtra',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
           },
           items: [
             {
@@ -89,8 +98,8 @@ export default function InvoicePreview() {
               taxAmount: 900,
               discountAmount: 0,
               totalAmount: 5000,
-              hsn: '998311'
-            }
+              hsn: '998311',
+            },
           ],
           subtotal: 5000,
           taxTotal: 900,
@@ -101,7 +110,7 @@ export default function InvoicePreview() {
           status: 'unpaid',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          store_id: ''
+          store_id: '',
         });
       }
     } catch (e) {
@@ -124,13 +133,13 @@ export default function InvoicePreview() {
       let currentStore = globalStoreInfo;
 
       if (previewSettingsRaw) {
-        try { 
+        try {
           currentSettings = JSON.parse(previewSettingsRaw);
           console.log('Using preview branding settings');
         } catch (e) {}
       }
       if (previewStoreRaw) {
-        try { 
+        try {
           currentStore = JSON.parse(previewStoreRaw);
           console.log('Using preview store info');
         } catch (e) {}
@@ -166,11 +175,15 @@ export default function InvoicePreview() {
     try {
       const [currentStoreInfo, currentSettings] = await Promise.all([
         getStoreInfo(),
-        getBrandingSettings()
+        getBrandingSettings(),
       ]);
 
       const brandSettings = currentSettings || settings || globalSettings;
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || globalStoreInfo!, brandSettings);
+      const pdf = generateInvoicePDF(
+        invoice,
+        currentStoreInfo || storeInfo || globalStoreInfo!,
+        brandSettings
+      );
       const filename = getInvoiceFilename(invoice);
       pdf.save(filename);
       toast.success('PDF downloaded successfully!', { id: toastId });
@@ -195,7 +208,11 @@ export default function InvoicePreview() {
       const currentSettings = await getBrandingSettings();
       const brandSettings = currentSettings || settings || globalSettings;
 
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || globalStoreInfo!, brandSettings);
+      const pdf = generateInvoicePDF(
+        invoice,
+        currentStoreInfo || storeInfo || globalStoreInfo!,
+        brandSettings
+      );
 
       // Use autoPrint and open in a way that triggers the dialog
       pdf.autoPrint();
@@ -227,11 +244,15 @@ export default function InvoicePreview() {
     try {
       const [currentStoreInfo, currentSettings] = await Promise.all([
         getStoreInfo(),
-        getBrandingSettings()
+        getBrandingSettings(),
       ]);
 
       const brandSettings = currentSettings || settings || globalSettings;
-      const pdf = generateInvoicePDF(invoice, currentStoreInfo || storeInfo || globalStoreInfo!, brandSettings);
+      const pdf = generateInvoicePDF(
+        invoice,
+        currentStoreInfo || storeInfo || globalStoreInfo!,
+        brandSettings
+      );
       const filename = getInvoiceFilename(invoice);
       const pdfBlob = pdf.output('blob');
       const file = new File([pdfBlob], filename, { type: 'application/pdf' });
@@ -269,8 +290,8 @@ export default function InvoicePreview() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <button 
-              onClick={handleBack} 
+            <button
+              onClick={handleBack}
               className="flex items-center gap-1.5 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer hover:opacity-80 text-[var(--brand-color)]"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -340,22 +361,31 @@ export default function InvoicePreview() {
       <main className="print:p-0 print:max-w-full">
         {!isInvoiceValid && !loading ? (
           <div className="max-w-2xl mx-auto mt-12 px-4">
-             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center shadow-sm">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ArrowLeft className="h-8 w-8 text-amber-600 rotate-90" />
-                </div>
-                <h2 className="text-xl font-bold text-amber-900 mb-2">Incomplete Invoice Data</h2>
-                <p className="text-amber-700 mb-6">This invoice appears to be missing items or basic details. Please go back and ensure all fields are filled before previewing.</p>
-                <Button onClick={handleBack} className="bg-amber-600 hover:bg-amber-700 text-white border-none px-8">
-                  Go Back to Editor
-                </Button>
-             </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center shadow-sm">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ArrowLeft className="h-8 w-8 text-amber-600 rotate-90" />
+              </div>
+              <h2 className="text-xl font-bold text-amber-900 mb-2">Incomplete Invoice Data</h2>
+              <p className="text-amber-700 mb-6">
+                This invoice appears to be missing items or basic details. Please go back and ensure
+                all fields are filled before previewing.
+              </p>
+              <Button
+                onClick={handleBack}
+                className="bg-amber-600 hover:bg-amber-700 text-white border-none px-8"
+              >
+                Go Back to Editor
+              </Button>
+            </div>
           </div>
         ) : (
           <>
             {/* Template View with Horizontal Scroll for Mobile */}
             <div className="w-full bg-slate-100 py-6 sm:py-12 print:hidden overflow-x-auto px-4 flex justify-start sm:justify-center min-h-[calc(100vh-80px)]">
-              <div className="bg-white rounded-lg shadow-2xl flex-shrink-0" style={{ width: '210mm', minHeight: '297mm' }}>
+              <div
+                className="bg-white rounded-lg shadow-2xl flex-shrink-0"
+                style={{ width: '210mm', minHeight: '297mm' }}
+              >
                 <InvoiceTemplate invoice={invoice!} settings={settings} storeInfo={storeInfo} />
               </div>
             </div>

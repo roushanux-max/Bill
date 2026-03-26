@@ -3,12 +3,30 @@ import { Link, useNavigate } from 'react-router';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { FileText, IndianRupee, Users, Package, Eye, EyeOff, UserPlus, Plus } from 'lucide-react';
-import { getInvoices, getCustomers, getProducts, subscribeToInvoices, subscribeToProducts, subscribeToCustomers, hasGuestDataToMigrate, migrateGuestDataToDatabase } from '@/shared/utils/storage';
+import {
+  getInvoices,
+  getCustomers,
+  getProducts,
+  subscribeToInvoices,
+  subscribeToProducts,
+  subscribeToCustomers,
+  hasGuestDataToMigrate,
+  migrateGuestDataToDatabase,
+} from '@/shared/utils/storage';
 import { Invoice } from '@/features/invoices/types/invoice';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useBranding } from '@/shared/contexts/BrandingContext';
 import { toast } from 'sonner';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from '@/shared/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+} from '@/shared/components/ui/alert-dialog';
 import { StatSkeleton, ListSkeleton } from '@/shared/components/SkeletonLoaders';
 import Header from '@/shared/components/Header';
 
@@ -48,7 +66,7 @@ export default function Dashboard() {
       const [invoicesRes, customersRes, productsRes] = await Promise.all([
         getInvoices(true),
         getCustomers(true),
-        getProducts(true)
+        getProducts(true),
       ]);
       const invoices = invoicesRes.data || [];
       const customers = customersRes.data || [];
@@ -72,21 +90,22 @@ export default function Dashboard() {
         if (parts.length === 3) {
           const day = parseInt(parts[0], 10);
           const month = parseInt(parts[1], 10) - 1;
-          const year = parts[2].length === 2 ? 2000 + parseInt(parts[2], 10) : parseInt(parts[2], 10);
+          const year =
+            parts[2].length === 2 ? 2000 + parseInt(parts[2], 10) : parseInt(parts[2], 10);
           return new Date(year, month, day);
         }
         return new Date(dateStr);
       };
 
-      const validInvoices = invoices.filter(inv => (inv.grandTotal || 0) > 0);
+      const validInvoices = invoices.filter((inv) => (inv.grandTotal || 0) > 0);
 
-      const todayInvoices = validInvoices.filter(inv => {
+      const todayInvoices = validInvoices.filter((inv) => {
         const invDate = parseDateString(inv.date);
         invDate.setHours(0, 0, 0, 0);
         return invDate.getTime() === today.getTime();
       });
 
-      const monthInvoices = validInvoices.filter(inv => {
+      const monthInvoices = validInvoices.filter((inv) => {
         const invDate = parseDateString(inv.date);
         return invDate >= thisMonth;
       });
@@ -104,7 +123,7 @@ export default function Dashboard() {
       // Keep a short list of recent invoices for dashboard quick view
       setRecentInvoices(invoices.slice(0, 6));
       setIsInitialLoading(false);
-      
+
       if (hasGuestDataToMigrate()) {
         setShowMigrationPrompt(true);
       }
@@ -126,7 +145,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-
       <main className="px-4 py-4 sm:py-8 max-w-6xl mx-auto pb-20 sm:pb-8">
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-1 sm:mb-2">
@@ -141,7 +159,17 @@ export default function Dashboard() {
             </Button>
           </div>
           <p className="text-sm sm:text-base text-slate-500">
-            Welcome back <span className="font-semibold text-slate-800">{storeInfo?.ownerName || user?.email?.split('@')[0]}</span>! Here's your {storeInfo?.name ? <strong className="text-[var(--brand-color)]">{storeInfo.name}</strong> : 'organization'} overview.
+            Welcome back{' '}
+            <span className="font-semibold text-slate-800">
+              {storeInfo?.ownerName || user?.email?.split('@')[0]}
+            </span>
+            ! Here's your{' '}
+            {storeInfo?.name ? (
+              <strong className="text-[var(--brand-color)]">{storeInfo.name}</strong>
+            ) : (
+              'organization'
+            )}{' '}
+            overview.
           </p>
         </div>
 
@@ -156,7 +184,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => setShowRevenue(!showRevenue)}
                   className="text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
-                  title={showRevenue ? "Hide Revenue" : "Show Revenue"}
+                  title={showRevenue ? 'Hide Revenue' : 'Show Revenue'}
                 >
                   {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -180,7 +208,8 @@ export default function Dashboard() {
               <CardContent>
                 <div className="text-xl sm:text-2xl font-bold">{stats.monthCount}</div>
                 <p className="text-xs text-slate-600 mt-1">
-                  {showRevenue ? `₹${stats.monthSales.toLocaleString('en-IN')}` : '₹******'} this month
+                  {showRevenue ? `₹${stats.monthSales.toLocaleString('en-IN')}` : '₹******'} this
+                  month
                 </p>
               </CardContent>
             </Card>
@@ -219,35 +248,48 @@ export default function Dashboard() {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold">Recent Invoices</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>View all</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>
+              View all
+            </Button>
           </div>
-          {
-            isInitialLoading ? (
-              <ListSkeleton count={3} />
-            ) : recentInvoices.length === 0 ? (
-              <div className="text-sm text-slate-500">No invoices yet.</div>
-            ) : (
-              <div className="grid grid-cols-1 gap-2">
-                {recentInvoices.map(inv => (
-                  <Card key={inv.id} className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{inv.invoiceNumber} — {inv.customer?.name}</div>
-                        <div className="text-xs text-slate-500">
-                          {inv.date} • {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ₹{inv.grandTotal?.toLocaleString('en-IN')}
-                        </div>
+          {isInitialLoading ? (
+            <ListSkeleton count={3} />
+          ) : recentInvoices.length === 0 ? (
+            <div className="text-sm text-slate-500">No invoices yet.</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-2">
+              {recentInvoices.map((inv) => (
+                <Card key={inv.id} className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">
+                        {inv.invoiceNumber} — {inv.customer?.name}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/invoice-preview?id=${encodeURIComponent(inv.id)}`)}>
-                          View
-                        </Button>
+                      <div className="text-xs text-slate-500">
+                        {inv.date} •{' '}
+                        {new Date(inv.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        • ₹{inv.grandTotal?.toLocaleString('en-IN')}
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            )
-          }
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          navigate(`/invoice-preview?id=${encodeURIComponent(inv.id)}`)
+                        }
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -257,16 +299,22 @@ export default function Dashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle>Save Temporary Unsaved Data?</AlertDialogTitle>
             <AlertDialogDescription>
-              We found invoices tracking activity from when you were exploring Invoice as a Guest. Would you like to save these invoices permanently to your new account?
+              We found invoices tracking activity from when you were exploring Invoice as a Guest.
+              Would you like to save these invoices permanently to your new account?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isMigrating} onClick={() => {
-              // Discard 
-              Object.keys(window.sessionStorage).forEach(k => k.startsWith('guest_mode_') && window.sessionStorage.removeItem(k));
-              window.sessionStorage.removeItem('invoice_guest_mode');
-              setShowMigrationPrompt(false);
-            }}>
+            <AlertDialogCancel
+              disabled={isMigrating}
+              onClick={() => {
+                // Discard
+                Object.keys(window.sessionStorage).forEach(
+                  (k) => k.startsWith('guest_mode_') && window.sessionStorage.removeItem(k)
+                );
+                window.sessionStorage.removeItem('invoice_guest_mode');
+                setShowMigrationPrompt(false);
+              }}
+            >
               Discard
             </AlertDialogCancel>
             <AlertDialogAction
@@ -279,7 +327,9 @@ export default function Dashboard() {
                 setIsMigrating(false);
                 setShowMigrationPrompt(false);
                 if (success) {
-                  toast.success('Successfully saved your temporary invoices to your account!', { id: toastId });
+                  toast.success('Successfully saved your temporary invoices to your account!', {
+                    id: toastId,
+                  });
                   setTimeout(() => window.location.reload(), 1000);
                 } else {
                   toast.error('Failed to migrate some data. Check console logs.', { id: toastId });
@@ -291,7 +341,6 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   );
 }

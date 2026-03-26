@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/shared/utils/supabase';
-import { saveInvoice, getUserKey, logActivity, safeGet, safeSet, safeRemove } from '@/shared/utils/storage';
+import {
+  saveInvoice,
+  getUserKey,
+  logActivity,
+  safeGet,
+  safeSet,
+  safeRemove,
+} from '@/shared/utils/storage';
 import { toast } from 'sonner';
 import LoadingScreen from '@/shared/components/LoadingScreen';
 
@@ -12,7 +19,14 @@ interface AuthContextType {
   loading: boolean;
   hasStore: boolean | null;
   refreshHasStore: () => Promise<void>;
-  signUp: (email: string, password: string, name: string, mobile?: string, industry?: string, dob?: string) => Promise<{ error: any }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+    mobile?: string,
+    industry?: string,
+    dob?: string
+  ) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   isAdmin: boolean;
@@ -32,7 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const ADMIN_EMAILS = ['roushan.ux@gmail.com'];
 
   useEffect(() => {
-    if (user?.email && ADMIN_EMAILS.some(email => email.toLowerCase() === user.email?.toLowerCase())) {
+    if (
+      user?.email &&
+      ADMIN_EMAILS.some((email) => email.toLowerCase() === user.email?.toLowerCase())
+    ) {
       setIsAdmin(true);
     } else {
       setIsAdmin(false);
@@ -45,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // PROACTIVE: Try to extract user ID from Supabase token immediately
       // This stabilizes getUserKey prefixes before getSession() even returns
       try {
-        const authKey = Object.keys(window.localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        const authKey = Object.keys(window.localStorage).find(
+          (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+        );
         if (authKey) {
           const tokenData = safeGet(authKey);
           if (tokenData) {
@@ -62,22 +81,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
 
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession();
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
-        
-        // If we have a hash fragment (OAuth redirect), let's wait a bit longer 
+
+        // If we have a hash fragment (OAuth redirect), let's wait a bit longer
         // for onAuthStateChange to fire if getSession returned null
         if (!initialSession && window.location.hash) {
-           console.log("AuthContext: Detected hash fragment, waiting for session with timeout...");
-           // Fail-safe timeout to prevent infinite loading
-           setTimeout(() => {
-             setLoading(current => {
-               if (current) console.log("AuthContext: Redirect timeout hit, concluding no session.");
-               return false;
-             });
-           }, 2000);
-           return;
+          console.log('AuthContext: Detected hash fragment, waiting for session with timeout...');
+          // Fail-safe timeout to prevent infinite loading
+          setTimeout(() => {
+            setLoading((current) => {
+              if (current) console.log('AuthContext: Redirect timeout hit, concluding no session.');
+              return false;
+            });
+          }, 2000);
+          return;
         }
         if (initialSession?.user) {
           safeSet('invoice_user_id', initialSession.user.id);
@@ -100,22 +121,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('AuthContext: Auth event:', event);
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         const isNewSession = !safeGet('bill_user_id');
         safeSet('bill_user_id', session.user.id);
-        
+
         if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && isNewSession)) {
-          logActivity('login', 'user', session.user.id, { 
+          logActivity('login', 'user', session.user.id, {
             email: session.user.email,
-            method: session.user.app_metadata?.provider || 'password'
+            method: session.user.app_metadata?.provider || 'password',
           });
         }
       } else {
         safeRemove('bill_user_id');
         setHasStore(null);
       }
-      
+
       setLoading(false);
     });
 
@@ -131,8 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (isRefreshing.current) {
-        console.log('AuthContext: refreshHasStore already in progress, skipping.');
-        return;
+      console.log('AuthContext: refreshHasStore already in progress, skipping.');
+      return;
     }
 
     isRefreshing.current = true;
@@ -141,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const onboardKey = getUserKey('hasCompletedOnboarding');
       const localStoreId = activeKey ? safeGet(activeKey) : null;
       const localOnboarding = onboardKey ? safeGet(onboardKey) === 'true' : false;
-      
+
       if (localStoreId && localOnboarding) {
         setHasStore(true);
         return;
@@ -160,10 +181,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const oKey = getUserKey('hasCompletedOnboarding');
         if (aKey) safeSet(aKey, storeId);
         if (oKey) safeSet(oKey, 'true');
-        
+
         // Dispatch storage event so other contexts (Branding) update immediately
         window.dispatchEvent(new Event('storage'));
-        
+
         setHasStore(true);
       } else {
         console.log('AuthContext: No store found for user');
@@ -172,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.warn('AuthContext: Store check failed', e);
       // Fallback: don't set hasStore false on error to avoid pushing to onboarding accidentally
-      if (hasStore === null) setHasStore(true); 
+      if (hasStore === null) setHasStore(true);
     } finally {
       isRefreshing.current = false;
     }
@@ -229,16 +250,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Guest Branding Migration Check (Conflict Resolution)
         const guestBrandingRaw = window.sessionStorage.getItem('guest_demo_branding_settings');
         const guestStoreRaw = window.sessionStorage.getItem('guest_demo_store_info');
-        
-        if (guestBrandingRaw || guestStoreRaw) {
-            window.dispatchEvent(new CustomEvent('GUEST_LOGIN_CONFLICT', {
-                detail: {
-                    guestBranding: guestBrandingRaw ? JSON.parse(guestBrandingRaw) : null,
-                    guestStore: guestStoreRaw ? JSON.parse(guestStoreRaw) : null
-                }
-            }));
-        }
 
+        if (guestBrandingRaw || guestStoreRaw) {
+          window.dispatchEvent(
+            new CustomEvent('GUEST_LOGIN_CONFLICT', {
+              detail: {
+                guestBranding: guestBrandingRaw ? JSON.parse(guestBrandingRaw) : null,
+                guestStore: guestStoreRaw ? JSON.parse(guestStoreRaw) : null,
+              },
+            })
+          );
+        }
       } catch (e) {
         console.error('Invoice draft migration failed', e);
       }
@@ -250,14 +272,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getFriendlyError = (error: any) => {
     if (!error) return null;
     const msg = error.message?.toLowerCase() || '';
-    if (msg.includes('user already exists')) return 'This email is already registered. Please try logging in.';
-    if (msg.includes('invalid login credentials')) return 'Incorrect email or password. Please try again.';
-    if (msg.includes('rate limit exceeded') || msg.includes('429')) return 'Too many attempts. Please wait a few minutes.';
+    if (msg.includes('user already exists'))
+      return 'This email is already registered. Please try logging in.';
+    if (msg.includes('invalid login credentials'))
+      return 'Incorrect email or password. Please try again.';
+    if (msg.includes('rate limit exceeded') || msg.includes('429'))
+      return 'Too many attempts. Please wait a few minutes.';
     if (msg.includes('weak_password')) return 'Password is too weak. Use at least 6 characters.';
     return error.message;
   };
 
-  const signUp = async (email: string, password: string, name: string, mobile?: string, industry?: string, dob?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    mobile?: string,
+    industry?: string,
+    dob?: string
+  ) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -268,16 +300,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             mobile: mobile || '',
             domain: industry || 'general',
             dob: dob || '',
-          }
-        }
+          },
+        },
       });
 
       if (!error && data?.user) {
         // Log registration immediately for admin discovery
-        await logActivity('registration', 'user', data.user.id, { 
+        await logActivity('registration', 'user', data.user.id, {
           email: data.user.email,
           name,
-          mobile
+          mobile,
         });
       }
 
@@ -317,12 +349,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       'active_store_id',
       'hasCompletedOnboarding',
       'invoiceDraft',
-      'bill_user_id'
+      'bill_user_id',
     ];
-    
+
     // Clear only global/session keys. User-prefixed keys are preserved for instant recall upon same-user re-login.
-    keysToRemove.forEach(key => safeRemove(key));
-    
+    keysToRemove.forEach((key) => safeRemove(key));
+
     // Dispatch a storage event to immediately update BrandingContext to defaults
     window.dispatchEvent(new Event('storage'));
 

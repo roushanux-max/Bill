@@ -84,6 +84,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['src/test/e2e/**', 'node_modules/**'],
   },
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.

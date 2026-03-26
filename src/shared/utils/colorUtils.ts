@@ -72,7 +72,7 @@ export const getDescriptionColorClass = (bgColor: string) => {
  */
 export function generateSecondaryColor(primaryHex: string): string {
   const luminance = getLuminance(primaryHex);
-  
+
   // If primary is dark, go lighter. If light, go darker.
   if (luminance < 0.2) {
     return adjustBrightness(primaryHex, 70); // Light highlight
@@ -91,24 +91,26 @@ export function adjustBrightness(color: string, percent: number): string {
   const num = parseInt(color.replace('#', ''), 16);
   const amt = Math.round(2.55 * percent);
   let R = (num >> 16) + amt;
-  let G = (num >> 8 & 0x00FF) + amt;
-  let B = (num & 0x0000FF) + amt;
+  let G = ((num >> 8) & 0x00ff) + amt;
+  let B = (num & 0x0000ff) + amt;
 
   R = Math.min(255, Math.max(0, R));
   G = Math.min(255, Math.max(0, G));
   B = Math.min(255, Math.max(0, B));
 
-  return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+  return `#${((1 << 24) | (R << 16) | (G << 8) | B).toString(16).slice(1)}`;
 }
 
 /**
  * Convert hex to RGB
  */
-function hexToRgb(hex: string): { r: number, g: number, b: number } | null {
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 }

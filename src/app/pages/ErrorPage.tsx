@@ -1,6 +1,19 @@
 import { useNavigate, useLocation, useRouteError, isRouteErrorResponse } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
-import { Home, RefreshCw, ChevronLeft, AlertCircle, Search, Settings, Link2Off, Bug, ShieldAlert, Cpu, Globe, Database } from 'lucide-react';
+import {
+  Home,
+  RefreshCw,
+  ChevronLeft,
+  AlertCircle,
+  Search,
+  Settings,
+  Link2Off,
+  Bug,
+  ShieldAlert,
+  Cpu,
+  Globe,
+  Database,
+} from 'lucide-react';
 
 interface ErrorPageProps {
   type?: '404' | 'maintenance' | 'offline' | 'error' | 'security';
@@ -15,14 +28,15 @@ export default function ErrorPage({ type: manualType, title, message }: ErrorPag
 
   // Determine error details
   let type = manualType;
-  let statusCode = "";
-  let technicalMessage = "";
+  let statusCode = '';
+  let technicalMessage = '';
 
   if (!type && error) {
     if (isRouteErrorResponse(error)) {
       statusCode = error.status.toString();
-      technicalMessage = error.statusText || (typeof error.data === 'string' ? error.data : error.data?.message);
-      
+      technicalMessage =
+        error.statusText || (typeof error.data === 'string' ? error.data : error.data?.message);
+
       if (error.status === 404) type = '404';
       else if (error.status === 403 || error.status === 401) type = 'security';
       else if (error.status >= 500) type = 'error';
@@ -41,44 +55,56 @@ export default function ErrorPage({ type: manualType, title, message }: ErrorPag
   const config = {
     '404': {
       icon: Search,
-      title: title || "Page Went Missing",
-      message: message || "We searched everywhere but couldn't find the page you're looking for. It might have been moved or deleted.",
-      buttonText: "Back to Home",
-      insight: "The URL might be mistyped or the content was relocated during a recent update.",
-      action: () => navigate('/')
+      title: title || 'Page Went Missing',
+      message:
+        message ||
+        "We searched everywhere but couldn't find the page you're looking for. It might have been moved or deleted.",
+      buttonText: 'Back to Home',
+      insight: 'The URL might be mistyped or the content was relocated during a recent update.',
+      action: () => navigate('/'),
     },
-    'maintenance': {
+    maintenance: {
       icon: Cpu,
-      title: title || "New Code Arriving",
-      message: message || "We're currently pushing some fresh code to the platform. This machine needs a quick restart and will be back in less than a minute.",
-      buttonText: "Check Progress",
-      insight: "Git deployment in progress. The server is updating to the latest stable version.",
-      action: () => window.location.reload()
+      title: title || 'New Code Arriving',
+      message:
+        message ||
+        "We're currently pushing some fresh code to the platform. This machine needs a quick restart and will be back in less than a minute.",
+      buttonText: 'Check Progress',
+      insight: 'Git deployment in progress. The server is updating to the latest stable version.',
+      action: () => window.location.reload(),
     },
-    'offline': {
+    offline: {
       icon: Link2Off,
-      title: title || "Connection Lost",
-      message: message || "It looks like your device is offline. Please check your internet connection and try again.",
-      buttonText: "Reconnect",
-      insight: "Your browser is unable to reach our servers. This is usually due to local network issues.",
-      action: () => window.location.reload()
+      title: title || 'Connection Lost',
+      message:
+        message ||
+        'It looks like your device is offline. Please check your internet connection and try again.',
+      buttonText: 'Reconnect',
+      insight:
+        'Your browser is unable to reach our servers. This is usually due to local network issues.',
+      action: () => window.location.reload(),
     },
-    'security': {
+    security: {
       icon: ShieldAlert,
-      title: title || "Access Denied",
-      message: message || "You don't have permission to access this resource. Please ensure you are logged in correctly.",
-      buttonText: "Login Again",
-      insight: "Authentication tokens may have expired or your account lacks the necessary roles.",
-      action: () => navigate('/login')
+      title: title || 'Access Denied',
+      message:
+        message ||
+        "You don't have permission to access this resource. Please ensure you are logged in correctly.",
+      buttonText: 'Login Again',
+      insight: 'Authentication tokens may have expired or your account lacks the necessary roles.',
+      action: () => navigate('/login'),
     },
-    'error': {
+    error: {
       icon: Bug,
-      title: title || "System Glitch",
-      message: message || "An unexpected error occurred while processing your request. Our team has been notified.",
-      buttonText: "Try Again",
-      insight: "The server encountered an unhandled exception. This is likely a temporary backend issue.",
-      action: () => window.location.reload()
-    }
+      title: title || 'System Glitch',
+      message:
+        message ||
+        'An unexpected error occurred while processing your request. Our team has been notified.',
+      buttonText: 'Try Again',
+      insight:
+        'The server encountered an unhandled exception. This is likely a temporary backend issue.',
+      action: () => window.location.reload(),
+    },
   }[type];
 
   const Icon = config.icon;
@@ -100,18 +126,16 @@ export default function ErrorPage({ type: manualType, title, message }: ErrorPag
         {/* Text Content */}
         <div className="space-y-4 relative">
           <div className="flex items-center justify-center gap-2 mb-2">
-             {statusCode && (
-               <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-100 tracking-wider">
-                 ERROR {statusCode}
-               </span>
-             )}
-             <span className="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-100 tracking-wider uppercase">
-               {type}
-             </span>
+            {statusCode && (
+              <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-100 tracking-wider">
+                ERROR {statusCode}
+              </span>
+            )}
+            <span className="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-100 tracking-wider uppercase">
+              {type}
+            </span>
           </div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-            {config.title}
-          </h1>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{config.title}</h1>
           <p className="text-slate-500 text-lg leading-relaxed max-w-[340px] mx-auto">
             {config.message}
           </p>
@@ -119,35 +143,37 @@ export default function ErrorPage({ type: manualType, title, message }: ErrorPag
 
         {/* Technical Insight Card */}
         <div className="bg-white/40 border border-slate-200/60 rounded-3xl p-5 text-left space-y-3 backdrop-blur-sm">
-           <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-              <Cpu className="w-4 h-4 text-indigo-500" />
-              What's happening?
-           </div>
-           <p className="text-slate-500 text-xs leading-relaxed italic">
-              "{config.insight}"
-           </p>
-           {technicalMessage && (
-             <div className="pt-2 border-t border-slate-100 mt-2">
-                <code className="text-[10px] text-slate-400 font-mono block break-all">
-                   Error: {technicalMessage}
-                </code>
-             </div>
-           )}
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+            <Cpu className="w-4 h-4 text-indigo-500" />
+            What's happening?
+          </div>
+          <p className="text-slate-500 text-xs leading-relaxed italic">"{config.insight}"</p>
+          {technicalMessage && (
+            <div className="pt-2 border-t border-slate-100 mt-2">
+              <code className="text-[10px] text-slate-400 font-mono block break-all">
+                Error: {technicalMessage}
+              </code>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-          <Button 
+          <Button
             onClick={config.action}
             size="lg"
             className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-8 h-12 shadow-lg shadow-indigo-200 transition-all active:scale-95 text-base font-semibold"
           >
-            {type === '404' ? <Home className="w-5 h-5 mr-2" /> : <RefreshCw className="w-5 h-5 mr-2" />}
+            {type === '404' ? (
+              <Home className="w-5 h-5 mr-2" />
+            ) : (
+              <RefreshCw className="w-5 h-5 mr-2" />
+            )}
             {config.buttonText}
           </Button>
-          
+
           {type !== '404' && (
-             <Button 
+            <Button
               variant="outline"
               onClick={() => navigate('/')}
               size="lg"
@@ -182,7 +208,9 @@ export default function ErrorPage({ type: manualType, title, message }: ErrorPag
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 rounded-full blur-[120px] animate-pulse-slow" />
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @keyframes float {
           0%, 100% { transform: translateY(0) rotate(0); }
           50% { transform: translateY(-10px) rotate(-5deg); }
@@ -197,7 +225,9 @@ export default function ErrorPage({ type: manualType, title, message }: ErrorPag
         .animate-pulse-slow {
           animation: pulse-slow 10s ease-in-out infinite;
         }
-      `}} />
+      `,
+        }}
+      />
     </div>
   );
 }

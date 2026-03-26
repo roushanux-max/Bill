@@ -91,9 +91,7 @@ export function PWAInstallPrompt() {
           </div>
 
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 mb-1">
-              Install Invoice
-            </h3>
+            <h3 className="font-semibold text-gray-900 mb-1">Install Invoice</h3>
             <p className="text-sm text-gray-600 mb-3">
               Install our app for quick access, offline use, and a better experience!
             </p>
@@ -108,11 +106,7 @@ export function PWAInstallPrompt() {
                 Install App
               </Button>
 
-              <Button
-                onClick={handleDismiss}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={handleDismiss} variant="outline" size="sm">
                 Not Now
               </Button>
             </div>
@@ -206,10 +200,7 @@ export function IOSInstallInstructions() {
           </div>
         </div>
 
-        <Button
-          onClick={handleDismiss}
-          className="w-full mt-6 bg-primary hover:bg-primary/90"
-        >
+        <Button onClick={handleDismiss} className="w-full mt-6 bg-primary hover:bg-primary/90">
           Got it!
         </Button>
       </div>

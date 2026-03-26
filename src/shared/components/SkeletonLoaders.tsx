@@ -2,19 +2,17 @@ import React from 'react';
 import { cn } from './ui/utils';
 
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("animate-pulse rounded-md bg-slate-200/60", className)}
-      {...props}
-    />
-  );
+  return <div className={cn('animate-pulse rounded-md bg-slate-200/60', className)} {...props} />;
 }
 
 export function StatSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-3">
+        <div
+          key={i}
+          className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-3"
+        >
           <div className="flex justify-between items-center">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-4 w-4 rounded-full" />
@@ -31,7 +29,10 @@ export function ListSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm flex items-center justify-between">
+        <div
+          key={i}
+          className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm flex items-center justify-between"
+        >
           <div className="space-y-2">
             <Skeleton className="h-5 w-48 mb-1" />
             <div className="flex gap-2">

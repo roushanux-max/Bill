@@ -11,10 +11,10 @@ export function lazyWithRetry(componentImport: () => Promise<{ default: Componen
       return await componentImport();
     } catch (error) {
       console.error('Lazy loading failed, attempting to reload the page:', error);
-      
+
       // Check if we've already tried to reload to avoid infinite loops
       const hasReloaded = window.sessionStorage.getItem('lazy_retry_reloaded');
-      
+
       if (!hasReloaded) {
         window.sessionStorage.setItem('lazy_retry_reloaded', 'true');
         window.location.reload();

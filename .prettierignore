@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+coverage
+.vercel
+dev-dist
+public
+*.png
+*.jpg
+*.svg
+*.ico

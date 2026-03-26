@@ -7,21 +7,69 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/components/ui/dialog';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, Download, Filter, X, Loader2, Cloud, CloudOff } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/components/ui/dialog';
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Download,
+  Filter,
+  X,
+  Loader2,
+  Cloud,
+  CloudOff,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Customer, Invoice } from '@/features/invoices/types/invoice';
 import { getCustomers, saveCustomer, deleteCustomer, getInvoices } from '@/shared/utils/storage';
 import { validatePhone } from '@/shared/utils/validation';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select';
 import { ListSkeleton } from '@/shared/components/SkeletonLoaders';
 
 const INDIAN_STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
 ];
 
 export default function Customers() {
@@ -61,10 +109,7 @@ export default function Customers() {
   }, [shouldOpenDialog]);
 
   const loadCustomers = async () => {
-    const [customerData, invoiceData] = await Promise.all([
-      getCustomers(true),
-      getInvoices(true)
-    ]);
+    const [customerData, invoiceData] = await Promise.all([getCustomers(true), getInvoices(true)]);
     setCustomers(customerData.data || []);
     setInvoices(invoiceData.data || []);
     setIsLoading(false);
@@ -138,19 +183,19 @@ export default function Customers() {
 
   // Calculate total spending for a customer
   const getCustomerSpending = (customerId: string) => {
-    const customerInvoices = invoices.filter(invoice => invoice.customerId === customerId);
+    const customerInvoices = invoices.filter((invoice) => invoice.customerId === customerId);
     return customerInvoices.reduce((sum, invoice) => sum + (invoice.grandTotal || 0), 0);
   };
 
   // Calculate number of invoices for a customer
   const getCustomerInvoiceCount = (customerId: string) => {
-    return invoices.filter(invoice => invoice.customerId === customerId).length;
+    return invoices.filter((invoice) => invoice.customerId === customerId).length;
   };
 
   // Export customers data to PDF
   const handleExport = () => {
-    const customerData = filteredSortedCustomers.map(customer => {
-      const customerInvoices = invoices.filter(inv => inv.customerId === customer.id);
+    const customerData = filteredSortedCustomers.map((customer) => {
+      const customerInvoices = invoices.filter((inv) => inv.customerId === customer.id);
       const totalSpent = customerInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
       return {
         name: customer.name,
@@ -164,7 +209,11 @@ export default function Customers() {
 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const storeName = storeInfo?.name || 'Business';
-    const exportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    const exportDate = new Date().toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
 
     // Header
     doc.setFontSize(18);
@@ -181,7 +230,14 @@ export default function Customers() {
     autoTable(doc, {
       startY: 34,
       head: [['Customer Name', 'Phone', 'GSTIN', 'State', 'Invoices', 'Total Spent']],
-      body: customerData.map(c => [c.name, c.phone, c.gstin, c.state, c.invoiceCount, c.totalSpent]),
+      body: customerData.map((c) => [
+        c.name,
+        c.phone,
+        c.gstin,
+        c.state,
+        c.invoiceCount,
+        c.totalSpent,
+      ]),
       headStyles: {
         fillColor: storeInfo?.ownerName ? (settings.primaryColor as any) : [99, 102, 241],
         textColor: 255,
@@ -207,7 +263,6 @@ export default function Customers() {
     toast.success('Customer data exported!', { description: 'PDF downloaded' });
   };
 
-
   const clearFilters = () => {
     setFilterState('all');
     setSortBy('date');
@@ -216,20 +271,22 @@ export default function Customers() {
 
   const hasActiveFilters = filterState !== 'all' || sortBy !== 'date';
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm) ||
-    customer.gstin.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm) ||
+      customer.gstin.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Check if state filter is needed (only show if there are 2+ unique states)
-  const uniqueStates = [...new Set(filteredCustomers.map(c => c.state))];
+  const uniqueStates = [...new Set(filteredCustomers.map((c) => c.state))];
   const showStateFilter = uniqueStates.length > 1;
 
   // Apply state filter
-  const filteredByState = filterState === 'all'
-    ? filteredCustomers
-    : filteredCustomers.filter(customer => customer.state === filterState);
+  const filteredByState =
+    filterState === 'all'
+      ? filteredCustomers
+      : filteredCustomers.filter((customer) => customer.state === filterState);
 
   // Apply sorting
   const filteredSortedCustomers = [...filteredByState].sort((a, b) => {
@@ -249,8 +306,8 @@ export default function Customers() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
-            <button 
-              onClick={() => navigate('/dashboard')} 
+            <button
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1.5 text-[var(--color-primary)] hover:opacity-80 transition-colors font-medium text-sm sm:text-base border-none bg-transparent p-0 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -269,103 +326,141 @@ export default function Customers() {
               <Download className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Export</span>
             </Button>
-              <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
                 setIsDialogOpen(open);
                 if (!open) resetForm();
-              }}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]">
-                    <Plus className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Add Customer</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
-                    <DialogDescription>
-                      {editingCustomer ? 'Update customer information below.' : 'Add a new customer to your list.'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm">Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Customer name"
-                        required
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-sm">Phone *</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                        inputMode="tel"
-                        maxLength={10}
-                        placeholder="9876543210"
-                        required
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="gstin" className="text-sm">GSTIN</Label>
-                      <Input
-                        id="gstin"
-                        value={formData.gstin}
-                        onChange={(e) => setFormData({ ...formData, gstin: e.target.value.toUpperCase() })}
-                        placeholder="10DAOPK4311H1Z1"
-                        maxLength={15}
-                        className="text-sm uppercase"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address" className="text-sm">Address</Label>
-                      <Input
-                        id="address"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        placeholder="Street address"
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state" className="text-sm">State</Label>
-                      <Select
-                        value={formData.state}
-                        onValueChange={(e) => setFormData({ ...formData, state: e })}
-                      >
-                        <SelectTrigger className="w-full rounded-lg border border-slate-200">
-                          <SelectValue>{formData.state}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="w-full max-h-60 overflow-y-auto px-3 rounded-lg border border-slate-200">
-                          {INDIAN_STATES.map(state => (
-                            <SelectItem key={state} value={state}>{state}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2 pt-4">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
-                        Cancel
-                      </Button>
-                      <Button type="submit" className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]" disabled={isSaving}>
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          editingCustomer ? 'Update Customer' : 'Add Customer'
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]"
+                >
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Customer</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
+                  <DialogDescription>
+                    {editingCustomer
+                      ? 'Update customer information below.'
+                      : 'Add a new customer to your list.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm">
+                      Name *
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Customer name"
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm">
+                      Phone *
+                    </Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone: e.target.value.replace(/\D/g, '').slice(0, 10),
+                        })
+                      }
+                      inputMode="tel"
+                      maxLength={10}
+                      placeholder="9876543210"
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gstin" className="text-sm">
+                      GSTIN
+                    </Label>
+                    <Input
+                      id="gstin"
+                      value={formData.gstin}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gstin: e.target.value.toUpperCase() })
+                      }
+                      placeholder="10DAOPK4311H1Z1"
+                      maxLength={15}
+                      className="text-sm uppercase"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-sm">
+                      Address
+                    </Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      placeholder="Street address"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className="text-sm">
+                      State
+                    </Label>
+                    <Select
+                      value={formData.state}
+                      onValueChange={(e) => setFormData({ ...formData, state: e })}
+                    >
+                      <SelectTrigger className="w-full rounded-lg border border-slate-200">
+                        <SelectValue>{formData.state}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="w-full max-h-60 overflow-y-auto px-3 rounded-lg border border-slate-200">
+                        {INDIAN_STATES.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]"
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : editingCustomer ? (
+                        'Update Customer'
+                      ) : (
+                        'Add Customer'
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </header>
@@ -393,7 +488,7 @@ export default function Customers() {
               <div className="flex items-center gap-2">
                 {showStateFilter && (
                   <Button
-                    variant={showFilters ? "default" : "outline"}
+                    variant={showFilters ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                     className="h-9"
@@ -409,12 +504,7 @@ export default function Customers() {
                   </Button>
                 )}
                 {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-9"
-                  >
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
                     <X className="h-4 w-4 mr-2" />
                     Clear
                   </Button>
@@ -427,18 +517,23 @@ export default function Customers() {
               <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 {showStateFilter && (
                   <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="filter-state" className="text-xs font-medium text-slate-700">State</Label>
-                    <Select
-                      value={filterState}
-                      onValueChange={(e) => setFilterState(e)}
-                    >
-                      <SelectTrigger className={`w-full h-9 ${filterState !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
-                        <SelectValue>{filterState === 'all' ? 'All States' : filterState}</SelectValue>
+                    <Label htmlFor="filter-state" className="text-xs font-medium text-slate-700">
+                      State
+                    </Label>
+                    <Select value={filterState} onValueChange={(e) => setFilterState(e)}>
+                      <SelectTrigger
+                        className={`w-full h-9 ${filterState !== 'all' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}
+                      >
+                        <SelectValue>
+                          {filterState === 'all' ? 'All States' : filterState}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All States</SelectItem>
-                        {uniqueStates.sort().map(state => (
-                          <SelectItem key={state} value={state}>{state}</SelectItem>
+                        {uniqueStates.sort().map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -446,14 +541,22 @@ export default function Customers() {
                 )}
 
                 <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="sort" className="text-xs font-medium text-slate-700">Sort by</Label>
+                  <Label htmlFor="sort" className="text-xs font-medium text-slate-700">
+                    Sort by
+                  </Label>
                   <Select
                     value={sortBy}
                     onValueChange={(e) => setSortBy(e as 'name' | 'date' | 'spending')}
                   >
-                    <SelectTrigger className={`w-full h-9 ${sortBy !== 'date' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}>
+                    <SelectTrigger
+                      className={`w-full h-9 ${sortBy !== 'date' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''}`}
+                    >
                       <SelectValue>
-                        {sortBy === 'name' ? 'Name (A-Z)' : sortBy === 'date' ? 'Date Added (Newest)' : 'Spending (Highest)'}
+                        {sortBy === 'name'
+                          ? 'Name (A-Z)'
+                          : sortBy === 'date'
+                            ? 'Date Added (Newest)'
+                            : 'Spending (Highest)'}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -491,41 +594,55 @@ export default function Customers() {
               </CardContent>
             </Card>
           ) : (
-            filteredSortedCustomers.map(customer => {
+            filteredSortedCustomers.map((customer) => {
               const totalSpent = getCustomerSpending(customer.id);
               const invoiceCount = getCustomerInvoiceCount(customer.id);
 
               return (
-                <Card key={customer.id} className="cursor-pointer hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all" onClick={() => navigate(`/create-invoice?customerId=${customer.id}`)}>
+                <Card
+                  key={customer.id}
+                  className="cursor-pointer hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all"
+                  onClick={() => navigate(`/create-invoice?customerId=${customer.id}`)}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <h3
-                            className="font-semibold text-slate-900 truncate flex items-center gap-2 hover:text-[var(--color-primary)]"
-                          >
+                          <h3 className="font-semibold text-slate-900 truncate flex items-center gap-2 hover:text-[var(--color-primary)]">
                             {customer.name}
                             {customer.isSynced === false ? (
-                              <span title="Offline changes" className="flex shrink-0"><CloudOff className="h-4 w-4 text-orange-500" /></span>
+                              <span title="Offline changes" className="flex shrink-0">
+                                <CloudOff className="h-4 w-4 text-orange-500" />
+                              </span>
                             ) : (
-                              <span title="Synced" className="flex shrink-0"><Cloud className="h-4 w-4 text-green-500" /></span>
+                              <span title="Synced" className="flex shrink-0">
+                                <Cloud className="h-4 w-4 text-green-500" />
+                              </span>
                             )}
                           </h3>
                           {totalSpent > 0 && (
                             <div className="flex-shrink-0 text-right">
-                              <p className="text-sm font-semibold text-green-600">₹{totalSpent.toLocaleString('en-IN')}</p>
-                              <p className="text-xs text-slate-500">{invoiceCount} {invoiceCount === 1 ? 'invoice' : 'invoices'}</p>
+                              <p className="text-sm font-semibold text-green-600">
+                                ₹{totalSpent.toLocaleString('en-IN')}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {invoiceCount} {invoiceCount === 1 ? 'invoice' : 'invoices'}
+                              </p>
                             </div>
                           )}
                         </div>
                         <div className="mt-1 space-y-0.5 text-xs sm:text-sm text-slate-600">
                           <p>{customer.phone}</p>
-                          {customer.gstin && <p className="font-mono text-xs">GSTIN: {customer.gstin}</p>}
+                          {customer.gstin && (
+                            <p className="font-mono text-xs">GSTIN: {customer.gstin}</p>
+                          )}
                           {customer.address && <p className="truncate">{customer.address}</p>}
                           <p>{customer.state}</p>
                         </div>
                         <div className="mt-3 pt-2 border-t border-slate-200">
-                          <p className="text-xs text-[var(--color-primary)] font-medium">Click to create invoice</p>
+                          <p className="text-xs text-[var(--color-primary)] font-medium">
+                            Click to create invoice
+                          </p>
                         </div>
                       </div>
                       <div className="flex gap-1 sm:gap-2">
@@ -555,7 +672,7 @@ export default function Customers() {
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })
           )}
         </div>

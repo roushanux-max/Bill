@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+console.log('--- TEST FILE LOADING ---');
 import { calculateTotals } from './calculations';
 import { InvoiceItem } from '../types/invoice';
 
@@ -27,17 +28,17 @@ describe('calculateTotals', () => {
       taxAmount: 60,
       discountAmount: 0,
       totalAmount: 560,
-    }
+    },
   ];
 
   it('calculates totals correctly with items, transport, and discount', () => {
     const { subtotal, totalTax, total } = calculateTotals(mockItems, 50, 20);
-    
+
     // Subtotal: (2 * 100) + (1 * 500) = 700
     // Tax: (2 * 100 * 0.05) + (1 * 500 * 0.12) = 10 + 60 = 70
     // Gross: 700 + 70 + 50 (transport) = 820
     // Total: 820 - 20 (discount) = 800
-    
+
     expect(subtotal).toBe(700);
     expect(totalTax).toBe(70);
     expect(total).toBe(800);
@@ -52,7 +53,18 @@ describe('calculateTotals', () => {
 
   it('handles zero tax rate', () => {
     const itemsNoTax: InvoiceItem[] = [
-      { id: '1', invoice_id: 'inv1', product_id: 'p1', productName: 'No Tax', quantity: 1, unitPrice: 100, taxRate: 0, taxAmount: 0, discountAmount: 0, totalAmount: 100 }
+      {
+        id: '1',
+        invoice_id: 'inv1',
+        product_id: 'p1',
+        productName: 'No Tax',
+        quantity: 1,
+        unitPrice: 100,
+        taxRate: 0,
+        taxAmount: 0,
+        discountAmount: 0,
+        totalAmount: 100,
+      },
     ];
     const { totalTax, total } = calculateTotals(itemsNoTax, 0, 0);
     expect(totalTax).toBe(0);
@@ -61,7 +73,18 @@ describe('calculateTotals', () => {
 
   it('rounds the final total', () => {
     const itemsRounding: InvoiceItem[] = [
-      { id: '1', invoice_id: 'inv1', product_id: 'p1', productName: 'Rounding', quantity: 1, unitPrice: 100.45, taxRate: 5, taxAmount: 5.02, discountAmount: 0, totalAmount: 105.47 }
+      {
+        id: '1',
+        invoice_id: 'inv1',
+        product_id: 'p1',
+        productName: 'Rounding',
+        quantity: 1,
+        unitPrice: 100.45,
+        taxRate: 5,
+        taxAmount: 5.02,
+        discountAmount: 0,
+        totalAmount: 105.47,
+      },
     ];
     // 100.45 + (100.45 * 0.05) = 100.45 + 5.0225 = 105.4725
     // round(105.4725) = 105

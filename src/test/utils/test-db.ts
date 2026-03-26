@@ -2,12 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase as realSupabase } from '../../shared/utils/supabase';
 
 // Helper to delay execution
-export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Helper for cleanup (delete test records)
 export async function cleanupTestData(userId: string) {
   if (!userId) return;
-  
+
   // Clear all data for this test user
   await realSupabase.from('invoices').delete().eq('user_id', userId);
   await realSupabase.from('customers').delete().eq('user_id', userId);
