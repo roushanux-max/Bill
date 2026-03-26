@@ -23,6 +23,7 @@ export interface BrandingSettings {
   showSignature: boolean;
   signatureImage: string | null;
   signatureText: string;
+  signatureTitle?: string; // Custom designation below the signature line
 
   // Domain Metadata (Invoice UI Template)
   domain?: 'general' | 'furniture' | 'clothing' | 'hotel' | 'freelance' | 'medical';
@@ -52,7 +53,8 @@ export const defaultBrandingSettings: BrandingSettings = {
 5. Usage of this platform implies acceptance of these terms.`,
   showSignature: true,
   signatureImage: null,
-  signatureText: 'Authorized Signatory',
+  signatureText: '',
+  signatureTitle: 'Authorized Signatory',
   domain: 'general',
   tagline: '',
   website: '',

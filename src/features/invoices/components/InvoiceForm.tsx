@@ -47,7 +47,7 @@ export default function InvoiceForm() {
   };
 
   const handleStoreInfoChange = (field: string, value: string) => {
-    updateStoreInfo({ ...(currentStore || { name: '', email: '', phone: '', address: '' }), [field]: value });
+    updateStoreInfo({ ...(currentStore || { name: '', email: '', phone: '', address: '', gstin: '', state: '' }), [field]: value });
   };
 
   const getDraftKey = () => (user ? `draft_${user.id}_new_invoice` : `guest_draft_new_invoice`);
@@ -250,15 +250,15 @@ export default function InvoiceForm() {
 
     const newErrs = { ...customerErrors };
     if (updates.name !== undefined) newErrs.name = validateInput('name', updates.name);
-    if (updates.mobile !== undefined)
-      newErrs.mobile = validateInput('mobile', String(updates.mobile));
+    if (updates.phone !== undefined)
+      newErrs.phone = validateInput('mobile', String(updates.phone));
     setCustomerErrors(newErrs);
 
     // Smart Search Trigger
-    if (updates.name !== undefined || updates.mobile !== undefined) {
+    if (updates.name !== undefined || updates.phone !== undefined) {
       if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
       customerSearchTimeout.current = setTimeout(async () => {
-        const query = (updates.name || updates.mobile || '').trim();
+        const query = (updates.name || updates.phone || '').trim();
         if (query.length >= 2) {
           const { searchCustomers } = await import('@/shared/utils/storage');
           const matches = await searchCustomers(query);
@@ -618,7 +618,7 @@ export default function InvoiceForm() {
                     />
                     {globalBranding.logo && (
                       <button 
-                        onClick={() => updateSettings({ ...globalBranding, logo: undefined })}
+                        onClick={() => updateSettings({ ...globalBranding, logo: null })}
                         className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
                       >
                         <Trash2 size={14} strokeWidth={3} />
@@ -777,14 +777,14 @@ export default function InvoiceForm() {
               Phone Number
             </label>
             <input
-              className={`w-full bg-slate-50 p-3 rounded-xl border outline-none transition-colors ${customerErrors.mobile ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
+                          className={`w-full bg-slate-50 p-3 rounded-xl border outline-none transition-colors ${customerErrors.phone ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
               placeholder="e.g. 9876543210"
               inputMode="numeric"
               maxLength={10}
-              value={invoice.customer.mobile}
+              value={invoice.customer.phone || ''}
               onChange={(e) => {
                 const val = ValidationRules.mobile.format(e.target.value);
-                updateCustomer({ mobile: val });
+                updateCustomer({ phone: val });
               }}
               onKeyDown={(e) => {
                 if (showCustomerDropdown) {
@@ -803,9 +803,9 @@ export default function InvoiceForm() {
                 }
               }}
             />
-            {customerErrors.mobile && (
+            {customerErrors.phone && (
               <p className="text-red-500 text-[10px] mt-1 font-semibold absolute -bottom-5 left-0">
-                {customerErrors.mobile}
+                {customerErrors.phone}
               </p>
             )}
           </div>

@@ -457,18 +457,16 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 style={{ height: '40px', marginBottom: '4px', objectFit: 'contain' }}
               />
             ) : (
-              <div
-                style={{
-                  fontSize: '24px',
-                  color: '#333',
-                  marginBottom: '4px',
-                }}
-              >
-                {settings.signatureText || storeInfo?.name?.split(' ')[0] || 'Signature'}
+              /* Blank signing space */
+              <div style={{ height: '40px', marginBottom: '4px' }} />
+            )}
+            {settings.signatureText && (
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#111', marginBottom: '2px' }}>
+                {settings.signatureText}
               </div>
             )}
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#111' }}>
-              {settings.signatureText || storeInfo?.name}
+            <div style={{ fontSize: '10px', fontWeight: 600, color: '#555' }}>
+              {settings.signatureTitle || 'Authorized Signatory'}
             </div>
           </div>
         </div>
@@ -841,14 +839,8 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                     style={{ height: '40px', objectFit: 'contain' }}
                   />
                 ) : (
-                  <div
-                    style={{
-                      fontSize: '20px',
-                      color: '#0f172a',
-                    }}
-                  >
-                    {settings.signatureText || storeInfo?.name?.split(' ')[0] || 'Signature'}
-                  </div>
+                  /* Blank signing space */
+                  <div style={{ height: '40px' }} />
                 )}
                 <div
                   style={{
@@ -858,8 +850,13 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                     margin: '4px auto',
                   }}
                 />
+                {settings.signatureText && (
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#0f172a', marginBottom: '2px' }}>
+                    {settings.signatureText}
+                  </div>
+                )}
                 <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748b' }}>
-                  Authorized Signatory
+                  {settings.signatureTitle || 'Authorized Signatory'}
                 </div>
               </div>
             </div>
@@ -1410,24 +1407,20 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               style={{ height: '50px', marginBottom: '6px', objectFit: 'contain' }}
             />
           ) : (
-            <div
-              style={{
-                fontSize: '28px',
-                color: '#1a1a2e',
-                opacity: 0.8,
-                marginBottom: '4px',
-              }}
-            >
-              {settings.signatureText || storeInfo?.name?.split(' ')[0] || 'Signature'}
-            </div>
+            /* Blank space for physical signature — intentionally left empty */
+            <div style={{ height: '48px', marginBottom: '4px' }} />
           )}
           <div
             style={{ width: '160px', height: '1px', backgroundColor: '#ccc', marginBottom: '5px' }}
           />
-          <p style={{ fontSize: '11px', fontWeight: 800, color: '#1a1a2e' }}>
-            {settings.signatureText || storeInfo?.name || 'Your Name & Signature'}
+          {settings.signatureText && (
+            <p style={{ fontSize: '11px', fontWeight: 800, color: '#1a1a2e', marginBottom: '2px' }}>
+              {settings.signatureText}
+            </p>
+          )}
+          <p style={{ fontSize: '10px', color: '#888', fontWeight: 600 }}>
+            {settings.signatureTitle || 'Authorized Signatory'}
           </p>
-          <p style={{ fontSize: '10px', color: '#888', fontWeight: 600 }}>Account Manager</p>
         </div>
 
         {/* Amount in words */}

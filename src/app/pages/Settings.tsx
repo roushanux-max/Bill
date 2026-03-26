@@ -992,16 +992,30 @@ export default function SettingsPage() {
                             </div>
                           </div>
 
-                          {/* Signature Text */}
+                          {/* Signer Name */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-slate-700">
-                              Signature Text
+                              Signer Name <span className="text-slate-400 font-normal text-xs">(acts as digital signature)</span>
                             </Label>
                             <Input
                               value={settings.signatureText}
                               onChange={(e) => updateSettings('signatureText', e.target.value)}
-                              placeholder="Authorized Signatory"
+                              placeholder="e.g. Ramesh Kumar"
                             />
+                            <p className="text-xs text-slate-400">This name will appear above the signature line in place of a handwritten signature.</p>
+                          </div>
+
+                          {/* Designation / Title */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-700">
+                              Designation / Title
+                            </Label>
+                            <Input
+                              value={(settings as any).signatureTitle || ''}
+                              onChange={(e) => updateSettings('signatureTitle' as any, e.target.value)}
+                              placeholder="e.g. Authorized Signatory, CEO, Owner"
+                            />
+                            <p className="text-xs text-slate-400">This label appears below the signature line on the invoice.</p>
                           </div>
                         </div>
                       )}
