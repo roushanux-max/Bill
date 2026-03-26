@@ -61,7 +61,7 @@ export default function InvoiceForm() {
   // --- Validation State ---
   const [customerErrors, setCustomerErrors] = useState<{
     name?: string | null;
-    mobile?: string | null;
+    phone?: string | null;
   }>({});
   const [itemErrors, setItemErrors] = useState<
     Record<string, { quantity?: string | null; unitPrice?: string | null }>
@@ -70,7 +70,7 @@ export default function InvoiceForm() {
   // --- State: Single Source of Truth ---
   const [invoice, setInvoice] = useState<any>({
     items: [],
-    customer: { name: '', mobile: '', email: '', address: '' },
+    customer: { name: '', phone: '', email: '', address: '' },
     transportCharges: 0,
     discountTotal: 0,
     invoiceNumber: '',
@@ -110,7 +110,7 @@ export default function InvoiceForm() {
                 totalAmount: 0,
               },
             ],
-            customer: { name: '', mobile: '', email: '', address: '' },
+            customer: { name: '', phone: '', email: '', address: '' },
             notes: 'Thank you for your business.',
             transportCharges: 0,
             discountTotal: 0,
@@ -726,6 +726,20 @@ export default function InvoiceForm() {
             </div>
           </div>
           <div className="flex flex-wrap gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Contact Number
+              </label>
+              <Input
+                className="h-12 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 focus:bg-white transition-all"
+                placeholder="+91 99999 99999"
+                value={invoice.customer.phone}
+                onChange={(e) => updateInvoice({ customer: { ...invoice.customer, phone: e.target.value } })}
+              />
+              {customerErrors.phone && (
+                <p className="text-[10px] text-red-500 font-bold px-1">{customerErrors.phone}</p>
+              )}
+            </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 Issue Date
