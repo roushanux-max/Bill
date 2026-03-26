@@ -90,7 +90,12 @@ export default function InvoiceForm() {
           restored = JSON.parse(localDraft);
         }
 
+        const today = new Date().toISOString().split('T')[0];
         if (restored) {
+          // If it's a guest draft, ensure the date is always today when they revisit
+          if (!user) {
+            restored.date = today;
+          }
           setInvoice(restored);
         } else {
           setInvoice({
@@ -110,7 +115,7 @@ export default function InvoiceForm() {
             transportCharges: 0,
             discountTotal: 0,
             invoiceNumber: '',
-            date: new Date().toISOString().split('T')[0],
+            date: today,
             status: 'unpaid',
             updatedAt: new Date().toISOString(),
           });
