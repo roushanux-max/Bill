@@ -425,7 +425,6 @@ export default function InvoiceForm() {
   };
 
   const handlePreview = () => {
-    if (!validateForm()) return;
     setShowPreviewModal(true);
   };
 
