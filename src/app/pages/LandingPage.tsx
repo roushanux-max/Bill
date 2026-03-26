@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+// Rebuild for effortless title update
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
