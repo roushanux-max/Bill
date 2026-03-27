@@ -590,6 +590,8 @@ export default function InvoiceForm() {
     );
   }
 
+  const hasInteracted = invoice.customer?.name || invoice.customer?.phone || invoice.invoiceNumber || invoice.items.some(i => i.productName || i.unitPrice > 0 || i.quantity > 1);
+
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
       {showPreviewModal && (
@@ -638,7 +640,7 @@ export default function InvoiceForm() {
       )}
 
       {/* Inline Warning for Guests */}
-      {!user && timeLeft !== null && (
+      {!user && timeLeft !== null && hasInteracted && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in">
           <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
             <Info size={20} className="animate-pulse" />
@@ -646,7 +648,7 @@ export default function InvoiceForm() {
           <div>
             <h4 className="text-amber-800 font-bold text-sm">Guest Session Expiring</h4>
             <p className="text-amber-700 text-xs font-medium mt-0.5">
-              This invoice will be deleted in <span className="font-black text-amber-900">{Math.ceil(timeLeft / 1000 / 60)} minutes</span>. Download it to avoid losing data.
+              This invoice will be deleted in <span className="font-black text-amber-900">{Math.floor(timeLeft / 60000)}m {Math.floor((timeLeft % 60000) / 1000)}s</span>. Download it to avoid losing data.
             </p>
           </div>
         </div>
