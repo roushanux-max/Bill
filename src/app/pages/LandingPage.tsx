@@ -575,18 +575,28 @@ export default function LandingPage() {
               href="https://www.linkedin.com/in/roushankuma/"
               target="_blank"
               rel="noopener noreferrer"
+              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95"
               style={{
                 color: '#0077b5',
                 textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                transition: 'transform 0.2s',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             >
               <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+              </svg>
+            </a>
+            <a
+              href="https://www.behance.net/roushankuma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95"
+              style={{
+                color: '#053eff',
+                textDecoration: 'none',
+              }}
+            >
+              <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22 13h-5.222c0 .666.255 1.157.778 1.444.388.223.833.334 1.333.334.61 0 1.055-.223 1.333-.667h2.5c-.389 1.444-1.722 2.778-3.833 2.778-2.333 0-3.833-1.611-3.833-3.889 0-2.333 1.555-4 4-4 2.167 0 3.722 1.444 3.722 3.667v.333zm-4-1.667c-.5 0-.889.222-1.111.667h2.222c-.111-.445-.5-.667-1.111-.667zM10.278 14.611H7v2.556h3.278c.944 0 1.5-.5 1.5-1.278s-.556-1.278-1.5-1.278zm-.056-4.5h-3.222v2.222H10.222c.833 0 1.278-.444 1.278-1.111s-.444-1.111-1.278-1.111zM14.556 5H4.778V18h5.778c2.444 0 4.167-1.333 4.167-3.667 0-1.167-.556-2.056-1.5-2.611.833-.444 1.278-1.278 1.278-2.333 0-2.444-1.833-3.389-4.167-3.389h-.278zM18.889 8.167h4.056v1.333h-4.056z" />
               </svg>
             </a>
           </div>
