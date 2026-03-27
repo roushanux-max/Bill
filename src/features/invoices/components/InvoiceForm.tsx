@@ -779,14 +779,25 @@ export default function InvoiceForm() {
                   />
                 </div>
                 
-                <div className="flex flex-col gap-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">GSTIN (Optional)</label>
-                  <Input 
-                    className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
-                    placeholder="27AABCU1234F1Z5"
-                    value={currentStore?.gstin || ''}
-                    onChange={(e) => handleStoreInfoChange('gstin', e.target.value)}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">GSTIN (Optional)</label>
+                    <Input 
+                      className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
+                      placeholder="27AABCU1234F1Z5"
+                      value={currentStore?.gstin || ''}
+                      onChange={(e) => handleStoreInfoChange('gstin', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signer Name (Optional)</label>
+                    <Input 
+                      className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
+                      placeholder="e.g. John Doe"
+                      value={globalBranding?.signatureText || ''}
+                      onChange={(e) => updateSettings({ ...globalBranding, signatureText: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -852,7 +863,7 @@ export default function InvoiceForm() {
 
         {/* 1. Customer Details */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 pb-10 border-b border-slate-100">
-          <div className="relative">
+          <div className={cn("relative", !user ? "order-2 md:order-2" : "order-1 md:order-1")}>
             <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
               Phone Number
             </label>
@@ -889,7 +900,7 @@ export default function InvoiceForm() {
               </p>
             )}
           </div>
-          <div className="md:col-span-2 relative">
+          <div className={cn("md:col-span-2 relative", !user ? "order-1 md:order-1" : "order-2 md:order-2")}>
             <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
               Customer Name *
             </label>
@@ -946,7 +957,7 @@ export default function InvoiceForm() {
               </div>
             )}
           </div>
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 order-3 md:order-3">
             <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Address</label>
             <input
               className="w-full bg-slate-50 p-3 rounded-xl border focus:border-slate-300 outline-none transition-colors"

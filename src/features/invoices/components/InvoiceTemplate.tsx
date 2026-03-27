@@ -1404,6 +1404,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       {/* ── SIGNATURE ──────────────────────────────────────── */}
       <div
         style={{
+          marginTop: 'auto',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-end',
@@ -1457,7 +1458,6 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       {/* ── REDESIGNED FOOTER: ICON BASED ────────────────────── */}
       <div
         style={{
-          marginTop: 'auto',
           borderTop: `2px solid #eee`,
           padding: '24px 28px',
           backgroundColor: '#fcfcfd',
