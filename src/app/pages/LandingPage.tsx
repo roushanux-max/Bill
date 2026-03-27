@@ -285,7 +285,7 @@ export default function LandingPage() {
       <section
         id="experience"
         style={{
-          padding: '40px max(16px, calc((100vw - 1152px)/2)) 60px',
+          padding: '40px max(16px, calc((100vw - 1152px)/2)) 20px',
           background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)',
           position: 'relative',
         }}
@@ -335,7 +335,7 @@ export default function LandingPage() {
           )}
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 py-4 md:py-6 my-4 md:my-8">
+        <div className="max-w-6xl mx-auto px-4 py-4 md:py-6 my-2 md:my-4">
           <InvoiceForm onInteractionChange={setHasFormData} />
         </div>
       </section>
