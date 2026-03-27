@@ -575,43 +575,37 @@ export default function LandingPage() {
               href="https://www.linkedin.com/in/roushankuma/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95"
-              style={{
-                color: '#0077b5',
-                textDecoration: 'none',
-              }}
+              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
-              <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-              </svg>
+              <img 
+                src="https://cdn.simpleicons.org/linkedin/0077B5" 
+                alt="LinkedIn" 
+                className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
+              />
             </a>
             <a
               href="https://www.behance.net/roushankuma"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95"
-              style={{
-                color: '#053eff',
-                textDecoration: 'none',
-              }}
+              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
-              <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24" fill="currentColor">
-                <path d="M22.028 13.911h-5.241c.143 1.393 1.258 2.083 2.651 2.083 1.096 0 1.942-.519 2.308-1.291h2.241c-.461 2.019-2.222 3.49-4.549 3.49-3.235 0-5.115-2.247-5.115-5.32 0-3.136 1.838-5.32 4.965-5.32 3.036 0 4.743 2.14 4.743 5.32v1.038zm-4.945-3.328c-1.169 0-2.023.754-2.213 2.29h4.379c-.066-1.554-.836-2.29-2.166-2.29zM1.428 5.867h5.114c2.816 0 4.14 1.488 4.14 3.064 0 1.284-.716 2.345-2.016 2.768v.06c1.616.32 2.668 1.583 2.668 3.253 0 2 1.487 3.655-4.524 3.655H1.428V5.867zm5.176 5.877c1.439 0 2.115-.754 2.115-1.742 0-.96-.676-1.731-2.086-1.731H3.57v3.473h3.034zm-2.825 5h3.084c1.397 0 2.235-.742 2.235-1.897 0-1.154-.838-1.896-2.216-1.896H3.779v3.793zM15.541 7.641h6.416v1.442h-6.416z" />
-              </svg>
+              <img 
+                src="https://cdn.simpleicons.org/behance/1769FF" 
+                alt="Behance" 
+                className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
+              />
             </a>
             <a
               href="https://dribbble.com/roushankr"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95"
-              style={{
-                color: '#ea4c89',
-                textDecoration: 'none',
-              }}
+              className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
-              <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308 2.522-1.283 4.452-4.427 4.392-6.87zm-7.63 7.63c-.156-1.19-.743-4.388-2.128-7.913-.016.006-.03.013-.047.02-4.082 1.642-5.557 5.178-5.69 5.51 1.56 1.155 3.483 1.843 5.56 1.843 1.056 0 2.067-.176 3.005-.46zM5.385 17.51c.142-.31 2.226-4.627 6.134-5.83.053-.016.107-.03.16-.045-.144-.327-.296-.65-.455-.97-3.926 1.135-7.81.99-8.495.964a10.457 10.457 0 002.656 5.881zM1.94 10.211c.792.016 3.993.072 7.857-1.045-.37-.733-.775-1.464-1.216-2.176-3.83 1.487-5.462 4.102-5.59 4.31a9.96 9.96 0 00-1.05 3.204c0-.1-.001-.2-.001-.293 0-1.423.415-2.748 1.127-3.868zM12 1.581a10.428 10.428 0 00-4.305.922c.42.744.823 1.52 1.205 2.32 3.16-.94 5.918-.344 6.27-.264A10.384 10.384 0 0012 1.581zm6.942 3.82c-.446-.11-3.666-.826-6.91.43 1.353 3.692 1.934 6.742 2.04 7.33 3.167-.406 5.86.632 6.183.76a10.407 10.407 0 00-1.313-2.52z"/>
-              </svg>
+              <img 
+                src="https://cdn.simpleicons.org/dribbble/EA4C89" 
+                alt="Dribbble" 
+                className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
+              />
             </a>
           </div>
         </div>
