@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info, Download, Upload, Palette, Building2 } from 'lucide-react';
+import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info, Download, Upload, Palette, Building2, RotateCcw, Users } from 'lucide-react';
 import { cn } from '@/shared/components/ui/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
@@ -55,8 +55,10 @@ export default function InvoiceForm() {
 
   // --- State: UI & Controls ---
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   // --- Validation State ---
   const [customerErrors, setCustomerErrors] = useState<{
@@ -95,11 +97,15 @@ export default function InvoiceForm() {
           // If it's a guest draft, ensure the date is always today when they revisit
           if (!user) {
             restored.date = today;
+            if (!restored.guestCreatedAt) {
+              restored.guestCreatedAt = Date.now();
+            }
           }
           setInvoice(restored);
         } else {
           setInvoice({
             id: crypto.randomUUID(),
+            guestCreatedAt: Date.now(),
             items: [
               {
                 id: crypto.randomUUID(),
@@ -129,6 +135,40 @@ export default function InvoiceForm() {
 
     restoreData();
   }, [user?.id]);
+
+  // --- Guest Data Lifecycle & Expiration ---
+  useEffect(() => {
+    if (user || isLoadingDraft || !invoice) return;
+
+    // 1. Delete on page refresh
+    const handleBeforeUnload = () => {
+      localStorage.removeItem(getDraftKey());
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // 2. 10 minute expiration logic
+    const duration = 10 * 60 * 1000; // 10 minutes
+    const updateTimer = () => {
+      if (!invoice.guestCreatedAt) return;
+      const elapsed = Date.now() - invoice.guestCreatedAt;
+      const remaining = Math.max(0, duration - elapsed);
+      setTimeLeft(remaining);
+
+      if (remaining === 0) {
+        // Auto-delete
+        localStorage.removeItem(getDraftKey());
+        window.location.reload();
+      }
+    };
+
+    updateTimer();
+    const intervalId = setInterval(updateTimer, 1000);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      clearInterval(intervalId);
+    };
+  }, [user, isLoadingDraft, invoice?.guestCreatedAt]);
 
   // UI-only states (not persisted to DB)
   const [customerMatches, setCustomerMatches] = useState<any[]>([]);
@@ -452,11 +492,13 @@ export default function InvoiceForm() {
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset all data and start over?')) {
-      const draftKey = getDraftKey();
-      localStorage.removeItem(draftKey);
-      window.location.reload(); // Simplest way to ensure all derived state & hooks reset
-    }
+    setShowResetModal(true);
+  };
+
+  const confirmReset = () => {
+    const draftKey = getDraftKey();
+    localStorage.removeItem(draftKey);
+    window.location.reload(); // Simplest way to ensure all derived state & hooks reset
   };
 
   const handlePreview = () => {
@@ -569,6 +611,47 @@ export default function InvoiceForm() {
         />
       )}
 
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl scale-in-center">
+            <h3 className="text-2xl font-black text-slate-800 mb-2">Reset Invoice</h3>
+            <p className="text-slate-500 font-medium mb-8">This will clear all data permanently</p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                className="font-bold rounded-xl h-12 px-6 border-slate-200"
+                onClick={() => setShowResetModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="font-bold rounded-xl h-12 px-6 flex items-center gap-2 bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20"
+                onClick={confirmReset}
+              >
+                <Trash2 size={18} />
+                Reset
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inline Warning for Guests */}
+      {!user && timeLeft !== null && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in">
+          <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
+            <Info size={20} className="animate-pulse" />
+          </div>
+          <div>
+            <h4 className="text-amber-800 font-bold text-sm">Guest Session Expiring</h4>
+            <p className="text-amber-700 text-xs font-medium mt-0.5">
+              This invoice will be deleted in <span className="font-black text-amber-900">{Math.ceil(timeLeft / 1000 / 60)} minutes</span>. Download it to avoid losing data.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-2">
         <div>
           <h2 className="text-2xl font-black text-slate-800">Invoice Details</h2>
@@ -589,7 +672,7 @@ export default function InvoiceForm() {
                 <Palette size={20} strokeWidth={3} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-800">Business Branding</h3>
+                <h3 className="text-lg font-black text-slate-800">Business Details</h3>
                 <p className="text-xs text-slate-500 font-bold">Customize how your business appears on the invoice.</p>
               </div>
             </div>
@@ -709,6 +792,17 @@ export default function InvoiceForm() {
             </div>
           </div>
         )}
+
+        {/* ─── CUSTOMER DETAILS HEADER ─── */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+            <Users size={20} strokeWidth={3} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-slate-800">Customer Details</h3>
+            <p className="text-xs text-slate-500 font-bold">Provide invoice meta and customer information below.</p>
+          </div>
+        </div>
 
         {/* ─── EXISTING FORM HEADER (INVOICE NO & DATE) ─── */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-slate-100/80">
@@ -1145,9 +1239,28 @@ export default function InvoiceForm() {
           </button>
         </div>
 
-        {/* 3. Totals Summary — directly below items table */}
-        <div className="flex justify-end mt-2 mb-8">
-          <div className="w-full md:w-96 bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
+        {/* 3 & 4. Notes and Totals Summary (Side by side) */}
+        <div className="flex flex-col md:flex-row justify-between items-end gap-8 mt-6">
+          {/* Notes (Left Side) */}
+          <div className="flex-1 w-full relative">
+            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
+              Terms & Notes
+            </label>
+            <textarea
+              className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[140px]"
+              placeholder="Payment terms, thank you notes..."
+              value={invoice.notes}
+              onChange={(e) => updateInvoice({ notes: e.target.value })}
+            />
+            {lastSaved && (
+              <p className="absolute -bottom-6 left-0 text-[10px] text-slate-400 font-medium">
+                Last autosaved at {lastSaved}
+              </p>
+            )}
+          </div>
+
+          {/* Totals Summary (Right Side) */}
+          <div className="w-full md:w-[400px] shrink-0 bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
             <div className="flex justify-between items-center text-slate-600 text-sm pb-3 border-b border-slate-200/60">
               <span className="font-bold">Subtotal:</span>
               <span className="font-bold">
@@ -1198,26 +1311,6 @@ export default function InvoiceForm() {
             </div>
           </div>
         </div>
-
-        {/* 4. Notes */}
-        <div className="flex-1 space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
-              Terms & Notes
-            </label>
-            <textarea
-              className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[100px]"
-              placeholder="Payment terms, thank you notes..."
-              value={invoice.notes}
-              onChange={(e) => updateInvoice({ notes: e.target.value })}
-            />
-            {lastSaved && (
-              <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                Last autosaved at {lastSaved}
-              </p>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* ACTION FOOTER */}
@@ -1231,8 +1324,9 @@ export default function InvoiceForm() {
             type="button"
             variant="secondary"
             onClick={handleReset}
-            className="w-full sm:w-auto font-bold h-12 px-8 rounded-xl order-2 sm:order-1"
+            className="w-full sm:w-auto font-bold h-12 px-8 rounded-xl order-2 sm:order-1 flex items-center gap-2"
           >
+            <RotateCcw size={18} />
             Reset
           </Button>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto order-1 sm:order-2">

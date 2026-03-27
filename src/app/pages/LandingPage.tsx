@@ -306,22 +306,28 @@ export default function LandingPage() {
           </p>
 
           {/* Prominent Guest Message */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '10px 20px',
-              background: '#f0f9ff',
-              borderRadius: 100,
-              border: '1px solid #bae6fd',
-              color: '#0369a1',
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            <Shield size={18} fill="#0ea5e9" color="#fff" />
-            <span>Privacy-First: No data is saved to our servers until you login.</span>
+          <div className="flex flex-col items-center gap-3">
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 20px',
+                background: '#f0f9ff',
+                borderRadius: 100,
+                border: '1px solid #bae6fd',
+                color: '#0369a1',
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              <Shield size={18} fill="#0ea5e9" color="#fff" />
+              <span>Create invoices instantly. Register to save and access them anytime — guest invoices are temporary.</span>
+            </div>
+            
+            <p className="text-sm font-medium text-slate-500 max-w-md">
+              Guest invoices are deleted after 10 minutes or on page refresh. Download before leaving.
+            </p>
           </div>
         </div>
 

@@ -77,9 +77,9 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   // Apply styles when settings change (prioritize override if present)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      applyBrandingStyles(overrideSettings || settings);
+      applyBrandingStyles(overrideSettings || settings, !!user);
     }
-  }, [settings, overrideSettings]);
+  }, [settings, overrideSettings, !!user]);
 
   const refreshBranding = async () => {
     // Avoid double-loading if we already have a user but no data yet
@@ -92,7 +92,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
       if (savedSettings) {
         setSettings(savedSettings);
-        applyBrandingStyles(savedSettings);
+        applyBrandingStyles(savedSettings, !!user);
         // Sync to local storage for the next instant-load
         const bKey = getUserKey('bill_branding_settings');
         if (bKey) safeSet(bKey, JSON.stringify(savedSettings));
@@ -138,7 +138,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
           try {
             const newSettings = JSON.parse(se.newValue) as BrandingSettings;
             setSettings(newSettings);
-            applyBrandingStyles(newSettings);
+            applyBrandingStyles(newSettings, !!user);
           } catch (e) {}
         }
         if (se.key === getUserKey('bill_store_info') && se.newValue) {
@@ -171,7 +171,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const updateSettings = async (newSettings: BrandingSettings) => {
     if (overrideSettings) setOverrideSettings(newSettings); // update temp if in temp mode
     setSettings(newSettings);
-    applyBrandingStyles(newSettings);
+    applyBrandingStyles(newSettings, !!user);
     if (user) await saveBrandingSettings(newSettings);
   };
 
@@ -226,9 +226,12 @@ export function useBranding() {
   return context;
 }
 
-function applyBrandingStyles(settings: BrandingSettings) {
+function applyBrandingStyles(settings: BrandingSettings, isLoggedIn: boolean = false) {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;
+
+  // Use default color for website if not logged in
+  const websiteColor = isLoggedIn ? settings.primaryColor : defaultBrandingSettings.primaryColor;
 
   // Create dynamic stylesheet for theme colors
   const styleId = 'branding-theme-styles';
@@ -241,25 +244,25 @@ function applyBrandingStyles(settings: BrandingSettings) {
   }
 
   const dynamicTextColor = '#1a1a2e'; // Standardized deep dark for readability
-  const primaryLight = generateSecondaryColor(settings.primaryColor);
-  const primaryHover = adjustBrightness(settings.primaryColor, -10);
-  const primaryActive = adjustBrightness(settings.primaryColor, -20);
-  const primaryForeground = getAAAForeground(settings.primaryColor);
+  const primaryLight = generateSecondaryColor(websiteColor);
+  const primaryHover = adjustBrightness(websiteColor, -10);
+  const primaryActive = adjustBrightness(websiteColor, -20);
+  const primaryForeground = getAAAForeground(websiteColor);
 
   const themeCSS = `
     :root {
-      --color-primary: ${settings.primaryColor};
+      --color-primary: ${websiteColor};
       --color-primary-hover: ${primaryHover};
       --color-primary-active: ${primaryActive};
       --color-primary-light: ${primaryLight};
       --color-primary-foreground: ${primaryForeground};
-      --brand-color: ${settings.primaryColor};
+      --brand-color: ${websiteColor};
       --brand-color-hover: ${primaryHover};
       --brand-color-light: ${primaryLight};
       --brand-color-foreground: ${primaryForeground};
       --color-secondary: ${primaryLight};
       --color-contrast-text: ${primaryForeground};
-      --primary: ${settings.primaryColor};
+      --primary: ${websiteColor};
       --primary-hover: ${primaryHover};
       --primary-active: ${primaryActive};
       --primary-light: ${primaryLight};
@@ -270,12 +273,12 @@ function applyBrandingStyles(settings: BrandingSettings) {
     }
 
     .user-theme {
-      --primary: ${settings.primaryColor};
+      --primary: ${websiteColor};
       --primary-hover: ${primaryHover};
       --primary-active: ${primaryActive};
       --primary-light: ${primaryLight};
       --primary-foreground: ${primaryForeground};
-      --brand-color: ${settings.primaryColor};
+      --brand-color: ${websiteColor};
       --brand-color-hover: ${primaryHover};
       --brand-color-light: ${primaryLight};
       --brand-color-foreground: ${primaryForeground};
@@ -287,8 +290,8 @@ function applyBrandingStyles(settings: BrandingSettings) {
 
     /* Input focus states */
     .user-theme input:focus, .user-theme textarea:focus, .user-theme select:focus {
-      border-color: ${settings.primaryColor} !important;
-      box-shadow: 0 0 0 2px ${settings.primaryColor}40 !important;
+      border-color: ${websiteColor} !important;
+      box-shadow: 0 0 0 2px ${websiteColor}40 !important;
     }
 
     /* Keep links neutral and only show brand on subtle hovers/specific components */

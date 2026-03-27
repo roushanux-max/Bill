@@ -1072,7 +1072,7 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
       </div>
 
       {/* ── ITEMS TABLE ────────────────────────────────────── */}
-      <div style={{ padding: '0 28px', flex: 1 }}>
+      <div style={{ padding: '0 28px' }}>
         <table
           style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', lineHeight: '1.4' }}
         >
