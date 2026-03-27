@@ -578,7 +578,7 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://img.icons8.com/color/48/linkedin.png" 
+                src="https://img.icons8.com/fluency/48/linkedin.png" 
                 alt="LinkedIn" 
                 className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
@@ -590,7 +590,7 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://img.icons8.com/color/48/behance.png" 
+                src="https://img.icons8.com/fluency/48/behance.png" 
                 alt="Behance" 
                 className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
@@ -602,7 +602,7 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://img.icons8.com/color/48/dribbble.png" 
+                src="https://img.icons8.com/fluency/48/dribbble.png" 
                 alt="Dribbble" 
                 className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
