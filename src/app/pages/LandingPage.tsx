@@ -578,9 +578,9 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://cdn.simpleicons.org/linkedin/0a66c2" 
+                src="https://img.icons8.com/color/48/linkedin.png" 
                 alt="LinkedIn" 
-                className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
+                className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
             </a>
             <a
@@ -590,9 +590,9 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://cdn.simpleicons.org/behance/1769ff" 
+                src="https://img.icons8.com/color/48/behance.png" 
                 alt="Behance" 
-                className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
+                className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
             </a>
             <a
@@ -602,9 +602,9 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://cdn.simpleicons.org/dribbble/ea4c89" 
+                src="https://img.icons8.com/color/48/dribbble.png" 
                 alt="Dribbble" 
-                className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
+                className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
             </a>
           </div>
