@@ -419,15 +419,16 @@ export function generateInvoicePDF(
   pdf.setLineWidth(0.5);
   pdf.line(sigX, sigY, sigX + sigW, sigY);
 
-  const sigText = settings.signatureText || storeInfo.name?.split(' ')[0] || 'Authorized Signatory';
-  setFont('bold', 9, textDark);
-  pdf.text(sigText, sigX + sigW / 2, sigY + 5, { align: 'center' });
-
-  // Only show sub-label if the main text isn't already the label
-  if (sigText.toLowerCase() !== 'authorized signatory') {
-    setFont('normal', 7, textLight);
-    pdf.text('Authorized Signatory', sigX + sigW / 2, sigY + 8, { align: 'center' });
+  const sigText = settings.signatureText || '';
+  if (sigText) {
+    setFont('bold', 10, textDark);
+    pdf.text(sigText, sigX + sigW / 2, sigY + 5, { align: 'center' });
   }
+
+  // Use the custom signature title or default to 'Authorized Signatory'
+  const finalTitle = settings.signatureTitle || 'Authorized Signatory';
+  setFont('normal', 8, textMid);
+  pdf.text(finalTitle, sigX + sigW / 2, sigY + 9, { align: 'center' });
 
   // ── ICON-BASED FOOTER ────────────────────────────────────────
   const footerH = 35;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info, Download, Upload, Palette, Building2, RotateCcw, Users } from 'lucide-react';
 import { cn } from '@/shared/components/ui/utils';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import {
   generateInvoicePDF,
   getInvoiceFilename,
@@ -12,6 +12,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { useBranding } from '@/shared/contexts/BrandingContext';
+import { Invoice, InvoiceItem } from '@/features/invoices/types/invoice';
 import { saveInvoice as dbSaveInvoice, getAndIncrementInvoiceNumber } from '@/shared/utils/storage';
 import { validateInput, ValidationRules } from '@/shared/utils/validation';
 import { formatDateForDisplay } from '@/shared/utils/dateUtils';
@@ -70,12 +71,23 @@ export default function InvoiceForm() {
   >({});
 
   // --- State: Single Source of Truth ---
-  const [invoice, setInvoice] = useState<any>({
+  const [invoice, setInvoice] = useState<Invoice>({
+    id: crypto.randomUUID(),
     items: [],
-    customer: { name: '', phone: '', email: '', address: '' },
+    customer: { id: '', name: '', phone: '', email: '', gstin: '', address: '', state: '', createdAt: new Date().toISOString() },
     transportCharges: 0,
     discountTotal: 0,
     invoiceNumber: '',
+    date: new Date().toISOString().split('T')[0],
+    subtotal: 0,
+    taxTotal: 0,
+    grandTotal: 0,
+    notes: '',
+    status: 'unpaid',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    store_id: '',
+    customerId: '',
   });
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
 
@@ -86,10 +98,10 @@ export default function InvoiceForm() {
       try {
         const draftKey = getDraftKey();
         const localDraft = localStorage.getItem(draftKey);
-        let restored = null;
+        let restored: Invoice | null = null;
 
         if (localDraft) {
-          restored = JSON.parse(localDraft);
+          restored = JSON.parse(localDraft) as Invoice;
         }
 
         const today = new Date().toISOString().split('T')[0];
@@ -106,24 +118,43 @@ export default function InvoiceForm() {
           setInvoice({
             id: crypto.randomUUID(),
             guestCreatedAt: Date.now(),
+            store_id: 'draft',
+            customerId: '',
+            invoiceNumber: '',
+            date: today,
+            subtotal: 0,
+            taxTotal: 0,
+            discountTotal: 0,
+            grandTotal: 0,
+            transportCharges: 0,
+            notes: 'Thank you for your business.',
+            status: 'unpaid',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             items: [
               {
                 id: crypto.randomUUID(),
+                invoice_id: 'draft',
                 productName: '',
                 quantity: 1,
                 unitPrice: 0,
                 taxRate: 18,
+                taxAmount: 0,
+                discountAmount: 0,
                 totalAmount: 0,
+                createdAt: new Date().toISOString(),
               },
             ],
-            customer: { name: '', phone: '', email: '', address: '' },
-            notes: 'Thank you for your business.',
-            transportCharges: 0,
-            discountTotal: 0,
-            invoiceNumber: '',
-            date: today,
-            status: 'unpaid',
-            updatedAt: new Date().toISOString(),
+            customer: { 
+              id: crypto.randomUUID(),
+              name: '',
+              phone: '',
+              email: '',
+              gstin: '',
+              address: '',
+              state: '',
+              createdAt: new Date().toISOString()
+            },
           });
         }
       } catch (e) {
@@ -423,11 +454,14 @@ export default function InvoiceForm() {
     customerId: invoice.customer.id || null,
     status: 'unpaid',
     customer: {
-      id: invoice.customer.id,
+      id: invoice.customer.id || crypto.randomUUID(),
       name: invoice.customer.name || 'Walk-in',
-      phone: invoice.customer.mobile,
-      email: invoice.customer.email,
-      address: invoice.customer.address,
+      phone: invoice.customer.phone || '',
+      email: invoice.customer.email || '',
+      address: invoice.customer.address || '',
+      gstin: invoice.customer.gstin || '',
+      state: invoice.customer.state || '',
+      createdAt: invoice.customer.createdAt || new Date().toISOString(),
     },
     items: getSerializedItems(),
     subtotal,
@@ -521,11 +555,11 @@ export default function InvoiceForm() {
         await saveCustomer({
           id: invoice.customer.id || crypto.randomUUID(),
           name: invoice.customer.name,
-          phone: invoice.customer.mobile || '',
+          phone: invoice.customer.phone || '',
           email: invoice.customer.email || '',
           address: invoice.customer.address || '',
           gstin: invoice.customer.gstin || '',
-          state: '',
+          state: invoice.customer.state || '',
           isSynced: false,
           createdAt: new Date().toISOString(),
         });

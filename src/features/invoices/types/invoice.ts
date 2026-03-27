@@ -67,8 +67,10 @@ export interface Invoice {
   isSynced?: boolean;
   lastSyncedAt?: string;
   // UI Helpers (populated on load)
-  items?: InvoiceItem[];
-  customer?: Customer;
+  items: InvoiceItem[];
+  customer: Customer;
+  dueDate?: string;
+  guestCreatedAt?: number;
 }
 
 export interface Payment {

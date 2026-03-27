@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { ArrowLeft, Printer, Download, Share2, Pencil, ChevronLeft } from 'lucide-react';
 import Header from '@/shared/components/Header';

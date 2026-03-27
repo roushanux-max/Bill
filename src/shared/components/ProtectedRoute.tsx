@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import LoadingScreen from '@/shared/components/LoadingScreen';
