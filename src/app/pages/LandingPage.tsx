@@ -101,7 +101,7 @@ export default function LandingPage() {
     }
     metaKeywords.setAttribute(
       'content',
-      'Free GST Billing Software India, Invoice Generator for Small Business India, GST Compliant Invoice Maker, Professional Invoicing Tool, Business Management App India, Offline First PWA Billing'
+      'Roushan Kumar, roushan.framer.website, Free GST Billing Software India, Invoice Generator for Small Business India, GST Compliant Invoice Maker, Professional Invoicing Tool, Business Management App India, Offline First PWA Billing'
     );
 
     return () => {

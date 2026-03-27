@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Developed by Roushan Kumar
+# Portfolio: https://roushan.framer.website
