@@ -70,6 +70,7 @@ export interface Invoice {
   items: InvoiceItem[];
   customer: Customer;
   dueDate?: string;
+  termsAndConditions?: string;
   guestCreatedAt?: number;
 }
 

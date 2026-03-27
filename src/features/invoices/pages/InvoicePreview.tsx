@@ -368,9 +368,9 @@ export default function InvoicePreview() {
       {/* 3. INVOICE CONTENT */}
       <main className="print:p-0 print:max-w-full print:mt-0">
         <div className="w-full bg-slate-50 py-12 sm:py-20 print:p-0 print:bg-white min-h-screen">
-          <div className="max-w-6xl mx-auto px-4 flex justify-center overflow-x-auto sm:overflow-visible">
+          <div className="max-w-6xl mx-auto px-4 flex justify-start md:justify-center overflow-x-auto sm:overflow-x-visible pb-8">
             <article
-              className="bg-white shadow-2xl rounded-sm print:shadow-none flex-shrink-0"
+              className="bg-white shadow-2xl rounded-sm print:shadow-none shrink-0"
               style={{ width: '210mm', minHeight: '297mm' }}
             >
               <InvoiceTemplate invoice={invoice!} settings={settings} storeInfo={storeInfo} />

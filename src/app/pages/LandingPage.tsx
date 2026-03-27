@@ -13,6 +13,7 @@ import {
   Trash2,
   Download,
   Eye,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/shared/components/Logo';
@@ -75,6 +76,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [hasFormData, setHasFormData] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }: { data: any }) => setUser(data.user));
@@ -305,34 +307,36 @@ export default function LandingPage() {
             required to try.
           </p>
 
-          {/* Prominent Guest Message */}
-          <div className="flex flex-col items-center gap-3">
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 20px',
-                background: '#f0f9ff',
-                borderRadius: 100,
-                border: '1px solid #bae6fd',
-                color: '#0369a1',
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              <Shield size={18} fill="#0ea5e9" color="#fff" />
-              <span>Create invoices instantly. Register to save and access them anytime — guest invoices are temporary.</span>
+          {/* Prominent Guest Message - ONLY shown if user has data */}
+          {!user && hasFormData && (
+            <div className="flex flex-col items-center gap-3">
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 20px',
+                  background: '#f0f9ff',
+                  borderRadius: 100,
+                  border: '1px solid #bae6fd',
+                  color: '#0369a1',
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                <Shield size={18} fill="#0ea5e9" color="#fff" />
+                <span>Create invoices instantly. Register to save and access them anytime — guest invoices are temporary.</span>
+              </div>
+              
+              <p className="text-sm font-medium text-slate-500 max-w-md">
+                Guest invoices are deleted after 10 minutes or on page refresh. Download before leaving.
+              </p>
             </div>
-            
-            <p className="text-sm font-medium text-slate-500 max-w-md">
-              Guest invoices are deleted after 10 minutes or on page refresh. Download before leaving.
-            </p>
-          </div>
+          )}
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-4 md:py-6 my-4 md:my-8">
-          <InvoiceForm />
+          <InvoiceForm onInteractionChange={setHasFormData} />
         </div>
       </section>
 
@@ -478,7 +482,7 @@ export default function LandingPage() {
               bg: 'var(--color-primary-light)',
             },
             {
-              icon: ArrowRight,
+              icon: Sparkles,
               title: 'Premium Branding',
               desc: 'Customize invoices with your company logo, signature, and theme colors. Make your brand stand out on every document.',
               color: '#334155',

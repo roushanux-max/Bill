@@ -23,7 +23,11 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 
 import InvoicePreviewModal from './InvoicePreviewModal';
 
-export default function InvoiceForm() {
+export default function InvoiceForm({
+  onInteractionChange,
+}: {
+  onInteractionChange?: (hasData: boolean) => void;
+}) {
   const { user } = useAuth();
   const { settings: globalBranding, storeInfo: currentStore, updateSettings, updateStoreInfo } = useBranding();
   const navigate = useNavigate();
@@ -624,7 +628,24 @@ export default function InvoiceForm() {
     );
   }
 
-  const hasInteracted = invoice.customer?.name || invoice.customer?.phone || invoice.invoiceNumber || invoice.items.some(i => i.productName || i.unitPrice > 0 || i.quantity > 1);
+  const hasInteracted =
+    invoice.customer?.name?.trim() ||
+    invoice.customer?.phone?.trim() ||
+    invoice.items.some(
+      (i) =>
+        i.productName?.trim() ||
+        i.unitPrice > 0 ||
+        i.quantity > 1 ||
+        (i.hsn && i.hsn.trim()) ||
+        (i.unit && i.unit !== 'pcs')
+    ) ||
+    (invoice.notes && invoice.notes !== 'Thank you for your business.');
+
+  useEffect(() => {
+    if (onInteractionChange) {
+      onInteractionChange(Boolean(hasInteracted));
+    }
+  }, [hasInteracted, onInteractionChange]);
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
@@ -1288,22 +1309,36 @@ export default function InvoiceForm() {
 
         {/* 3 & 4. Notes and Totals Summary (Side by side) */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mt-6">
-          {/* Notes (Left Side) */}
-          <div className="flex-1 w-full relative">
-            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
-              Terms & Notes
-            </label>
-            <textarea
-              className="w-full bg-slate-50 p-4 rounded-xl border focus:border-slate-300 outline-none transition-colors text-slate-600 min-h-[140px]"
-              placeholder="Payment terms, thank you notes..."
-              value={invoice.notes}
-              onChange={(e) => updateInvoice({ notes: e.target.value })}
-            />
-            {lastSaved && (
-              <p className="absolute -bottom-6 left-0 text-[10px] text-slate-400 font-medium">
-                Last autosaved at {lastSaved}
-              </p>
-            )}
+          {/* Notes and Terms (Left Side) */}
+          <div className="flex-1 w-full space-y-6">
+            <div className="relative">
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                Invoice Notes
+              </label>
+              <textarea
+                className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 focus:border-[var(--brand-color)] focus:ring-1 focus:ring-[var(--brand-color)]/20 outline-none transition-all text-slate-600 min-h-[100px] text-sm"
+                placeholder="e.g. Please include invoice number in payment."
+                value={invoice.notes}
+                onChange={(e) => updateInvoice({ notes: e.target.value })}
+              />
+            </div>
+
+            <div className="relative">
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                Terms & Conditions
+              </label>
+              <textarea
+                className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 focus:border-[var(--brand-color)] focus:ring-1 focus:ring-[var(--brand-color)]/20 outline-none transition-all text-slate-600 min-h-[120px] text-sm"
+                placeholder="Standard business terms..."
+                value={invoice.termsAndConditions ?? globalBranding.termsAndConditions}
+                onChange={(e) => updateInvoice({ termsAndConditions: e.target.value })}
+              />
+              {lastSaved && (
+                <p className="absolute -bottom-6 left-0 text-[10px] text-slate-400 font-medium italic">
+                  Draft saved at {lastSaved}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Totals Summary (Right Side) */}
