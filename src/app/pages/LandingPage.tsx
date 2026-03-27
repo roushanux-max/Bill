@@ -578,7 +578,7 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://cdn.simpleicons.org/linkedin/0077B5" 
+                src="https://cdn.simpleicons.org/linkedin/0a66c2" 
                 alt="LinkedIn" 
                 className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
               />
@@ -590,7 +590,7 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://cdn.simpleicons.org/behance/1769FF" 
+                src="https://cdn.simpleicons.org/behance/1769ff" 
                 alt="Behance" 
                 className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
               />
@@ -602,7 +602,7 @@ export default function LandingPage() {
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
               <img 
-                src="https://cdn.simpleicons.org/dribbble/EA4C89" 
+                src="https://cdn.simpleicons.org/dribbble/ea4c89" 
                 alt="Dribbble" 
                 className="w-[18px] h-[18px] transition-transform group-hover:scale-110"
               />
