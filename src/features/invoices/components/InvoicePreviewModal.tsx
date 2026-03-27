@@ -12,6 +12,7 @@ interface InvoicePreviewModalProps {
   transportCharges: number;
   grandTotal: number;
   notes: string;
+  termsAndConditions?: string;
   onClose: () => void;
   onDownload: (templateId: string) => void;
 }
@@ -25,6 +26,7 @@ export default function InvoicePreviewModal({
   transportCharges,
   grandTotal,
   notes,
+  termsAndConditions,
   onClose,
   onDownload,
 }: InvoicePreviewModalProps) {
@@ -82,6 +84,7 @@ export default function InvoicePreviewModal({
                 taxTotal: tax,
                 discountTotal: discount,
                 notes,
+                termsAndConditions,
                 transportCharges: transportCharges,
                 templateId: selectedTemplate,
               }}

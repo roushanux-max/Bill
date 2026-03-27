@@ -629,17 +629,14 @@ export default function InvoiceForm({
   }
 
   const hasInteracted =
-    invoice.customer?.name?.trim() ||
-    invoice.customer?.phone?.trim() ||
-    invoice.items.some(
-      (i) =>
-        i.productName?.trim() ||
-        i.unitPrice > 0 ||
-        i.quantity > 1 ||
-        (i.hsn && i.hsn.trim()) ||
-        (i.unit && i.unit !== 'pcs')
-    ) ||
-    (invoice.notes && invoice.notes !== 'Thank you for your business.');
+    (invoice.customer?.name?.trim() !== '') ||
+    (invoice.customer?.phone?.trim() !== '') ||
+    (invoice.items.some(i => i.productName?.trim() !== '' || i.unitPrice > 0)) ||
+    (invoice.notes && invoice.notes.trim() !== '' && invoice.notes !== 'Thank you for your business.') ||
+    (invoice.termsAndConditions && invoice.termsAndConditions.trim() !== '') ||
+    (globalBranding.logo !== null) ||
+    (globalBranding.signatureImage !== null) ||
+    (globalBranding.signatureText && globalBranding.signatureText.trim() !== '');
 
   useEffect(() => {
     if (onInteractionChange) {
@@ -663,6 +660,7 @@ export default function InvoiceForm({
           transportCharges={Number(invoice.transportCharges)}
           grandTotal={grandTotal}
           notes={invoice.notes}
+          termsAndConditions={invoice.termsAndConditions}
           onClose={() => setShowPreviewModal(false)}
           onDownload={handleDownloadPDF}
         />
