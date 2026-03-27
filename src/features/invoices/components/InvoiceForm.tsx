@@ -619,6 +619,26 @@ export default function InvoiceForm({
     setShowPreviewModal(false);
   };
 
+  const hasInteracted = useMemo(() => {
+    if (!invoice) return false;
+    return (
+      (invoice.customer?.name?.trim() !== '') ||
+      (invoice.customer?.phone?.trim() !== '') ||
+      (invoice.items.some(i => i.productName?.trim() !== '' || i.unitPrice > 0)) ||
+      (invoice.notes && invoice.notes.trim() !== '' && invoice.notes !== 'Thank you for your business.') ||
+      (invoice.termsAndConditions && invoice.termsAndConditions.trim() !== '') ||
+      (globalBranding.logo !== null) ||
+      (globalBranding.signatureImage !== null) ||
+      (globalBranding.signatureText && globalBranding.signatureText.trim() !== '')
+    );
+  }, [invoice, globalBranding]);
+
+  useEffect(() => {
+    if (onInteractionChange) {
+      onInteractionChange(Boolean(hasInteracted));
+    }
+  }, [hasInteracted, onInteractionChange]);
+
   if (isLoadingDraft || !invoice) {
     return (
       <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200 rounded-3xl animate-pulse">
@@ -627,22 +647,6 @@ export default function InvoiceForm({
       </div>
     );
   }
-
-  const hasInteracted =
-    (invoice.customer?.name?.trim() !== '') ||
-    (invoice.customer?.phone?.trim() !== '') ||
-    (invoice.items.some(i => i.productName?.trim() !== '' || i.unitPrice > 0)) ||
-    (invoice.notes && invoice.notes.trim() !== '' && invoice.notes !== 'Thank you for your business.') ||
-    (invoice.termsAndConditions && invoice.termsAndConditions.trim() !== '') ||
-    (globalBranding.logo !== null) ||
-    (globalBranding.signatureImage !== null) ||
-    (globalBranding.signatureText && globalBranding.signatureText.trim() !== '');
-
-  useEffect(() => {
-    if (onInteractionChange) {
-      onInteractionChange(Boolean(hasInteracted));
-    }
-  }, [hasInteracted, onInteractionChange]);
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
