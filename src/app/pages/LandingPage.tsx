@@ -556,20 +556,18 @@ export default function LandingPage() {
               color: '#94a3b8',
             }}
           >
-            <span>
+            <span className="font-medium">
               Designed & Developed by
               <a
                 href="https://roushan.framer.website"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="text-indigo-600 hover:text-indigo-700 font-bold transition-colors ml-1.5"
                 style={{
-                  color: 'var(--color-primary)',
                   textDecoration: 'none',
-                  fontWeight: 600,
-                  marginLeft: 4,
                 }}
               >
-                roushan.framer.website
+                Roushan Kumar
               </a>
             </span>
             <span style={{ color: '#e2e8f0' }}>|</span>
