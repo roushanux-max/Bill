@@ -43,14 +43,12 @@ export const defaultBrandingSettings: BrandingSettings = {
   fontSize: 'medium',
   showFooter: true,
   footerText: 'Thank you for your business!',
-  invoiceNotes:
-    'All Subject to Arrah Jurisdiction only.\nGoods once sold will not be taken back.\nAll works transit will be entertained.',
-  termsAndConditions: `Terms & Conditions:
-1. All invoices generated are for record-keeping purposes.
-2. Users are responsible for ensuring the accuracy of entered data.
-3. The platform is not liable for any financial or legal discrepancies.
-4. Ensure invoices are downloaded and stored securely.
-5. Usage of this platform implies acceptance of these terms.`,
+  invoiceNotes: 'Thank you for your business.',
+  termsAndConditions: `1. Goods once sold will not be taken back or exchanged.
+2. Please check your goods/services at the time of delivery.
+3. Payment is due within 7 days from the invoice date.
+4. Interest at 18% per annum will be charged on overdue payments.
+5. All disputes are subject to local jurisdiction.`,
   showSignature: true,
   signatureImage: null,
   signatureText: '',

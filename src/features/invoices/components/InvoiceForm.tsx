@@ -1319,8 +1319,8 @@ export default function InvoiceForm({
               </label>
               <textarea
                 className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 focus:border-[var(--brand-color)] focus:ring-1 focus:ring-[var(--brand-color)]/20 outline-none transition-all text-slate-600 min-h-[100px] text-sm"
-                placeholder="e.g. Please include invoice number in payment."
-                value={invoice.notes}
+                placeholder="Message for your customer..."
+                value={invoice.notes || ''}
                 onChange={(e) => updateInvoice({ notes: e.target.value })}
               />
             </div>
@@ -1332,7 +1332,7 @@ export default function InvoiceForm({
               <textarea
                 className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 focus:border-[var(--brand-color)] focus:ring-1 focus:ring-[var(--brand-color)]/20 outline-none transition-all text-slate-600 min-h-[120px] text-sm"
                 placeholder="Standard business terms..."
-                value={invoice.termsAndConditions ?? globalBranding.termsAndConditions}
+                value={invoice.termsAndConditions || globalBranding.termsAndConditions || ''}
                 onChange={(e) => updateInvoice({ termsAndConditions: e.target.value })}
               />
               {lastSaved && (
