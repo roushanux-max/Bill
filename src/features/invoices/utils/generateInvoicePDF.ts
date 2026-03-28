@@ -214,6 +214,15 @@ export function generateInvoicePDF(
   const hasAnyHSN = (invoice.items || []).some(
     (item) => item.hsn && item.hsn.trim() !== '' && item.hsn !== '-'
   );
+  const hasAnySize = (invoice.items || []).some(
+    (item: any) => item.unit && item.unit.trim() !== '' && item.unit !== '-'
+  );
+  const hasAnyColor = (invoice.items || []).some(
+    (item: any) => item.color && item.color.trim() !== '' && item.color !== '-'
+  );
+  const hasAnyMaterial = (invoice.items || []).some(
+    (item: any) => item.material && item.material.trim() !== '' && item.material !== '-'
+  );
 
   let cols = [
     { label: 'QTY', w: 12, align: 'center' },
@@ -224,10 +233,13 @@ export function generateInvoicePDF(
     { label: 'TOTAL', w: 30, align: 'right' },
   ];
 
-  if (activeDomain === 'clothing') {
+  if (hasAnySize) {
     cols.splice(2, 0, { label: 'SIZE', w: 12, align: 'center', id: 'size' });
-    cols.splice(3, 0, { label: 'COLOR', w: 12, align: 'center', id: 'color' });
-  } else if (activeDomain === 'furniture') {
+  }
+  if (hasAnyColor) {
+    cols.splice(hasAnySize ? 4 : 3, 0, { label: 'COLOR', w: 12, align: 'center', id: 'color' });
+  }
+  if (hasAnyMaterial) {
     cols.splice(2, 0, { label: 'MATERIAL', w: 24, align: 'center', id: 'material' });
   }
 
