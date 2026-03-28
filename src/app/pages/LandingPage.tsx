@@ -9,11 +9,18 @@ import {
   Users,
   Package,
   ChevronDown,
-  Plus,
-  Trash2,
   Download,
-  Eye,
   Sparkles,
+  Briefcase,
+  Sofa,
+  Scissors,
+  ShoppingCart,
+  Stethoscope,
+  Hotel,
+  Code2,
+  Cpu,
+  Utensils,
+  ShoppingBag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Logo from '@/shared/components/Logo';
@@ -69,6 +76,19 @@ const stats = [
   { value: '60s', label: 'To create an invoice' },
   { value: '100%', label: 'GST compliant' },
   { value: 'Free', label: 'Forever for small businesses' },
+];
+
+const DOMAINS = [
+  { id: 'furniture',    label: 'Furniture',           icon: Sofa,         color: '#92400e', bg: '#fef3c7', desc: 'Material, HSN & dimensions' },
+  { id: 'clothing',     label: 'Clothing & Fashion',   icon: Scissors,     color: '#be185d', bg: '#fdf2f8', desc: 'Size, color & fabric details' },
+  { id: 'grocery',      label: 'Grocery / Kirana',     icon: ShoppingCart,  color: '#15803d', bg: '#f0fdf4', desc: 'Units, batch & FMCG billing' },
+  { id: 'medical',      label: 'Medical / Pharmacy',   icon: Stethoscope,  color: '#0369a1', bg: '#f0f9ff', desc: 'Patient & prescription fields' },
+  { id: 'hotel',        label: 'Hotel & Restaurant',   icon: Hotel,        color: '#b45309', bg: '#fffbeb', desc: 'Rooms, covers & stay billing' },
+  { id: 'freelance',    label: 'Freelance & Services', icon: Code2,        color: '#7c3aed', bg: '#f5f3ff', desc: 'Hourly & project-based' },
+  { id: 'electronics',  label: 'Electronics',          icon: Cpu,          color: '#0f172a', bg: '#f8fafc', desc: 'Serial numbers & warranty' },
+  { id: 'food',         label: 'Food & Catering',      icon: Utensils,     color: '#c2410c', bg: '#fff7ed', desc: 'Bulk orders & catering' },
+  { id: 'retail',       label: 'Retail / Shop',        icon: ShoppingBag,  color: '#0891b2', bg: '#ecfeff', desc: 'Multi-product retail billing' },
+  { id: 'general',      label: 'General Business',     icon: Briefcase,    color: '#6366f1', bg: '#f5f3ff', desc: 'Works for any business type' },
 ];
 
 export default function LandingPage() {
@@ -496,7 +516,148 @@ export default function LandingPage() {
         </AnimatedSection>
       </section>
 
+      {/* ─── Industry Domains Showcase ─── */}
+      <section
+        id="industries"
+        style={{
+          padding: '60px max(16px, calc((100vw - 1200px)/2))',
+          position: 'relative',
+          zIndex: 2,
+          background: 'linear-gradient(180deg, #fff 0%, #f8fafc 100%)',
+        }}
+      >
+        <AnimatedSection>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'var(--color-primary-light, #f5f3ff)',
+                border: '1px solid var(--color-primary)',
+                borderRadius: 100,
+                padding: '6px 16px',
+                marginBottom: 20,
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--color-primary)',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <Sparkles size={12} fill="currentColor" />
+              Register to unlock
+            </div>
+            <h2
+              style={{
+                fontSize: 'clamp(28px, 4vw, 48px)',
+                fontWeight: 900,
+                color: '#0f172a',
+                letterSpacing: '-1.5px',
+                lineHeight: 1.15,
+                marginBottom: 16,
+              }}
+            >
+              Built for <em style={{ fontStyle: 'normal', color: 'var(--color-primary)' }}>your</em> industry.
+            </h2>
+            <p style={{ fontSize: 18, color: '#64748b', maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
+              Every business is different. Register to get domain-specific invoice fields, column layouts, and templates tailored to your trade.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 16,
+              marginBottom: 48,
+            }}
+          >
+            {DOMAINS.map((domain, i) => {
+              const Icon = domain.icon;
+              return (
+                <div
+                  key={domain.id}
+                  style={{
+                    background: '#fff',
+                    border: '1.5px solid #f1f5f9',
+                    borderRadius: 20,
+                    padding: '20px 18px',
+                    cursor: 'default',
+                    transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+                    animation: `fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms both`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.borderColor = domain.color + '60';
+                    e.currentTarget.style.boxShadow = `0 12px 32px -8px ${domain.color}25`;
+                    e.currentTarget.style.background = domain.bg;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = '#f1f5f9';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.background = '#fff';
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 14,
+                      background: domain.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 14,
+                    }}
+                  >
+                    <Icon size={22} color={domain.color} />
+                  </div>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: '#1e293b', marginBottom: 4, lineHeight: 1.3 }}>
+                    {domain.label}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, fontWeight: 500 }}>
+                    {domain.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <Link
+              to="/register"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
+                color: 'white',
+                padding: '14px 32px',
+                borderRadius: 14,
+                fontWeight: 800,
+                fontSize: 16,
+                textDecoration: 'none',
+                boxShadow: '0 8px 20px -5px var(--color-primary-light)',
+                transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              }}
+            >
+              Choose Your Business Vertical <ArrowRight size={18} />
+            </Link>
+            <p style={{ marginTop: 12, fontSize: 13, color: '#94a3b8' }}>Free forever. No credit card required.</p>
+          </div>
+        </AnimatedSection>
+      </section>
+
       {/* ─── Features ─── */}
+
       <section
         id="features"
         style={{
