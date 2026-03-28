@@ -434,9 +434,8 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header with Glassmorphism */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all duration-300 h-20">
-        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between w-full">
+      <div className="bg-white border-b border-slate-200 py-6 transition-all duration-300">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between w-full">
           <div className="flex items-center gap-3 sm:gap-6">
             <button
               onClick={() => navigate('/dashboard')}
@@ -453,7 +452,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Header Actions */}
           <div className="flex items-center gap-2">
             {hasChanges && (
               <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-[var(--brand-color)] bg-[var(--brand-color)]/10 px-2 py-1 rounded-full border border-[var(--brand-color)]/20 mr-2">
@@ -466,7 +464,6 @@ export default function SettingsPage() {
               size="sm"
               className="gap-2 hidden sm:flex border-slate-200 text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5"
               onClick={async () => {
-                // Prepare a preview invoice using current settings and storeInfo
                 try {
                   const previewInvoice = {
                     id: 'preview',
@@ -546,7 +543,7 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="px-4 py-6 sm:py-8 max-w-6xl mx-auto pb-24 lg:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

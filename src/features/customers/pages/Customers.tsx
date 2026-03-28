@@ -333,7 +333,7 @@ export default function Customers() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 sm:pb-8">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 h-20">
+      <div className="bg-white border-b border-slate-200 py-6">
         <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
             <button
@@ -508,7 +508,7 @@ export default function Customers() {
             </Dialog>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="px-4 py-4 sm:py-8 max-w-6xl mx-auto">
         {/* Search */}
