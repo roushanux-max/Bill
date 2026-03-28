@@ -338,6 +338,101 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── Registration Benefits CTA ─── */}
+      {!user && (
+        <section
+          style={{
+            padding: '40px max(16px, calc((100vw - 1100px)/2)) 20px',
+            position: 'relative',
+            zIndex: 10,
+          }}
+        >
+          <AnimatedSection>
+            <div
+              style={{
+                background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
+                borderRadius: 32,
+                padding: '48px 32px',
+                textAlign: 'center',
+                border: '1px solid #f1f5f9',
+                boxShadow: '0 20px 40px -15px rgba(0,0,0,0.03)',
+                maxWidth: 900,
+                margin: '0 auto',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 20,
+              }}
+            >
+              <div
+                style={{
+                  padding: '12px',
+                  background: '#f5f3ff',
+                  borderRadius: 100,
+                  color: 'var(--color-primary)',
+                  marginBottom: 8,
+                }}
+              >
+                <Sparkles size={28} fill="currentColor" strokeWidth={1} style={{ opacity: 0.8 }} />
+              </div>
+              <h3
+                style={{
+                  fontSize: 'clamp(24px, 4vw, 36px)',
+                  fontWeight: 900,
+                  color: '#0f172a',
+                  letterSpacing: '-1px',
+                  lineHeight: 1.2,
+                }}
+              >
+                Go beyond basics.
+                <br />
+                <span style={{ color: 'var(--color-primary)' }}>Register your business today.</span>
+              </h3>
+              <p
+                style={{
+                  fontSize: 'clamp(16px, 1.5vw, 19px)',
+                  color: '#64748b',
+                  maxWidth: 580,
+                  lineHeight: 1.6,
+                  fontWeight: 500,
+                }}
+              >
+                Unlock <strong>industry-specific invoice domains</strong> (Furniture, Clothing, Medical, and more) plus access to our full library of <strong>professional templates</strong>.
+              </p>
+              <Link
+                to="/register"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  background: 'var(--color-primary)',
+                  color: 'white',
+                  padding: '16px 36px',
+                  borderRadius: 16,
+                  fontWeight: 800,
+                  fontSize: 16,
+                  textDecoration: 'none',
+                  boxShadow: '0 10px 25px -5px var(--color-primary-light)',
+                  transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+                  marginTop: 8,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                  e.currentTarget.style.background = 'var(--color-primary-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.background = 'var(--color-primary)';
+                }}
+              >
+                Create Your Free Account <ArrowRight size={20} />
+              </Link>
+            </div>
+          </AnimatedSection>
+        </section>
+      )}
+
+
       {/* ─── Stats ─── */}
       <section
         style={{

@@ -1042,17 +1042,15 @@ export default function InvoiceForm({
                         : 'Item Description'}
                   </th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
+                    HSN
+                  </th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
                     {activeDomain === 'freelance'
                       ? 'Hours'
                       : activeDomain === 'hotel'
                         ? 'Nights'
                         : 'Qty'}
                   </th>
-                  {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
-                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
-                      HSN
-                    </th>
-                  )}
                   {activeDomain === 'clothing' && (
                     <>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-20">
@@ -1164,6 +1162,14 @@ export default function InvoiceForm({
                         </div>
                       )}
                     </td>
+                    <td className="p-3 text-center">
+                      <input
+                        className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center font-semibold text-slate-500 text-xs"
+                        placeholder="HSN/SAC"
+                        value={item.hsn || ''}
+                        onChange={(e) => updateItem(item.id, { hsn: e.target.value })}
+                      />
+                    </td>
                     <td className="p-3 text-center relative">
                       <input
                         type="number"
@@ -1178,16 +1184,6 @@ export default function InvoiceForm({
                         }
                       />
                     </td>
-                    {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
-                      <td className="p-3 text-center">
-                        <input
-                          className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
-                          placeholder="HSN"
-                          value={item.hsn || ''}
-                          onChange={(e) => updateItem(item.id, { hsn: e.target.value })}
-                        />
-                      </td>
-                    )}
                     {activeDomain === 'clothing' && (
                       <>
                         <td className="p-3 text-center">
