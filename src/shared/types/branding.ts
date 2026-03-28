@@ -26,7 +26,7 @@ export interface BrandingSettings {
   signatureTitle?: string; // Custom designation below the signature line
 
   // Domain Metadata (Invoice UI Template)
-  domain?: 'general' | 'furniture' | 'clothing' | 'hotel' | 'freelance' | 'medical';
+  domain?: 'general' | 'furniture' | 'clothing' | 'hotel' | 'freelance' | 'medical' | 'grocery' | 'electronics' | 'food' | 'retail';
 
   // New Design Fields
   tagline?: string;

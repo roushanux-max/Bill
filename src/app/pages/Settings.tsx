@@ -35,6 +35,16 @@ import {
   Building2,
   User,
   LogOut,
+  Briefcase,
+  ShoppingBag,
+  Sofa,
+  Stethoscope,
+  Hotel,
+  Code2,
+  ShoppingCart,
+  Cpu,
+  Utensils,
+  Scissors,
 } from 'lucide-react';
 import {
   getTextColorClass,
@@ -77,7 +87,7 @@ export default function SettingsPage() {
   }>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState('store');
+  const [activeSection, setActiveSection] = useState('domain');
   const [fetchingPincode, setFetchingPincode] = useState(false);
   const location = useLocation();
   const sectionParam = new URLSearchParams(location.search).get('section');
@@ -109,7 +119,7 @@ export default function SettingsPage() {
   // Handle deep linking to specific sections
   useEffect(() => {
     if (sectionParam) {
-      const validSections = ['store', 'logo', 'footer', 'terms', 'account'];
+      const validSections = ['domain', 'store', 'logo', 'footer', 'terms', 'account'];
       if (validSections.includes(sectionParam)) {
         setActiveSection(sectionParam);
         // Scroll to top of the content area if possible
@@ -313,7 +323,91 @@ export default function SettingsPage() {
     }
   };
 
+  const DOMAINS = [
+    {
+      id: 'general',
+      label: 'General',
+      description: 'Standard invoices for any business',
+      icon: Briefcase,
+      color: '#6366f1',
+      bg: '#f5f3ff',
+    },
+    {
+      id: 'furniture',
+      label: 'Furniture',
+      description: 'Wood, material & dimensions',
+      icon: Sofa,
+      color: '#92400e',
+      bg: '#fef3c7',
+    },
+    {
+      id: 'clothing',
+      label: 'Clothing & Fashion',
+      description: 'Size, color & HSN-ready',
+      icon: Scissors,
+      color: '#be185d',
+      bg: '#fdf2f8',
+    },
+    {
+      id: 'grocery',
+      label: 'Grocery / Kirana',
+      description: 'Fast-moving consumer goods',
+      icon: ShoppingCart,
+      color: '#15803d',
+      bg: '#f0fdf4',
+    },
+    {
+      id: 'medical',
+      label: 'Medical / Pharmacy',
+      description: 'Patient-wise billing & medicine',
+      icon: Stethoscope,
+      color: '#0369a1',
+      bg: '#f0f9ff',
+    },
+    {
+      id: 'hotel',
+      label: 'Hotel / Restaurant',
+      description: 'Room nights, covers & stays',
+      icon: Hotel,
+      color: '#b45309',
+      bg: '#fffbeb',
+    },
+    {
+      id: 'freelance',
+      label: 'Freelance / Services',
+      description: 'Hourly & project-based billing',
+      icon: Code2,
+      color: '#7c3aed',
+      bg: '#f5f3ff',
+    },
+    {
+      id: 'electronics',
+      label: 'Electronics',
+      description: 'Serial numbers & warranty',
+      icon: Cpu,
+      color: '#0f172a',
+      bg: '#f8fafc',
+    },
+    {
+      id: 'food',
+      label: 'Food & Catering',
+      description: 'Bulk orders & catering bills',
+      icon: Utensils,
+      color: '#c2410c',
+      bg: '#fff7ed',
+    },
+    {
+      id: 'retail',
+      label: 'Retail / Shop',
+      description: 'Multi-product retail billing',
+      icon: ShoppingBag,
+      color: '#0891b2',
+      bg: '#ecfeff',
+    },
+  ];
+
   const sections = [
+    { id: 'domain', label: 'Business Domain', icon: Briefcase },
     { id: 'store', label: 'Store Details', icon: Building2 },
     { id: 'logo', label: 'Logo & Color', icon: ImageIcon },
     { id: 'footer', label: 'Footer & Sign', icon: FileSignature },
@@ -505,6 +599,106 @@ export default function SettingsPage() {
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
+
+            {/* Business Domain Section */}
+            {activeSection === 'domain' && (
+              <div className="space-y-6">
+                <Card className="shadow-lg border-0 overflow-hidden">
+                  <div
+                    style={{
+                      backgroundColor: settings.primaryColor,
+                      color: getContrastColor(settings.primaryColor),
+                    }}
+                    className="px-6 py-4"
+                  >
+                    <CardTitle className="flex items-center gap-2" style={{ color: 'inherit' }}>
+                      <Briefcase className="h-5 w-5" />
+                      Business Domain
+                    </CardTitle>
+                    <CardDescription className="opacity-90 mt-1" style={{ color: 'inherit' }}>
+                      Choose your industry to unlock domain-specific invoice fields and templates
+                    </CardDescription>
+                  </div>
+                  <CardContent className="p-5">
+                    <p className="text-sm text-slate-500 mb-5">
+                      This setting customizes which fields appear on your invoices. For example, selecting <strong>Clothing</strong> adds <em>Size</em> and <em>Color</em> columns, while <strong>Medical</strong> adds patient and procedure fields.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {DOMAINS.map((domain) => {
+                        const Icon = domain.icon;
+                        const isSelected = (settings.domain || 'general') === domain.id;
+                        return (
+                          <button
+                            key={domain.id}
+                            onClick={() => updateSettings('domain', domain.id as any)}
+                            className="relative text-left p-4 rounded-2xl border-2 transition-all duration-200 group"
+                            style={{
+                              borderColor: isSelected ? domain.color : '#e2e8f0',
+                              background: isSelected ? domain.bg : '#fff',
+                              boxShadow: isSelected ? `0 4px 14px -4px ${domain.color}40` : 'none',
+                              transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                            }}
+                          >
+                            {isSelected && (
+                              <div
+                                className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                                style={{ background: domain.color }}
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                              </div>
+                            )}
+                            <div
+                              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                              style={{ background: domain.bg }}
+                            >
+                              <Icon className="w-5 h-5" style={{ color: domain.color }} />
+                            </div>
+                            <p className="text-sm font-bold text-slate-800 leading-tight">{domain.label}</p>
+                            <p className="text-[11px] text-slate-400 mt-1 leading-tight">{domain.description}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Preview of active domain */}
+                    {settings.domain && settings.domain !== 'general' && (() => {
+                      const activeDomainInfo = DOMAINS.find(d => d.id === settings.domain);
+                      if (!activeDomainInfo) return null;
+                      const extraFields: Record<string, string[]> = {
+                        furniture: ['Material', 'HSN Code'],
+                        clothing: ['Size', 'Color', 'HSN Code'],
+                        medical: ['Patient Name', 'Procedure / Code'],
+                        hotel: ['Room Number', 'Check-in / Nights'],
+                        freelance: ['Hours', 'Project Name'],
+                        grocery: ['Unit (kg/ltr)', 'HSN Code'],
+                        electronics: ['Serial No.', 'Warranty'],
+                        food: ['Covers / Pax', 'Menu Category'],
+                        retail: ['SKU / Barcode', 'HSN Code'],
+                      };
+                      const fields = extraFields[settings.domain] || [];
+                      return (
+                        <div
+                          className="mt-5 p-4 rounded-xl border"
+                          style={{ background: activeDomainInfo.bg, borderColor: `${activeDomainInfo.color}30` }}
+                        >
+                          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: activeDomainInfo.color }}>
+                            Extra fields unlocked for {activeDomainInfo.label}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {fields.map(f => (
+                              <span key={f} className="text-xs font-semibold px-3 py-1 rounded-full bg-white shadow-sm" style={{ color: activeDomainInfo.color, border: `1px solid ${activeDomainInfo.color}30` }}>
+                                + {f}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Store Details Section */}
             {activeSection === 'store' &&
               (storeInfo ? (
