@@ -31,7 +31,11 @@ import { NavigationProvider } from '@/shared/contexts/NavigationContext';
 
 const RootLayout = () => {
   const location = useLocation();
-  const hideGlobalNav = location.pathname === '/invoice-preview';
+  const hideGlobalNav =
+    location.pathname === '/' ||
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/register') ||
+    location.pathname.startsWith('/invoice-preview');
 
   useEffect(() => {
     clearLazyRetryFlag();
