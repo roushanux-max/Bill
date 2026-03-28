@@ -121,10 +121,8 @@ export default function LandingPage() {
       {/* ─── Hero ─── */}
       <header
         style={{
-          paddingTop: 140,
-          paddingBottom: 60,
           textAlign: 'center',
-          padding: '140px max(16px, calc((100vw - 800px)/2)) 60px',
+          padding: '100px max(16px, calc((100vw - 800px)/2)) 40px',
           position: 'relative',
           overflow: 'hidden',
           zIndex: 2,
@@ -205,7 +203,7 @@ export default function LandingPage() {
               fontSize: 'clamp(17px, 2vw, 21px)',
               color: '#475569',
               maxWidth: 640,
-              margin: '0 auto 48px',
+              margin: '0 auto 32px',
               lineHeight: 1.6,
               fontWeight: 400,
             }}
@@ -220,7 +218,7 @@ export default function LandingPage() {
               flexWrap: 'wrap',
               gap: 14,
               justifyContent: 'center',
-              marginBottom: 40,
+              marginBottom: 32,
             }}
           >
             <Link
@@ -285,12 +283,12 @@ export default function LandingPage() {
       <section
         id="experience"
         style={{
-          padding: '40px max(16px, calc((100vw - 1152px)/2)) 20px',
+          padding: '40px max(16px, calc((100vw - 1152px)/2)) 10px',
           background: 'radial-gradient(circle at 50% 110%, #f5f3ff 0%, #fff 100%)',
           position: 'relative',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h2
             style={{
               fontSize: 'clamp(32px, 5vw, 56px)',
@@ -335,7 +333,7 @@ export default function LandingPage() {
           )}
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 py-4 md:py-6 my-2 md:my-4">
+        <div className="max-w-6xl mx-auto px-4 py-2 md:py-4 my-1 md:my-2">
           <InvoiceForm onInteractionChange={setHasFormData} />
         </div>
       </section>
@@ -343,9 +341,9 @@ export default function LandingPage() {
       {/* ─── Stats ─── */}
       <section
         style={{
-          padding: '0 max(16px, calc((100vw - 1152px)/2)) 80px',
-          marginTop: '48px',
-          marginBottom: '48px',
+          padding: '0 max(16px, calc((100vw - 1152px)/2)) 40px',
+          marginTop: '16px',
+          marginBottom: '16px',
           position: 'relative',
           zIndex: 2,
         }}
@@ -367,7 +365,7 @@ export default function LandingPage() {
                 key={i}
                 style={{
                   background: '#fff',
-                  padding: '40px 32px',
+                  padding: '32px 24px',
                   textAlign: 'center',
                   transition: 'background 0.2s',
                 }}
@@ -407,12 +405,12 @@ export default function LandingPage() {
       <section
         id="features"
         style={{
-          padding: '120px max(16px, calc((100vw - 1152px)/2))',
+          padding: '80px max(16px, calc((100vw - 1152px)/2))',
           position: 'relative',
           zIndex: 2,
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: 100 }}>
+        <div style={{ textAlign: 'center', marginBottom: 60 }}>
           <h2
             style={{
               fontSize: 'clamp(32px, 5vw, 56px)',
@@ -442,7 +440,7 @@ export default function LandingPage() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: 48,
+            gap: 32,
           }}
         >
           {[
@@ -495,7 +493,7 @@ export default function LandingPage() {
                 background: '#fff',
                 border: '1px solid #f1f5f9',
                 borderRadius: 24,
-                padding: 40,
+                padding: 32,
                 boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)',
               }}
             >

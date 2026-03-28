@@ -649,7 +649,7 @@ export default function InvoiceForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">
+    <div className="flex flex-col gap-5 max-w-5xl mx-auto pb-6">
       {showPreviewModal && (
         <InvoicePreviewModal
           invoiceData={{
@@ -721,11 +721,11 @@ export default function InvoiceForm({
       </div>
 
       {/* FORM CONTAINER */}
-      <div className="bg-white border text-sm border-slate-200 rounded-3xl shadow-sm p-8">
+      <div className="bg-white border text-sm border-slate-200 rounded-3xl shadow-sm p-6">
         
         {/* ─── GUEST BRANDING SECTION ─── */}
         {!user && (
-          <div className="mb-10 pb-10 border-b border-slate-100">
+          <div className="mb-6 pb-6 border-b border-slate-100">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
                 <Palette size={20} strokeWidth={3} />
@@ -736,9 +736,9 @@ export default function InvoiceForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Logo & Color */}
-              <div className="lg:col-span-4 flex flex-col gap-8">
+              <div className="lg:col-span-4 flex flex-col gap-4">
                 <div className="flex flex-col gap-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Logo</label>
                   <div className="relative group w-32 h-32">
@@ -793,8 +793,8 @@ export default function InvoiceForm({
               </div>
 
               {/* Business Info */}
-              <div className="lg:col-span-8 flex flex-col gap-6">
-                <div className="flex flex-col gap-3">
+              <div className="lg:col-span-8 flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Name</label>
                   <div className="relative items-center flex group">
                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors" size={18} />
@@ -921,7 +921,7 @@ export default function InvoiceForm({
         </div>
 
         {/* 1. Customer Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 pb-10 border-b border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pb-6 border-b border-slate-100">
           <div className={cn("relative", !user ? "order-2 md:order-2" : "order-1 md:order-1")}>
             <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
               Phone Number
@@ -1028,7 +1028,7 @@ export default function InvoiceForm({
         </div>
 
         {/* 2. Items Table Section (Dynamic) */}
-        <div className="mb-10 pb-10 border-b border-slate-100">
+        <div className="mb-6 pb-6 border-b border-slate-100">
           <h3 className="text-lg font-black text-slate-800 mb-4">Invoice Items</h3>
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-left bg-white">
@@ -1310,9 +1310,9 @@ export default function InvoiceForm({
         </div>
 
         {/* 3 & 4. Notes and Totals Summary (Side by side) */}
-        <div className="flex flex-col md:flex-row justify-between items-end gap-8 mt-6">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mt-4">
           {/* Notes and Terms (Left Side) */}
-          <div className="flex-1 w-full space-y-6">
+          <div className="flex-1 w-full space-y-4">
             <div className="relative">
               <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
                 Invoice Notes
