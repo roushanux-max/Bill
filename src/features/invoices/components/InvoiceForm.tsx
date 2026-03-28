@@ -1,5 +1,20 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Save, Plus, Trash2, Eye, ArrowLeft, MoreVertical, Smartphone, Info, Download, Upload, Palette, Building2, RotateCcw, Users } from 'lucide-react';
+import {
+  Save,
+  Plus,
+  Trash2,
+  Eye,
+  ArrowLeft,
+  MoreVertical,
+  Smartphone,
+  Info,
+  Download,
+  Upload,
+  Palette,
+  Building2,
+  RotateCcw,
+  Users,
+} from 'lucide-react';
 import { cn } from '@/shared/components/ui/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +44,12 @@ export default function InvoiceForm({
   onInteractionChange?: (hasData: boolean) => void;
 }) {
   const { user } = useAuth();
-  const { settings: globalBranding, storeInfo: currentStore, updateSettings, updateStoreInfo } = useBranding();
+  const {
+    settings: globalBranding,
+    storeInfo: currentStore,
+    updateSettings,
+    updateStoreInfo,
+  } = useBranding();
   const navigate = useNavigate();
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,11 +72,13 @@ export default function InvoiceForm({
   };
 
   const handleStoreInfoChange = (field: string, value: string) => {
-    updateStoreInfo({ ...(currentStore || { name: '', email: '', phone: '', address: '', gstin: '', state: '' }), [field]: value });
+    updateStoreInfo({
+      ...(currentStore || { name: '', email: '', phone: '', address: '', gstin: '', state: '' }),
+      [field]: value,
+    });
   };
 
   const getDraftKey = () => (user ? `draft_${user.id}_new_invoice` : `guest_draft_new_invoice`);
-
 
   // --- State: UI & Controls ---
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -78,7 +100,16 @@ export default function InvoiceForm({
   const [invoice, setInvoice] = useState<Invoice>({
     id: crypto.randomUUID(),
     items: [],
-    customer: { id: '', name: '', phone: '', email: '', gstin: '', address: '', state: '', createdAt: new Date().toISOString() },
+    customer: {
+      id: '',
+      name: '',
+      phone: '',
+      email: '',
+      gstin: '',
+      address: '',
+      state: '',
+      createdAt: new Date().toISOString(),
+    },
     transportCharges: 0,
     discountTotal: 0,
     invoiceNumber: '',
@@ -149,7 +180,7 @@ export default function InvoiceForm({
                 createdAt: new Date().toISOString(),
               },
             ],
-            customer: { 
+            customer: {
               id: crypto.randomUUID(),
               name: '',
               phone: '',
@@ -157,7 +188,7 @@ export default function InvoiceForm({
               gstin: '',
               address: '',
               state: '',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
             },
           });
         }
@@ -239,10 +270,7 @@ export default function InvoiceForm({
 
   const grandTotal = useMemo(() => {
     return (
-      subtotal +
-      tax +
-      Number(invoice?.transportCharges || 0) -
-      Number(invoice?.discountTotal || 0)
+      subtotal + tax + Number(invoice?.transportCharges || 0) - Number(invoice?.discountTotal || 0)
     );
   }, [subtotal, tax, invoice?.transportCharges, invoice?.discountTotal]);
 
@@ -325,8 +353,7 @@ export default function InvoiceForm({
 
     const newErrs = { ...customerErrors };
     if (updates.name !== undefined) newErrs.name = validateInput('name', updates.name);
-    if (updates.phone !== undefined)
-      newErrs.phone = validateInput('mobile', String(updates.phone));
+    if (updates.phone !== undefined) newErrs.phone = validateInput('mobile', String(updates.phone));
     setCustomerErrors(newErrs);
 
     // Smart Search Trigger
@@ -439,6 +466,19 @@ export default function InvoiceForm({
         if (i.procedure) extra.push(`Procedure: ${i.procedure}`);
       } else if (activeDomain === 'hotel') {
         if (i.room) extra.push(`Room: ${i.room}`);
+      } else if (activeDomain === 'electronics') {
+        if (i.serialNo) extra.push(`SN: ${i.serialNo}`);
+        if (i.warranty) extra.push(`Warranty: ${i.warranty}`);
+      } else if (activeDomain === 'water') {
+        if (i.jarsDue) extra.push(`Jars Due: ${i.jarsDue}`);
+        if (i.deposit) extra.push(`Dep: ₹${i.deposit}`);
+      } else if (activeDomain === 'barber') {
+        if (i.stylist) extra.push(`Stylist: ${i.stylist}`);
+        if (i.appointmentTime) extra.push(`Time: ${i.appointmentTime}`);
+      } else if (activeDomain === 'food') {
+        if (i.foodType) extra.push(`Type: ${i.foodType}`);
+      } else if (activeDomain === 'retail') {
+        if (i.barcode) extra.push(`Barcode: ${i.barcode}`);
       }
       const suffix = extra.length > 0 ? ` [${extra.join(', ')}]` : '';
       return {
@@ -496,6 +536,31 @@ export default function InvoiceForm({
       newCustomerErrors.name = null;
     }
 
+    // Validate phone strictly (REQUIRED)
+    if (!invoice.customer.phone || invoice.customer.phone.trim() === '') {
+      newCustomerErrors.phone = 'Phone number is required.';
+      toast.error('Customer phone number is required to save or download.');
+      isValid = false;
+    } else {
+      const phoneErr = validateInput('mobile', invoice.customer.phone);
+      if (phoneErr) {
+        newCustomerErrors.phone = phoneErr;
+        toast.error('Please enter a valid 10-digit phone number.');
+        isValid = false;
+      } else {
+        newCustomerErrors.phone = null;
+      }
+    }
+
+    // Validate GSTIN strictly (if provided)
+    if (invoice.customer.gstin && invoice.customer.gstin.trim() !== '') {
+      const gstErr = validateInput('gst', invoice.customer.gstin);
+      if (gstErr) {
+        toast.error('Please enter a valid 15-character GSTIN.');
+        isValid = false;
+      }
+    }
+
     // Validate items
     if (!invoice.items || invoice.items.length === 0) {
       toast.error('At least one item is required.');
@@ -540,6 +605,7 @@ export default function InvoiceForm({
   };
 
   const handlePreview = () => {
+    if (!validateForm()) return;
     setShowPreviewModal(true);
   };
 
@@ -622,13 +688,15 @@ export default function InvoiceForm({
   const hasInteracted = useMemo(() => {
     if (!invoice) return false;
     return (
-      (invoice.customer?.name?.trim() !== '') ||
-      (invoice.customer?.phone?.trim() !== '') ||
-      (invoice.items.some(i => i.productName?.trim() !== '' || i.unitPrice > 0)) ||
-      (invoice.notes && invoice.notes.trim() !== '' && invoice.notes !== 'Thank you for your business.') ||
+      invoice.customer?.name?.trim() !== '' ||
+      invoice.customer?.phone?.trim() !== '' ||
+      invoice.items.some((i) => i.productName?.trim() !== '' || i.unitPrice > 0) ||
+      (invoice.notes &&
+        invoice.notes.trim() !== '' &&
+        invoice.notes !== 'Thank you for your business.') ||
       (invoice.termsAndConditions && invoice.termsAndConditions.trim() !== '') ||
-      (globalBranding.logo !== null) ||
-      (globalBranding.signatureImage !== null) ||
+      globalBranding.logo !== null ||
+      globalBranding.signatureImage !== null ||
       (globalBranding.signatureText && globalBranding.signatureText.trim() !== '')
     );
   }, [invoice, globalBranding]);
@@ -705,7 +773,11 @@ export default function InvoiceForm({
           <div>
             <h4 className="text-amber-800 font-bold text-sm">Guest Session Expiring</h4>
             <p className="text-amber-700 text-xs font-medium mt-0.5">
-              This invoice will be deleted in <span className="font-black text-amber-900">{Math.floor(timeLeft / 60000)}m {Math.floor((timeLeft % 60000) / 1000)}s</span>. Download it to avoid losing data.
+              This invoice will be deleted in{' '}
+              <span className="font-black text-amber-900">
+                {Math.floor(timeLeft / 60000)}m {Math.floor((timeLeft % 60000) / 1000)}s
+              </span>
+              . Download it to avoid losing data.
             </p>
           </div>
         </div>
@@ -722,7 +794,6 @@ export default function InvoiceForm({
 
       {/* FORM CONTAINER */}
       <div className="bg-white border text-sm border-slate-200 rounded-3xl shadow-sm p-6">
-        
         {/* ─── GUEST BRANDING SECTION ─── */}
         {!user && (
           <div className="mb-6 pb-6 border-b border-slate-100">
@@ -732,7 +803,9 @@ export default function InvoiceForm({
               </div>
               <div>
                 <h3 className="text-lg font-black text-slate-800">Business Details</h3>
-                <p className="text-xs text-slate-500 font-bold">Customize how your business appears on the invoice.</p>
+                <p className="text-xs text-slate-500 font-bold">
+                  Customize how your business appears on the invoice.
+                </p>
               </div>
             </div>
 
@@ -740,11 +813,17 @@ export default function InvoiceForm({
               {/* Logo & Color */}
               <div className="lg:col-span-4 flex flex-col gap-4">
                 <div className="flex flex-col gap-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Logo</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Business Logo
+                  </label>
                   <div className="relative group w-32 h-32">
                     <div className="w-full h-full rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 overflow-hidden transition-all group-hover:bg-slate-100 group-hover:border-slate-300">
                       {globalBranding.logo ? (
-                        <img src={globalBranding.logo} alt="Logo" className="w-full h-full object-contain p-2" />
+                        <img
+                          src={globalBranding.logo}
+                          alt="Logo"
+                          className="w-full h-full object-contain p-2"
+                        />
                       ) : (
                         <>
                           <Upload size={24} className="text-slate-400" />
@@ -752,14 +831,14 @@ export default function InvoiceForm({
                         </>
                       )}
                     </div>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="absolute inset-0 opacity-0 cursor-pointer" 
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                       onChange={handleLogoUpload}
                     />
                     {globalBranding.logo && (
-                      <button 
+                      <button
                         onClick={() => updateSettings({ ...globalBranding, logo: null })}
                         className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
                       >
@@ -770,21 +849,25 @@ export default function InvoiceForm({
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand Accent Color</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Brand Accent Color
+                  </label>
                   <div className="flex items-center gap-4">
-                    <div 
-                      className="w-12 h-12 rounded-xl border-4 border-white shadow-xl" 
-                      style={{ background: globalBranding.primaryColor }} 
+                    <div
+                      className="w-12 h-12 rounded-xl border-4 border-white shadow-xl"
+                      style={{ background: globalBranding.primaryColor }}
                     />
                     <div className="flex-1 relative">
-                      <input 
-                        type="color" 
-                        value={globalBranding.primaryColor} 
+                      <input
+                        type="color"
+                        value={globalBranding.primaryColor}
                         onChange={handleColorChange}
                         className="absolute inset-x-0 bottom-0 top-0 opacity-0 cursor-pointer w-full"
                       />
                       <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 h-11 flex items-center justify-between pointer-events-none">
-                        <span className="font-mono font-bold text-slate-700 tracking-tight">{globalBranding.primaryColor.toUpperCase()}</span>
+                        <span className="font-mono font-bold text-slate-700 tracking-tight">
+                          {globalBranding.primaryColor.toUpperCase()}
+                        </span>
                         <Palette size={16} className="text-slate-400" />
                       </div>
                     </div>
@@ -795,10 +878,15 @@ export default function InvoiceForm({
               {/* Business Info */}
               <div className="lg:col-span-8 flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Name</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Business Name
+                  </label>
                   <div className="relative items-center flex group">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors" size={18} />
-                    <Input 
+                    <Building2
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors"
+                      size={18}
+                    />
+                    <Input
                       className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl font-black text-slate-800 placeholder:text-slate-300 focus:bg-white focus:border-amber-400 transition-all text-base"
                       placeholder="My Awesome Business"
                       value={currentStore?.name || ''}
@@ -809,8 +897,10 @@ export default function InvoiceForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Phone</label>
-                    <Input 
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Contact Phone
+                    </label>
+                    <Input
                       className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
                       placeholder="+91 99999 99999"
                       value={currentStore?.phone || ''}
@@ -818,8 +908,10 @@ export default function InvoiceForm({
                     />
                   </div>
                   <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
-                    <Input 
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Email Address
+                    </label>
+                    <Input
                       className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
                       placeholder="business@example.com"
                       value={currentStore?.email || ''}
@@ -829,19 +921,23 @@ export default function InvoiceForm({
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Address</label>
-                  <textarea 
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Business Address
+                  </label>
+                  <textarea
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-slate-700 focus:bg-white focus:border-amber-400 transition-all min-h-[100px] outline-none"
                     placeholder="123, Street Name, City, State, ZIP"
                     value={currentStore?.address || ''}
                     onChange={(e) => handleStoreInfoChange('address', e.target.value)}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">GSTIN (Optional)</label>
-                    <Input 
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      GSTIN (Optional)
+                    </label>
+                    <Input
                       className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
                       placeholder="27AABCU1234F1Z5"
                       value={currentStore?.gstin || ''}
@@ -849,12 +945,16 @@ export default function InvoiceForm({
                     />
                   </div>
                   <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Signer Name (Optional)</label>
-                    <Input 
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Signer Name (Optional)
+                    </label>
+                    <Input
                       className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold text-slate-700 focus:bg-white transition-all"
                       placeholder="e.g. John Doe"
                       value={globalBranding?.signatureText || ''}
-                      onChange={(e) => updateSettings({ ...globalBranding, signatureText: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ ...globalBranding, signatureText: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -870,7 +970,9 @@ export default function InvoiceForm({
           </div>
           <div>
             <h3 className="text-lg font-black text-slate-800">Customer Details</h3>
-            <p className="text-xs text-slate-500 font-bold">Provide invoice meta and customer information below.</p>
+            <p className="text-xs text-slate-500 font-bold">
+              Provide invoice meta and customer information below.
+            </p>
           </div>
         </div>
 
@@ -899,15 +1001,22 @@ export default function InvoiceForm({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[180px] h-10 justify-start text-left font-bold border-none bg-slate-50 hover:bg-slate-100 transition-all rounded-xl",
-                      !invoice.date && "text-slate-400"
+                      'w-[180px] h-10 justify-start text-left font-bold border-none bg-slate-50 hover:bg-slate-100 transition-all rounded-xl',
+                      !invoice.date && 'text-slate-400'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 text-[var(--brand-color)]" />
-                    {invoice.date ? format(new Date(invoice.date), "PPP") : <span>Pick a date</span>}
+                    {invoice.date ? (
+                      format(new Date(invoice.date), 'PPP')
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-slate-100" align="start">
+                <PopoverContent
+                  className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-slate-100"
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={invoice.date ? new Date(invoice.date) : undefined}
@@ -922,12 +1031,12 @@ export default function InvoiceForm({
 
         {/* 1. Customer Details */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pb-6 border-b border-slate-100">
-          <div className={cn("relative", !user ? "order-2 md:order-2" : "order-1 md:order-1")}>
+          <div className={cn('relative', !user ? 'order-2 md:order-2' : 'order-1 md:order-1')}>
             <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
-              Phone Number
+              Phone Number *
             </label>
             <input
-                          className={`w-full bg-slate-50 p-3 rounded-xl border outline-none transition-colors ${customerErrors.phone ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
+              className={`w-full bg-slate-50 p-3 rounded-xl border outline-none transition-colors ${customerErrors.phone ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500' : 'focus:border-slate-300'}`}
               placeholder="e.g. 9876543210"
               inputMode="numeric"
               maxLength={10}
@@ -959,7 +1068,12 @@ export default function InvoiceForm({
               </p>
             )}
           </div>
-          <div className={cn("md:col-span-2 relative", !user ? "order-1 md:order-1" : "order-2 md:order-2")}>
+          <div
+            className={cn(
+              'md:col-span-2 relative',
+              !user ? 'order-1 md:order-1' : 'order-2 md:order-2'
+            )}
+          >
             <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">
               Customer Name *
             </label>
@@ -1031,7 +1145,7 @@ export default function InvoiceForm({
         <div className="mb-6 pb-6 border-b border-slate-100">
           <h3 className="text-lg font-black text-slate-800 mb-4">Invoice Items</h3>
           <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-left bg-white">
+            <table className="w-full text-left bg-white min-w-[800px]">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase">
@@ -1042,15 +1156,25 @@ export default function InvoiceForm({
                         : 'Item Description'}
                   </th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
-                    HSN
-                  </th>
-                  <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
                     {activeDomain === 'freelance'
                       ? 'Hours'
                       : activeDomain === 'hotel'
                         ? 'Nights'
-                        : 'Qty'}
+                        : activeDomain === 'water'
+                          ? 'Jars'
+                          : activeDomain === 'barber'
+                            ? 'Svcs'
+                            : 'Qty'}
                   </th>
+                  {(activeDomain === 'clothing' ||
+                    activeDomain === 'grocery' ||
+                    activeDomain === 'electronics' ||
+                    activeDomain === 'retail' ||
+                    activeDomain === 'water') && (
+                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
+                      HSN
+                    </th>
+                  )}
                   {activeDomain === 'clothing' && (
                     <>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-20">
@@ -1061,10 +1185,55 @@ export default function InvoiceForm({
                       </th>
                     </>
                   )}
+                  {activeDomain === 'grocery' && (
+                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
+                      Unit
+                    </th>
+                  )}
                   {activeDomain === 'furniture' && (
                     <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-28">
                       Material
                     </th>
+                  )}
+                  {activeDomain === 'electronics' && (
+                    <>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
+                        Serial No
+                      </th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
+                        Warranty
+                      </th>
+                    </>
+                  )}
+                  {activeDomain === 'food' && (
+                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
+                      Food Type
+                    </th>
+                  )}
+                  {activeDomain === 'retail' && (
+                    <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
+                      Barcode
+                    </th>
+                  )}
+                  {activeDomain === 'water' && (
+                    <>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
+                        Jars Due
+                      </th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-24">
+                        Deposit
+                      </th>
+                    </>
+                  )}
+                  {activeDomain === 'barber' && (
+                    <>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
+                        Stylist
+                      </th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
+                        Time
+                      </th>
+                    </>
                   )}
                   {activeDomain === 'freelance' && (
                     <th className="p-4 text-xs font-bold text-slate-500 uppercase text-center w-32">
@@ -1091,7 +1260,9 @@ export default function InvoiceForm({
                       ? 'Rate/Hr'
                       : activeDomain === 'hotel'
                         ? 'Rate/Night'
-                        : 'Price'}
+                        : activeDomain === 'water'
+                          ? 'Rate/Jar'
+                          : 'Price'}
                   </th>
                   <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right w-24">
                     GST %
@@ -1162,14 +1333,6 @@ export default function InvoiceForm({
                         </div>
                       )}
                     </td>
-                    <td className="p-3 text-center">
-                      <input
-                        className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center font-semibold text-slate-500 text-xs"
-                        placeholder="HSN/SAC"
-                        value={item.hsn || ''}
-                        onChange={(e) => updateItem(item.id, { hsn: e.target.value })}
-                      />
-                    </td>
                     <td className="p-3 text-center relative">
                       <input
                         type="number"
@@ -1184,6 +1347,20 @@ export default function InvoiceForm({
                         }
                       />
                     </td>
+                    {(activeDomain === 'clothing' ||
+                      activeDomain === 'grocery' ||
+                      activeDomain === 'electronics' ||
+                      activeDomain === 'retail' ||
+                      activeDomain === 'water') && (
+                      <td className="p-3 text-center">
+                        <input
+                          className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center font-semibold text-slate-500 text-xs"
+                          placeholder="HSN/SAC"
+                          value={item.hsn || ''}
+                          onChange={(e) => updateItem(item.id, { hsn: e.target.value })}
+                        />
+                      </td>
+                    )}
                     {activeDomain === 'clothing' && (
                       <>
                         <td className="p-3 text-center">
@@ -1204,6 +1381,16 @@ export default function InvoiceForm({
                         </td>
                       </>
                     )}
+                    {activeDomain === 'grocery' && (
+                      <td className="p-3 text-center">
+                        <input
+                          className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                          placeholder="kg"
+                          value={item.unit || ''}
+                          onChange={(e) => updateItem(item.id, { unit: e.target.value })}
+                        />
+                      </td>
+                    )}
                     {activeDomain === 'furniture' && (
                       <td className="p-3 text-center">
                         <input
@@ -1213,6 +1400,88 @@ export default function InvoiceForm({
                           onChange={(e) => updateItem(item.id, { material: e.target.value })}
                         />
                       </td>
+                    )}
+                    {activeDomain === 'electronics' && (
+                      <>
+                        <td className="p-3 text-center">
+                          <input
+                            className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                            placeholder="SN123"
+                            value={item.serialNo || ''}
+                            onChange={(e) => updateItem(item.id, { serialNo: e.target.value })}
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <input
+                            className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                            placeholder="1 Year"
+                            value={item.warranty || ''}
+                            onChange={(e) => updateItem(item.id, { warranty: e.target.value })}
+                          />
+                        </td>
+                      </>
+                    )}
+                    {activeDomain === 'food' && (
+                      <td className="p-3 text-center">
+                        <input
+                          className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                          placeholder="Veg"
+                          value={item.foodType || ''}
+                          onChange={(e) => updateItem(item.id, { foodType: e.target.value })}
+                        />
+                      </td>
+                    )}
+                    {activeDomain === 'retail' && (
+                      <td className="p-3 text-center">
+                        <input
+                          className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                          placeholder="SKU-88"
+                          value={item.barcode || ''}
+                          onChange={(e) => updateItem(item.id, { barcode: e.target.value })}
+                        />
+                      </td>
+                    )}
+                    {activeDomain === 'water' && (
+                      <>
+                        <td className="p-3 text-center">
+                          <input
+                            className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                            placeholder="2"
+                            value={item.jarsDue || ''}
+                            onChange={(e) => updateItem(item.id, { jarsDue: e.target.value })}
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <input
+                            className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                            placeholder="100"
+                            value={item.deposit || ''}
+                            onChange={(e) => updateItem(item.id, { deposit: e.target.value })}
+                          />
+                        </td>
+                      </>
+                    )}
+                    {activeDomain === 'barber' && (
+                      <>
+                        <td className="p-3 text-center">
+                          <input
+                            className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                            placeholder="John"
+                            value={item.stylist || ''}
+                            onChange={(e) => updateItem(item.id, { stylist: e.target.value })}
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <input
+                            className="w-full bg-slate-50 p-2 rounded-lg outline-none text-center"
+                            placeholder="10:30 AM"
+                            value={item.appointmentTime || ''}
+                            onChange={(e) =>
+                              updateItem(item.id, { appointmentTime: e.target.value })
+                            }
+                          />
+                        </td>
+                      </>
                     )}
                     {activeDomain === 'freelance' && (
                       <td className="p-3 text-center">

@@ -21,7 +21,9 @@ import {
   Cpu,
   Utensils,
   ShoppingBag,
+  Droplet,
 } from 'lucide-react';
+import DomainHoverPreview from '@/shared/components/DomainHoverPreview';
 import { toast } from 'sonner';
 import Logo from '@/shared/components/Logo';
 import { useBranding } from '@/shared/contexts/BrandingContext';
@@ -79,16 +81,102 @@ const stats = [
 ];
 
 const DOMAINS = [
-  { id: 'furniture',    label: 'Furniture',           icon: Sofa,         color: '#92400e', bg: '#fef3c7', desc: 'Material, HSN & dimensions' },
-  { id: 'clothing',     label: 'Clothing & Fashion',   icon: Scissors,     color: '#be185d', bg: '#fdf2f8', desc: 'Size, color & fabric details' },
-  { id: 'grocery',      label: 'Grocery / Kirana',     icon: ShoppingCart,  color: '#15803d', bg: '#f0fdf4', desc: 'Units, batch & FMCG billing' },
-  { id: 'medical',      label: 'Medical / Pharmacy',   icon: Stethoscope,  color: '#0369a1', bg: '#f0f9ff', desc: 'Patient & prescription fields' },
-  { id: 'hotel',        label: 'Hotel & Restaurant',   icon: Hotel,        color: '#b45309', bg: '#fffbeb', desc: 'Rooms, covers & stay billing' },
-  { id: 'freelance',    label: 'Freelance & Services', icon: Code2,        color: '#7c3aed', bg: '#f5f3ff', desc: 'Hourly & project-based' },
-  { id: 'electronics',  label: 'Electronics',          icon: Cpu,          color: '#0f172a', bg: '#f8fafc', desc: 'Serial numbers & warranty' },
-  { id: 'food',         label: 'Food & Catering',      icon: Utensils,     color: '#c2410c', bg: '#fff7ed', desc: 'Bulk orders & catering' },
-  { id: 'retail',       label: 'Retail / Shop',        icon: ShoppingBag,  color: '#0891b2', bg: '#ecfeff', desc: 'Multi-product retail billing' },
-  { id: 'general',      label: 'General Business',     icon: Briefcase,    color: '#6366f1', bg: '#f5f3ff', desc: 'Works for any business type' },
+  {
+    id: 'furniture',
+    label: 'Furniture',
+    icon: Sofa,
+    color: '#92400e',
+    bg: '#fef3c7',
+    desc: 'Material, HSN & dimensions',
+  },
+  {
+    id: 'clothing',
+    label: 'Clothing & Fashion',
+    icon: Scissors,
+    color: '#be185d',
+    bg: '#fdf2f8',
+    desc: 'Size, color & fabric details',
+  },
+  {
+    id: 'grocery',
+    label: 'Grocery / Kirana',
+    icon: ShoppingCart,
+    color: '#15803d',
+    bg: '#f0fdf4',
+    desc: 'Units, batch & FMCG billing',
+  },
+  {
+    id: 'medical',
+    label: 'Medical / Pharmacy',
+    icon: Stethoscope,
+    color: '#0369a1',
+    bg: '#f0f9ff',
+    desc: 'Patient & prescription fields',
+  },
+  {
+    id: 'hotel',
+    label: 'Hotel & Restaurant',
+    icon: Hotel,
+    color: '#b45309',
+    bg: '#fffbeb',
+    desc: 'Rooms, covers & stay billing',
+  },
+  {
+    id: 'freelance',
+    label: 'Freelance & Services',
+    icon: Code2,
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+    desc: 'Hourly & project-based',
+  },
+  {
+    id: 'electronics',
+    label: 'Electronics',
+    icon: Cpu,
+    color: '#0f172a',
+    bg: '#f8fafc',
+    desc: 'Serial numbers & warranty',
+  },
+  {
+    id: 'food',
+    label: 'Food & Catering',
+    icon: Utensils,
+    color: '#c2410c',
+    bg: '#fff7ed',
+    desc: 'Bulk orders & catering',
+  },
+  {
+    id: 'retail',
+    label: 'Retail / Shop',
+    icon: ShoppingBag,
+    color: '#0891b2',
+    bg: '#ecfeff',
+    desc: 'Multi-product retail billing',
+  },
+  {
+    id: 'water',
+    label: 'Water Supplier',
+    icon: Droplet,
+    color: '#0284c7',
+    bg: '#e0f2fe',
+    desc: 'Jars, dispensers & deposits',
+  },
+  {
+    id: 'barber',
+    label: 'Salon / Barber',
+    icon: Scissors,
+    color: '#9333ea',
+    bg: '#faf5ff',
+    desc: 'Services & appointments',
+  },
+  {
+    id: 'general',
+    label: 'General Business',
+    icon: Briefcase,
+    color: '#6366f1',
+    bg: '#f5f3ff',
+    desc: 'Works for any business type',
+  },
 ];
 
 export default function LandingPage() {
@@ -343,11 +431,15 @@ export default function LandingPage() {
                 }}
               >
                 <Shield size={18} fill="#0ea5e9" color="#fff" />
-                <span>Create invoices instantly. Register to save and access them anytime — guest invoices are temporary.</span>
+                <span>
+                  Create invoices instantly. Register to save and access them anytime — guest
+                  invoices are temporary.
+                </span>
               </div>
-              
+
               <p className="text-sm font-medium text-slate-500 max-w-md">
-                Guest invoices are deleted after 10 minutes or on page refresh. Download before leaving.
+                Guest invoices are deleted after 10 minutes or on page refresh. Download before
+                leaving.
               </p>
             </div>
           )}
@@ -417,7 +509,9 @@ export default function LandingPage() {
                   fontWeight: 500,
                 }}
               >
-                Unlock <strong>industry-specific invoice domains</strong> (Furniture, Clothing, Medical, and more) plus access to our full library of <strong>professional templates</strong>.
+                Unlock <strong>industry-specific invoice domains</strong> (Furniture, Clothing,
+                Medical, and more) plus access to our full library of{' '}
+                <strong>professional templates</strong>.
               </p>
               <Link
                 to="/register"
@@ -451,7 +545,6 @@ export default function LandingPage() {
           </AnimatedSection>
         </section>
       )}
-
 
       {/* ─── Stats ─── */}
       <section
@@ -558,10 +651,20 @@ export default function LandingPage() {
                 marginBottom: 16,
               }}
             >
-              Built for <em style={{ fontStyle: 'normal', color: 'var(--color-primary)' }}>your</em> industry.
+              Built for <em style={{ fontStyle: 'normal', color: 'var(--color-primary)' }}>your</em>{' '}
+              industry.
             </h2>
-            <p style={{ fontSize: 18, color: '#64748b', maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
-              Every business is different. Register to get domain-specific invoice fields, column layouts, and templates tailored to your trade.
+            <p
+              style={{
+                fontSize: 18,
+                color: '#64748b',
+                maxWidth: 560,
+                margin: '0 auto',
+                lineHeight: 1.6,
+              }}
+            >
+              Every business is different. Register to get domain-specific invoice fields, column
+              layouts, and templates tailored to your trade.
             </p>
           </div>
 
@@ -576,51 +679,61 @@ export default function LandingPage() {
             {DOMAINS.map((domain, i) => {
               const Icon = domain.icon;
               return (
-                <div
-                  key={domain.id}
-                  style={{
-                    background: '#fff',
-                    border: '1.5px solid #f1f5f9',
-                    borderRadius: 20,
-                    padding: '20px 18px',
-                    cursor: 'default',
-                    transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
-                    animation: `fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms both`,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.borderColor = domain.color + '60';
-                    e.currentTarget.style.boxShadow = `0 12px 32px -8px ${domain.color}25`;
-                    e.currentTarget.style.background = domain.bg;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = '#f1f5f9';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.background = '#fff';
-                  }}
-                >
+                <DomainHoverPreview key={domain.id} domainId={domain.id}>
                   <div
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 14,
-                      background: domain.bg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 14,
+                      height: '100%',
+                      background: '#fff',
+                      border: '1.5px solid #f1f5f9',
+                      borderRadius: 20,
+                      padding: '20px 18px',
+                      cursor: 'default',
+                      transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+                      animation: `fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms both`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.borderColor = domain.color + '60';
+                      e.currentTarget.style.boxShadow = `0 12px 32px -8px ${domain.color}25`;
+                      e.currentTarget.style.background = domain.bg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.borderColor = '#f1f5f9';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.background = '#fff';
                     }}
                   >
-                    <Icon size={22} color={domain.color} />
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 14,
+                        background: domain.bg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 14,
+                      }}
+                    >
+                      <Icon size={22} color={domain.color} />
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: '#1e293b',
+                        marginBottom: 4,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {domain.label}
+                    </p>
+                    <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, fontWeight: 500 }}>
+                      {domain.desc}
+                    </p>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: '#1e293b', marginBottom: 4, lineHeight: 1.3 }}>
-                    {domain.label}
-                  </p>
-                  <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, fontWeight: 500 }}>
-                    {domain.desc}
-                  </p>
-                </div>
+                </DomainHoverPreview>
               );
             })}
           </div>
@@ -632,7 +745,8 @@ export default function LandingPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 10,
-                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
+                background:
+                  'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
                 color: 'white',
                 padding: '14px 32px',
                 borderRadius: 14,
@@ -651,7 +765,9 @@ export default function LandingPage() {
             >
               Choose Your Business Vertical <ArrowRight size={18} />
             </Link>
-            <p style={{ marginTop: 12, fontSize: 13, color: '#94a3b8' }}>Free forever. No credit card required.</p>
+            <p style={{ marginTop: 12, fontSize: 13, color: '#94a3b8' }}>
+              Free forever. No credit card required.
+            </p>
           </div>
         </AnimatedSection>
       </section>
@@ -831,9 +947,9 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
-              <img 
-                src="https://img.icons8.com/fluency/48/linkedin.png" 
-                alt="LinkedIn" 
+              <img
+                src="https://img.icons8.com/fluency/48/linkedin.png"
+                alt="LinkedIn"
                 className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
             </a>
@@ -843,9 +959,9 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
-              <img 
-                src="https://img.icons8.com/fluency/48/behance.png" 
-                alt="Behance" 
+              <img
+                src="https://img.icons8.com/fluency/48/behance.png"
+                alt="Behance"
                 className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
             </a>
@@ -855,9 +971,9 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center justify-center p-1 rounded-md transition-all hover:bg-slate-50 active:scale-95 group"
             >
-              <img 
-                src="https://img.icons8.com/fluency/48/dribbble.png" 
-                alt="Dribbble" 
+              <img
+                src="https://img.icons8.com/fluency/48/dribbble.png"
+                alt="Dribbble"
                 className="w-[20px] h-[20px] transition-transform group-hover:scale-110"
               />
             </a>

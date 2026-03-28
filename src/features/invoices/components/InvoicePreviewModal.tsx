@@ -53,15 +53,17 @@ export default function InvoicePreviewModal({
               <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               <span>Back</span>
             </button>
-            <h1 className="text-xl sm:text-2xl font-black text-[#0f172a] tracking-tight hidden sm:block">Invoice Preview</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-[#0f172a] tracking-tight hidden sm:block">
+              Invoice Preview
+            </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleDownload}
               className="px-6 sm:px-8 py-3 text-white rounded-2xl text-sm font-black flex items-center gap-2 transition-all active:scale-95 shadow-lg"
-              style={{ 
+              style={{
                 backgroundColor: 'var(--brand-color, #f59e0b)',
-                boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))'
+                boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))',
               }}
             >
               <Download size={18} strokeWidth={3} /> <span>Download PDF</span>

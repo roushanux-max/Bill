@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { ArrowLeft, Printer, Download, Share2, Pencil, ChevronLeft } from 'lucide-react';
-import Header from '@/shared/components/Header';
 import { BrandingSettings } from '@/shared/types/branding';
 import InvoiceTemplate from '@/features/invoices/components/InvoiceTemplate';
 import { Invoice, StoreInfo } from '@/features/invoices/types/invoice';
@@ -137,13 +136,17 @@ export default function InvoicePreview() {
         try {
           currentSettings = JSON.parse(previewSettingsRaw);
           console.log('Using preview branding settings');
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse preview branding settings', e);
+        }
       }
       if (previewStoreRaw) {
         try {
           currentStore = JSON.parse(previewStoreRaw);
           console.log('Using preview store info');
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse preview store info', e);
+        }
       }
 
       setSettings(currentSettings);
@@ -285,14 +288,10 @@ export default function InvoicePreview() {
   return (
     <div className="min-h-screen bg-white">
       {isGenerating && <LoadingScreen type="printing" />}
-      
-      {/* 1. MAIN GLOBAL HEADER */}
-      <Header />
 
-      {/* 2. SUB-HEADER: ACTIONS */}
-      <div 
-        className="bg-white border-b border-slate-100 py-6 sticky top-20 z-[1100] print:hidden shadow-sm transition-all"
-        style={{ top: '80px' }}
+      {/* 1. SUB-HEADER: ACTIONS */}
+      <div
+        className="bg-white border-b border-slate-100 py-6 sticky top-0 z-[1100] print:hidden shadow-sm transition-all"
       >
         <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -312,9 +311,9 @@ export default function InvoicePreview() {
               <Button
                 variant="default"
                 className="text-white border-none h-12 px-8 rounded-2xl shadow-md active:scale-95 transition-all font-black"
-                style={{ 
+                style={{
                   backgroundColor: 'var(--brand-color, #f59e0b)',
-                  boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))'
+                  boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))',
                 }}
                 disabled={isGenerating}
               >
@@ -326,9 +325,9 @@ export default function InvoicePreview() {
               variant="outline"
               onClick={handlePrint}
               className="border-2 h-12 px-8 rounded-2xl active:scale-95 transition-all font-black bg-transparent"
-              style={{ 
+              style={{
                 borderColor: 'var(--brand-color, #f59e0b)',
-                color: 'var(--brand-color, #f59e0b)' 
+                color: 'var(--brand-color, #f59e0b)',
               }}
               disabled={isGenerating}
             >
@@ -339,9 +338,9 @@ export default function InvoicePreview() {
               variant="outline"
               onClick={handleDownload}
               className="border-2 h-12 px-8 rounded-2xl active:scale-95 transition-all font-black bg-transparent"
-              style={{ 
+              style={{
                 borderColor: 'var(--brand-color, #f59e0b)',
-                color: 'var(--brand-color, #f59e0b)' 
+                color: 'var(--brand-color, #f59e0b)',
               }}
               disabled={isGenerating}
             >
@@ -352,9 +351,9 @@ export default function InvoicePreview() {
               variant="default"
               onClick={handleShare}
               className="text-white border-none h-12 px-8 rounded-2xl shadow-md active:scale-95 transition-all font-black"
-              style={{ 
+              style={{
                 backgroundColor: 'var(--brand-color, #f59e0b)',
-                boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))'
+                boxShadow: '0 8px 16px -4px var(--brand-color-light, rgba(245, 158, 11, 0.2))',
               }}
               disabled={isGenerating}
             >
@@ -384,9 +383,9 @@ export default function InvoicePreview() {
             variant="default"
             onClick={handleShare}
             className="pointer-events-auto text-white border-none h-14 px-8 rounded-2xl shadow-2xl font-black"
-            style={{ 
+            style={{
               backgroundColor: 'var(--brand-color, #f59e0b)',
-              boxShadow: '0 12px 24px -6px var(--brand-color-light, rgba(245, 158, 11, 0.3))'
+              boxShadow: '0 12px 24px -6px var(--brand-color-light, rgba(245, 158, 11, 0.3))',
             }}
             disabled={isGenerating}
           >

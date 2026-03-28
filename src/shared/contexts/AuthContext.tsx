@@ -78,7 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('AuthContext: Failed to parse initial session from local storage', e);
+      }
 
       try {
         const {

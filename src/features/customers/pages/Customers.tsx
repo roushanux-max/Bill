@@ -31,7 +31,7 @@ import {
 import { toast } from 'sonner';
 import { Customer, Invoice } from '@/features/invoices/types/invoice';
 import { getCustomers, saveCustomer, deleteCustomer, getInvoices } from '@/shared/utils/storage';
-import { validatePhone } from '@/shared/utils/validation';
+import { validatePhone, validateInput, ValidationRules } from '@/shared/utils/validation';
 import {
   Select,
   SelectContent,
@@ -96,6 +96,11 @@ export default function Customers() {
     address: '',
     state: 'Bihar',
   });
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string | null;
+    phone?: string | null;
+    gstin?: string | null;
+  }>({});
 
   useEffect(() => {
     loadCustomers();
@@ -123,6 +128,7 @@ export default function Customers() {
       address: '',
       state: 'Bihar',
     });
+    setValidationErrors({});
     setEditingCustomer(null);
   };
 
@@ -154,8 +160,32 @@ export default function Customers() {
       return;
     }
 
+    let isValid = true;
+    const errors: any = {};
+
+    const nameErr = validateInput('name', formData.name);
+    if (nameErr) {
+      errors.name = nameErr;
+      isValid = false;
+    }
+
     if (!validatePhone(formData.phone)) {
-      toast.error('Please enter a valid 10-digit phone number');
+      errors.phone = 'Please enter a valid 10-digit phone number';
+      isValid = false;
+    }
+
+    if (formData.gstin) {
+      const gstErr = validateInput('gst', formData.gstin);
+      if (gstErr) {
+        errors.gstin = 'Please enter a valid 15-character GSTIN';
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+
+    if (!isValid) {
+      toast.error('Please fix the validation errors in the form.');
       return;
     }
 
@@ -359,11 +389,18 @@ export default function Customers() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => {
+                        const val = ValidationRules.name.format(e.target.value);
+                        setFormData({ ...formData, name: val });
+                        setValidationErrors({ ...validationErrors, name: validateInput('name', val) });
+                      }}
                       placeholder="Customer name"
                       required
-                      className="text-sm"
+                      className={`text-sm ${validationErrors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                     />
+                    {validationErrors.name && (
+                      <p className="text-red-500 text-[10px] mt-1 font-semibold">{validationErrors.name}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm">
@@ -372,18 +409,20 @@ export default function Customers() {
                     <Input
                       id="phone"
                       value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          phone: e.target.value.replace(/\D/g, '').slice(0, 10),
-                        })
-                      }
+                      onChange={(e) => {
+                        const val = ValidationRules.mobile.format(e.target.value);
+                        setFormData({ ...formData, phone: val });
+                        setValidationErrors({ ...validationErrors, phone: validatePhone(val) ? null : 'Enter a valid 10-digit mobile number' });
+                      }}
                       inputMode="tel"
                       maxLength={10}
                       placeholder="9876543210"
                       required
-                      className="text-sm"
+                      className={`text-sm ${validationErrors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                     />
+                    {validationErrors.phone && (
+                      <p className="text-red-500 text-[10px] mt-1 font-semibold">{validationErrors.phone}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gstin" className="text-sm">
@@ -392,13 +431,19 @@ export default function Customers() {
                     <Input
                       id="gstin"
                       value={formData.gstin}
-                      onChange={(e) =>
-                        setFormData({ ...formData, gstin: e.target.value.toUpperCase() })
-                      }
+                      onChange={(e) => {
+                        const val = ValidationRules.gst.format(e.target.value);
+                        setFormData({ ...formData, gstin: val });
+                        if (val) setValidationErrors({ ...validationErrors, gstin: validateInput('gst', val) });
+                        else setValidationErrors({ ...validationErrors, gstin: null });
+                      }}
                       placeholder="10DAOPK4311H1Z1"
                       maxLength={15}
-                      className="text-sm uppercase"
+                      className={`text-sm uppercase ${validationErrors.gstin ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                     />
+                    {validationErrors.gstin && (
+                      <p className="text-red-500 text-[10px] mt-1 font-semibold">{validationErrors.gstin}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address" className="text-sm">

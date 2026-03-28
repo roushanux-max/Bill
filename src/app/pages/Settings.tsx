@@ -45,7 +45,9 @@ import {
   Cpu,
   Utensils,
   Scissors,
+  Droplet,
 } from 'lucide-react';
+import DomainHoverPreview from '@/shared/components/DomainHoverPreview';
 import {
   getTextColorClass,
   getDescriptionColorClass,
@@ -404,6 +406,22 @@ export default function SettingsPage() {
       color: '#0891b2',
       bg: '#ecfeff',
     },
+    {
+      id: 'water',
+      label: 'Water Supplier',
+      description: 'Jars, dispensers & deposits',
+      icon: Droplet,
+      color: '#0284c7',
+      bg: '#e0f2fe',
+    },
+    {
+      id: 'barber',
+      label: 'Salon / Barber',
+      description: 'Services & appointments',
+      icon: Scissors,
+      color: '#9333ea',
+      bg: '#faf5ff',
+    },
   ];
 
   const sections = [
@@ -599,7 +617,6 @@ export default function SettingsPage() {
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
-
             {/* Business Domain Section */}
             {activeSection === 'domain' && (
               <div className="space-y-6">
@@ -621,79 +638,103 @@ export default function SettingsPage() {
                   </div>
                   <CardContent className="p-5">
                     <p className="text-sm text-slate-500 mb-5">
-                      This setting customizes which fields appear on your invoices. For example, selecting <strong>Clothing</strong> adds <em>Size</em> and <em>Color</em> columns, while <strong>Medical</strong> adds patient and procedure fields.
+                      This setting customizes which fields appear on your invoices. For example,
+                      selecting <strong>Clothing</strong> adds <em>Size</em> and <em>Color</em>{' '}
+                      columns, while <strong>Medical</strong> adds patient and procedure fields.
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                       {DOMAINS.map((domain) => {
                         const Icon = domain.icon;
                         const isSelected = (settings.domain || 'general') === domain.id;
                         return (
-                          <button
-                            key={domain.id}
-                            onClick={() => updateSettings('domain', domain.id as any)}
-                            className="relative text-left p-4 rounded-2xl border-2 transition-all duration-200 group"
-                            style={{
-                              borderColor: isSelected ? domain.color : '#e2e8f0',
-                              background: isSelected ? domain.bg : '#fff',
-                              boxShadow: isSelected ? `0 4px 14px -4px ${domain.color}40` : 'none',
-                              transform: isSelected ? 'scale(1.02)' : 'scale(1)',
-                            }}
-                          >
-                            {isSelected && (
-                              <div
-                                className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
-                                style={{ background: domain.color }}
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                              </div>
-                            )}
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                              style={{ background: domain.bg }}
+                          <DomainHoverPreview key={domain.id} domainId={domain.id}>
+                            <button
+                              onClick={() => updateSettings('domain', domain.id as any)}
+                              className="relative text-left p-4 rounded-2xl border-2 transition-all duration-200 group w-full h-full"
+                              style={{
+                                borderColor: isSelected ? domain.color : '#e2e8f0',
+                                background: isSelected ? domain.bg : '#fff',
+                                boxShadow: isSelected ? `0 4px 14px -4px ${domain.color}40` : 'none',
+                                transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                              }}
                             >
-                              <Icon className="w-5 h-5" style={{ color: domain.color }} />
-                            </div>
-                            <p className="text-sm font-bold text-slate-800 leading-tight">{domain.label}</p>
-                            <p className="text-[11px] text-slate-400 mt-1 leading-tight">{domain.description}</p>
-                          </button>
+                              {isSelected && (
+                                <div
+                                  className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                                  style={{ background: domain.color }}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                </div>
+                              )}
+                              <div
+                                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                                style={{ background: domain.bg }}
+                              >
+                                <Icon className="w-5 h-5" style={{ color: domain.color }} />
+                              </div>
+                              <p className="text-sm font-bold text-slate-800 leading-tight">
+                                {domain.label}
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-1 leading-tight">
+                                {domain.description}
+                              </p>
+                            </button>
+                          </DomainHoverPreview>
                         );
                       })}
                     </div>
 
                     {/* Preview of active domain */}
-                    {settings.domain && settings.domain !== 'general' && (() => {
-                      const activeDomainInfo = DOMAINS.find(d => d.id === settings.domain);
-                      if (!activeDomainInfo) return null;
-                      const extraFields: Record<string, string[]> = {
-                        furniture: ['Material', 'HSN Code'],
-                        clothing: ['Size', 'Color', 'HSN Code'],
-                        medical: ['Patient Name', 'Procedure / Code'],
-                        hotel: ['Room Number', 'Check-in / Nights'],
-                        freelance: ['Hours', 'Project Name'],
-                        grocery: ['Unit (kg/ltr)', 'HSN Code'],
-                        electronics: ['Serial No.', 'Warranty'],
-                        food: ['Covers / Pax', 'Menu Category'],
-                        retail: ['SKU / Barcode', 'HSN Code'],
-                      };
-                      const fields = extraFields[settings.domain] || [];
-                      return (
-                        <div
-                          className="mt-5 p-4 rounded-xl border"
-                          style={{ background: activeDomainInfo.bg, borderColor: `${activeDomainInfo.color}30` }}
-                        >
-                          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: activeDomainInfo.color }}>
-                            Extra fields unlocked for {activeDomainInfo.label}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {fields.map(f => (
-                              <span key={f} className="text-xs font-semibold px-3 py-1 rounded-full bg-white shadow-sm" style={{ color: activeDomainInfo.color, border: `1px solid ${activeDomainInfo.color}30` }}>
-                                + {f}
-                              </span>
-                            ))}
+                    {settings.domain &&
+                      settings.domain !== 'general' &&
+                      (() => {
+                        const activeDomainInfo = DOMAINS.find((d) => d.id === settings.domain);
+                        if (!activeDomainInfo) return null;
+                        const extraFields: Record<string, string[]> = {
+                          furniture: ['Material', 'HSN Code'],
+                          clothing: ['Size', 'Color', 'HSN Code'],
+                          medical: ['Patient Name', 'Procedure / Code'],
+                          hotel: ['Room Number', 'Check-in / Nights'],
+                          freelance: ['Hours', 'Project Name'],
+                          grocery: ['Unit (kg/ltr)', 'HSN Code'],
+                          electronics: ['Serial No.', 'Warranty period'],
+                          food: ['Food Type', 'Delivery Details'],
+                          retail: ['Barcode/SKU'],
+                          water: ['Jars Due/Return', 'Security Deposit'],
+                          barber: ['Stylist', 'Appointment Time'],
+                        };
+                        const fields = extraFields[settings.domain] || [];
+                        return (
+                          <div
+                            className="mt-5 p-4 rounded-xl border"
+                            style={{
+                              background: activeDomainInfo.bg,
+                              borderColor: `${activeDomainInfo.color}30`,
+                            }}
+                          >
+                            <p
+                              className="text-xs font-bold uppercase tracking-widest mb-2"
+                              style={{ color: activeDomainInfo.color }}
+                            >
+                              Extra fields unlocked for {activeDomainInfo.label}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {fields.map((f) => (
+                                <span
+                                  key={f}
+                                  className="text-xs font-semibold px-3 py-1 rounded-full bg-white shadow-sm"
+                                  style={{
+                                    color: activeDomainInfo.color,
+                                    border: `1px solid ${activeDomainInfo.color}30`,
+                                  }}
+                                >
+                                  + {f}
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
                   </CardContent>
                 </Card>
               </div>
@@ -1189,14 +1230,20 @@ export default function SettingsPage() {
                           {/* Signer Name */}
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-slate-700">
-                              Signer Name <span className="text-slate-400 font-normal text-xs">(acts as digital signature)</span>
+                              Signer Name{' '}
+                              <span className="text-slate-400 font-normal text-xs">
+                                (acts as digital signature)
+                              </span>
                             </Label>
                             <Input
                               value={settings.signatureText}
                               onChange={(e) => updateSettings('signatureText', e.target.value)}
                               placeholder="e.g. Ramesh Kumar"
                             />
-                            <p className="text-xs text-slate-400">This name will appear above the signature line in place of a handwritten signature.</p>
+                            <p className="text-xs text-slate-400">
+                              This name will appear above the signature line in place of a
+                              handwritten signature.
+                            </p>
                           </div>
 
                           {/* Designation / Title */}
@@ -1206,10 +1253,14 @@ export default function SettingsPage() {
                             </Label>
                             <Input
                               value={(settings as any).signatureTitle || ''}
-                              onChange={(e) => updateSettings('signatureTitle' as any, e.target.value)}
+                              onChange={(e) =>
+                                updateSettings('signatureTitle' as any, e.target.value)
+                              }
                               placeholder="e.g. Authorized Signatory, CEO, Owner"
                             />
-                            <p className="text-xs text-slate-400">This label appears below the signature line on the invoice.</p>
+                            <p className="text-xs text-slate-400">
+                              This label appears below the signature line on the invoice.
+                            </p>
                           </div>
                         </div>
                       )}

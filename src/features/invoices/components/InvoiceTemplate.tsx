@@ -7,6 +7,18 @@ interface ExtendedInvoiceItem extends InvoiceItem {
   color?: string;
   material?: string;
   size?: string;
+  serialNo?: string;
+  warranty?: string;
+  foodType?: string;
+  barcode?: string;
+  jarsDue?: string;
+  deposit?: string | number;
+  stylist?: string;
+  appointmentTime?: string;
+  project?: string;
+  patient?: string;
+  procedure?: string;
+  room?: string;
 }
 
 interface InvoiceTemplateProps {
@@ -119,25 +131,40 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
   const templateType = invoice.templateId || 'standard';
 
   const qtyLabel =
-    activeDomain === 'freelance' ? 'HOURS' : activeDomain === 'hotel' ? 'NIGHTS' : 'QTY';
+    activeDomain === 'freelance'
+      ? 'HOURS'
+      : activeDomain === 'hotel'
+        ? 'NIGHTS'
+        : activeDomain === 'water'
+          ? 'JARS'
+          : activeDomain === 'barber'
+            ? 'SVCS'
+            : 'QTY';
+
   const priceLabel =
-    activeDomain === 'freelance' ? 'RATE/HR' : activeDomain === 'hotel' ? 'RATE/NIGHT' : 'PRICE';
+    activeDomain === 'freelance'
+      ? 'RATE/HR'
+      : activeDomain === 'hotel'
+        ? 'RATE/NIGHT'
+        : activeDomain === 'water'
+          ? 'RATE/JAR'
+          : 'PRICE';
 
   // --- MINIMALIST TEMPLATE ---
   if (templateType === 'minimalist') {
     return (
-        <div
-          style={{
-            width: '210mm',
-            margin: '0 auto',
-            backgroundColor: '#fff',
-            minHeight: '297mm',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '40px',
-            fontFamily: '"Aptos", sans-serif',
-          }}
-        >
+      <div
+        style={{
+          width: '210mm',
+          margin: '0 auto',
+          backgroundColor: '#fff',
+          minHeight: '297mm',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '40px',
+          fontFamily: '"Aptos", sans-serif',
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -275,6 +302,25 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                 >
                   Item Description
                 </th>
+                {(activeDomain === 'clothing' ||
+                  activeDomain === 'furniture' ||
+                  activeDomain === 'grocery' ||
+                  activeDomain === 'electronics' ||
+                  activeDomain === 'retail' ||
+                  activeDomain === 'water') && (
+                  <th
+                    style={{
+                      padding: '12px 0',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: '#888',
+                      textTransform: 'uppercase',
+                      width: '60px',
+                    }}
+                  >
+                    HSN
+                  </th>
+                )}
                 <th
                   style={{
                     padding: '12px 0',
@@ -332,7 +378,64 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   <tr key={item.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
                     <td style={{ padding: '14px 0', color: '#111' }}>
                       <div style={{ fontWeight: 500 }}>{item.productName}</div>
+                      {/* Domain specialized sub-info for minimalist */}
+                      <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                        {activeDomain === 'clothing' && (
+                          <span>
+                            {item.size ? `Size: ${item.size}` : ''}
+                            {item.size && item.color ? ' • ' : ''}
+                            {item.color ? `Color: ${item.color}` : ''}
+                          </span>
+                        )}
+                        {activeDomain === 'furniture' && item.material && (
+                          <span>Material: {item.material}</span>
+                        )}
+                        {activeDomain === 'electronics' && (
+                          <span>
+                            {item.serialNo ? `SN: ${item.serialNo}` : ''}
+                            {item.serialNo && item.warranty ? ' • ' : ''}
+                            {item.warranty ? `Warranty: ${item.warranty}` : ''}
+                          </span>
+                        )}
+                        {activeDomain === 'water' && (
+                          <span>
+                            {item.jarsDue ? `Due: ${item.jarsDue}` : ''}
+                            {item.jarsDue && item.deposit ? ' • ' : ''}
+                            {item.deposit ? `Dep: ₹${item.deposit}` : ''}
+                          </span>
+                        )}
+                        {activeDomain === 'barber' && (
+                          <span>
+                            {item.stylist ? `Staff: ${item.stylist}` : ''}
+                            {item.stylist && item.appointmentTime ? ' • ' : ''}
+                            {item.appointmentTime ? `Time: ${item.appointmentTime}` : ''}
+                          </span>
+                        )}
+                        {activeDomain === 'freelance' && item.project && (
+                          <span>Project: {item.project}</span>
+                        )}
+                        {activeDomain === 'hotel' && item.room && (
+                          <span>Room: {item.room}</span>
+                        )}
+                        {activeDomain === 'medical' && (
+                          <span>
+                            {item.patient ? `Patient: ${item.patient}` : ''}
+                            {item.patient && item.procedure ? ' • ' : ''}
+                            {item.procedure ? `Proc: ${item.procedure}` : ''}
+                          </span>
+                        )}
+                      </div>
                     </td>
+                    {(activeDomain === 'clothing' ||
+                      activeDomain === 'furniture' ||
+                      activeDomain === 'grocery' ||
+                      activeDomain === 'electronics' ||
+                      activeDomain === 'retail' ||
+                      activeDomain === 'water') && (
+                      <td style={{ padding: '14px 0', textAlign: 'center', color: '#666' }}>
+                        {item.hsn || '-'}
+                      </td>
+                    )}
                     <td style={{ padding: '14px 0', textAlign: 'center', color: '#444' }}>
                       {item.quantity}
                     </td>
@@ -471,7 +574,9 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               <div style={{ height: '40px', marginBottom: '4px' }} />
             )}
             {settings.signatureText && (
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#111', marginBottom: '2px' }}>
+              <div
+                style={{ fontSize: '11px', fontWeight: 800, color: '#111', marginBottom: '2px' }}
+              >
                 {settings.signatureText}
               </div>
             )}
@@ -635,51 +740,78 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
                     <th
                       style={{
-                        padding: '12px 0',
+                        padding: '12px 10px',
                         textAlign: 'left',
-                        fontWeight: 700,
-                        color: '#0f172a',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        color: '#64748b',
                       }}
                     >
                       DESCRIPTION
                     </th>
+                    {(activeDomain === 'clothing' ||
+                      activeDomain === 'furniture' ||
+                      activeDomain === 'grocery' ||
+                      activeDomain === 'electronics' ||
+                      activeDomain === 'retail' ||
+                      activeDomain === 'water') && (
+                      <th
+                        style={{
+                          padding: '12px 10px',
+                          textAlign: 'center',
+                          fontSize: '11px',
+                          fontWeight: 900,
+                          color: '#64748b',
+                          width: '60px',
+                        }}
+                      >
+                        HSN
+                      </th>
+                    )}
                     <th
                       style={{
-                        padding: '12px 0',
+                        padding: '12px 10px',
                         textAlign: 'center',
-                        fontWeight: 700,
-                        color: '#0f172a',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        color: '#64748b',
+                        width: '60px',
                       }}
                     >
                       {qtyLabel}
                     </th>
                     <th
                       style={{
-                        padding: '12px 0',
+                        padding: '12px 10px',
                         textAlign: 'right',
-                        fontWeight: 700,
-                        color: '#0f172a',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        color: '#64748b',
+                        width: '100px',
                       }}
                     >
                       {priceLabel}
                     </th>
                     <th
                       style={{
-                        padding: '12px 0',
+                        padding: '12px 10px',
                         textAlign: 'right',
-                        fontWeight: 700,
-                        color: '#0f172a',
-                        width: '70px',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        color: '#64748b',
+                        width: '60px',
                       }}
                     >
                       GST
                     </th>
                     <th
                       style={{
-                        padding: '12px 0',
+                        padding: '12px 10px',
                         textAlign: 'right',
-                        fontWeight: 700,
-                        color: '#0f172a',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        color: '#64748b',
+                        width: '100px',
                       }}
                     >
                       TOTAL
@@ -691,12 +823,77 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                     const { rawSubtotal, taxAmount, totalAmount } = calculateItemTotals(item);
                     return (
                       <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '16px 0', color: '#334155' }}>
-                          <div style={{ fontWeight: 600 }}>{item.productName}</div>
+                        <td style={{ padding: '16px 10px' }}>
+                          <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '14px' }}>
+                            {item.productName}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>
+                            {activeDomain === 'clothing' && (
+                              <span>
+                                {item.size ? `Size: ${item.size}` : ''}
+                                {item.size && item.color ? ' • ' : ''}
+                                {item.color ? `Color: ${item.color}` : ''}
+                              </span>
+                            )}
+                            {activeDomain === 'furniture' && item.material && (
+                              <span>Material: {item.material}</span>
+                            )}
+                            {activeDomain === 'electronics' && (
+                              <span>
+                                {item.serialNo ? `SN: ${item.serialNo}` : ''}
+                                {item.serialNo && item.warranty ? ' • ' : ''}
+                                {item.warranty ? `Warranty: ${item.warranty}` : ''}
+                              </span>
+                            )}
+                            {activeDomain === 'water' && (
+                              <span>
+                                {item.jarsDue ? `Due: ${item.jarsDue}` : ''}
+                                {item.jarsDue && item.deposit ? ' • ' : ''}
+                                {item.deposit ? `Dep: ₹${item.deposit}` : ''}
+                              </span>
+                            )}
+                            {activeDomain === 'barber' && (
+                              <span>
+                                {item.stylist ? `Staff: ${item.stylist}` : ''}
+                                {item.stylist && item.appointmentTime ? ' • ' : ''}
+                                {item.appointmentTime ? `Time: ${item.appointmentTime}` : ''}
+                              </span>
+                            )}
+                            {activeDomain === 'freelance' && item.project && (
+                              <span>Project: {item.project}</span>
+                            )}
+                            {activeDomain === 'hotel' && item.room && (
+                              <span>Room: {item.room}</span>
+                            )}
+                            {activeDomain === 'medical' && (
+                              <span>
+                                {item.patient ? `Patient: ${item.patient}` : ''}
+                                {item.patient && item.procedure ? ' • ' : ''}
+                                {item.procedure ? `Proc: ${item.procedure}` : ''}
+                              </span>
+                            )}
+                          </div>
                         </td>
+                        {(activeDomain === 'clothing' ||
+                          activeDomain === 'furniture' ||
+                          activeDomain === 'grocery' ||
+                          activeDomain === 'electronics' ||
+                          activeDomain === 'retail' ||
+                          activeDomain === 'water') && (
+                          <td
+                            style={{
+                              padding: '16px 10px',
+                              textAlign: 'center',
+                              color: '#64748b',
+                              fontSize: '12px',
+                            }}
+                          >
+                            {item.hsn || '-'}
+                          </td>
+                        )}
                         <td
                           style={{
-                            padding: '16px 0',
+                            padding: '16px 10px',
                             textAlign: 'center',
                             color: '#475569',
                             fontWeight: 500,
@@ -852,13 +1049,29 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   Thank you!
                 </p>
                 {invoice.notes && (
-                  <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.5, marginBottom: '8px' }}>
+                  <p
+                    style={{
+                      fontSize: '10px',
+                      color: '#64748b',
+                      lineHeight: 1.5,
+                      marginBottom: '8px',
+                    }}
+                  >
                     {invoice.notes}
                   </p>
                 )}
                 {(invoice.termsAndConditions || settings.termsAndConditions) && (
-                  <p style={{ fontSize: '9px', color: '#94a3b8', lineHeight: 1.4, borderTop: '1px solid #f1f5f9', paddingTop: '6px' }}>
-                    <strong>Terms & Conditions:</strong> {invoice.termsAndConditions || settings.termsAndConditions}
+                  <p
+                    style={{
+                      fontSize: '9px',
+                      color: '#94a3b8',
+                      lineHeight: 1.4,
+                      borderTop: '1px solid #f1f5f9',
+                      paddingTop: '6px',
+                    }}
+                  >
+                    <strong>Terms & Conditions:</strong>{' '}
+                    {invoice.termsAndConditions || settings.termsAndConditions}
                   </p>
                 )}
               </div>
@@ -882,7 +1095,14 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   }}
                 />
                 {settings.signatureText && (
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#0f172a', marginBottom: '2px' }}>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      color: '#0f172a',
+                      marginBottom: '2px',
+                    }}
+                  >
                     {settings.signatureText}
                   </div>
                 )}
@@ -1122,7 +1342,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
               <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 900 }}>
                 ITEM DESCRIPTION
               </th>
-              {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
+              {(activeDomain === 'furniture' ||
+                activeDomain === 'clothing' ||
+                activeDomain === 'grocery' ||
+                activeDomain === 'electronics' ||
+                activeDomain === 'retail' ||
+                activeDomain === 'water') && (
                 <th
                   style={{
                     padding: '9px 8px',
@@ -1158,6 +1383,18 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   </th>
                 </>
               )}
+              {activeDomain === 'grocery' && (
+                <th
+                  style={{
+                    padding: '9px 8px',
+                    textAlign: 'center',
+                    width: '60px',
+                    fontWeight: 800,
+                  }}
+                >
+                  UNIT
+                </th>
+              )}
               {activeDomain === 'furniture' && (
                 <th
                   style={{
@@ -1168,6 +1405,150 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   }}
                 >
                   MATERIAL
+                </th>
+              )}
+              {activeDomain === 'electronics' && (
+                <>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '80px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    SERIAL NO
+                  </th>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '70px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    WARRANTY
+                  </th>
+                </>
+              )}
+              {activeDomain === 'food' && (
+                <th
+                  style={{
+                    padding: '9px 8px',
+                    textAlign: 'center',
+                    width: '80px',
+                    fontWeight: 800,
+                  }}
+                >
+                  FOOD TYPE
+                </th>
+              )}
+              {activeDomain === 'retail' && (
+                <th
+                  style={{
+                    padding: '9px 8px',
+                    textAlign: 'center',
+                    width: '80px',
+                    fontWeight: 800,
+                  }}
+                >
+                  BARCODE
+                </th>
+              )}
+              {activeDomain === 'water' && (
+                <>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '70px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    JARS DUE
+                  </th>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '70px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    DEPOSIT
+                  </th>
+                </>
+              )}
+              {activeDomain === 'barber' && (
+                <>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '80px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    STYLIST
+                  </th>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '80px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    TIME
+                  </th>
+                </>
+              )}
+              {activeDomain === 'freelance' && (
+                <th
+                  style={{
+                    padding: '9px 8px',
+                    textAlign: 'center',
+                    width: '80px',
+                    fontWeight: 800,
+                  }}
+                >
+                  PROJECT
+                </th>
+              )}
+              {activeDomain === 'medical' && (
+                <>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '80px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    PATIENT
+                  </th>
+                  <th
+                    style={{
+                      padding: '9px 8px',
+                      textAlign: 'center',
+                      width: '80px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    PROCEDURE
+                  </th>
+                </>
+              )}
+              {activeDomain === 'hotel' && (
+                <th
+                  style={{
+                    padding: '9px 8px',
+                    textAlign: 'center',
+                    width: '60px',
+                    fontWeight: 800,
+                  }}
+                >
+                  ROOM
                 </th>
               )}
               <th
@@ -1246,7 +1627,12 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                   <td style={{ padding: '10px', color: '#222', fontWeight: 600 }}>
                     {item.productName}
                   </td>
-                  {(activeDomain === 'furniture' || activeDomain === 'clothing') && (
+                  {(activeDomain === 'furniture' ||
+                    activeDomain === 'clothing' ||
+                    activeDomain === 'grocery' ||
+                    activeDomain === 'electronics' ||
+                    activeDomain === 'retail' ||
+                    activeDomain === 'water') && (
                     <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
                       {item.hsn || '-'}
                     </td>
@@ -1261,9 +1647,74 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
                       </td>
                     </>
                   )}
+                  {activeDomain === 'grocery' && (
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                      {item.unit || '-'}
+                    </td>
+                  )}
                   {activeDomain === 'furniture' && (
                     <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
                       {item.material || '-'}
+                    </td>
+                  )}
+                  {activeDomain === 'electronics' && (
+                    <>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.serialNo || '-'}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.warranty || '-'}
+                      </td>
+                    </>
+                  )}
+                  {activeDomain === 'food' && (
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                      {item.foodType || '-'}
+                    </td>
+                  )}
+                  {activeDomain === 'retail' && (
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                      {item.barcode || '-'}
+                    </td>
+                  )}
+                  {activeDomain === 'water' && (
+                    <>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.jarsDue || '-'}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.deposit ? `₹${item.deposit}` : '-'}
+                      </td>
+                    </>
+                  )}
+                  {activeDomain === 'barber' && (
+                    <>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.stylist || '-'}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.appointmentTime || '-'}
+                      </td>
+                    </>
+                  )}
+                  {activeDomain === 'freelance' && (
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                      {item.project || '-'}
+                    </td>
+                  )}
+                  {activeDomain === 'medical' && (
+                    <>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.patient || '-'}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                        {item.procedure || '-'}
+                      </td>
+                    </>
+                  )}
+                  {activeDomain === 'hotel' && (
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+                      {item.room || '-'}
                     </td>
                   )}
                   <td
@@ -1350,7 +1801,13 @@ export default function InvoiceTemplate({ invoice, settings, storeInfo }: Invoic
             </div>
           )}
           {(invoice.termsAndConditions || settings.termsAndConditions) && (
-            <div style={{ marginTop: '20px', borderLeft: `3px solid ${brandColor}`, paddingLeft: '12px' }}>
+            <div
+              style={{
+                marginTop: '20px',
+                borderLeft: `3px solid ${brandColor}`,
+                paddingLeft: '12px',
+              }}
+            >
               <p
                 style={{
                   fontSize: '10px',

@@ -65,9 +65,7 @@ const MobileNav: React.FC = () => {
               </span>
 
               {location.pathname === item.path && (
-                <div
-                  className="absolute -bottom-1 w-1 h-1 rounded-full animate-pulse bg-slate-400"
-                />
+                <div className="absolute -bottom-1 w-1 h-1 rounded-full animate-pulse bg-slate-400" />
               )}
             </NavLink>
           );

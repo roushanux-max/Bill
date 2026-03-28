@@ -30,6 +30,9 @@ import ErrorPage from './pages/ErrorPage';
 import { NavigationProvider } from '@/shared/contexts/NavigationContext';
 
 const RootLayout = () => {
+  const location = useLocation();
+  const hideGlobalNav = location.pathname === '/invoice-preview';
+
   useEffect(() => {
     clearLazyRetryFlag();
   }, []);
@@ -38,13 +41,13 @@ const RootLayout = () => {
     <NavigationProvider>
       <div className="min-h-screen flex flex-col bg-slate-50 user-theme">
         <ScrollRestoration />
-        <Header />
+        {!hideGlobalNav && <Header />}
         <Suspense fallback={<LoadingFallback />}>
-          <div className="flex-1 pb-24 md:pb-0">
+          <div className={`flex-1 ${!hideGlobalNav ? 'pb-24 md:pb-0' : ''}`}>
             <Outlet />
           </div>
         </Suspense>
-        <MobileNav />
+        {!hideGlobalNav && <MobileNav />}
       </div>
     </NavigationProvider>
   );

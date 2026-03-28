@@ -93,7 +93,9 @@ export const migrateGuestDataToDatabase = async (): Promise<boolean> => {
       try {
         const bs = JSON.parse(brandingRaw);
         await saveBrandingSettings(bs);
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Failed to parse guest branding settings', e);
+      }
     }
 
     // Clean up session storage matching 'guest_mode_'

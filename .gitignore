@@ -9,3 +9,7 @@ dev-dist
 coverage
 *.local
 package-lock.json
+*.txt
+*.log
+tsc-output.txt
+lint-output.txt

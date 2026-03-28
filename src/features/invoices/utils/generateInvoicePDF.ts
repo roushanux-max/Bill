@@ -132,7 +132,9 @@ export function generateInvoicePDF(
       const finalW = finalH * imgRatio;
       pdf.addImage(settings.logo, 'PNG', logoX, logoY, finalW, finalH, undefined, 'FAST');
       logoX += finalW + 8;
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Failed to add logo image to PDF', e);
+    }
   } else {
     pdf.setFillColor(...primary);
     pdf.roundedRect(logoX, logoY, 15, 15, 3, 3, 'F');
@@ -224,14 +226,72 @@ export function generateInvoicePDF(
     (item: any) => item.material && item.material.trim() !== '' && item.material !== '-'
   );
 
+  const qtyLabel =
+    activeDomain === 'freelance'
+      ? 'HOURS'
+      : activeDomain === 'hotel'
+        ? 'NIGHTS'
+        : activeDomain === 'water'
+          ? 'JARS'
+          : activeDomain === 'barber'
+            ? 'SVCS'
+            : 'QTY';
+
+  const priceLabel =
+    activeDomain === 'freelance'
+      ? 'RATE/HR'
+      : activeDomain === 'hotel'
+        ? 'RATE/NIGHT'
+        : activeDomain === 'water'
+          ? 'RATE/JAR'
+          : 'PRICE';
+
   let cols = [
-    { label: 'QTY', w: 12, align: 'center' },
+    { label: qtyLabel, w: 12, align: 'center', id: 'qty' },
     { label: 'ITEM DESCRIPTION', w: 60, align: 'left', id: 'desc' },
     { label: 'HSN', w: 15, align: 'center', id: 'hsn' },
-    { label: 'PRICE', w: 25, align: 'right' },
-    { label: 'GST', w: 20, align: 'right' },
-    { label: 'TOTAL', w: 30, align: 'right' },
+    { label: priceLabel, w: 25, align: 'right', id: 'price' },
+    { label: 'GST', w: 20, align: 'right', id: 'gst' },
+    { label: 'TOTAL', w: 30, align: 'right', id: 'total' },
   ];
+
+  const hasAnyWarranty = (invoice.items || []).some(
+    (item: any) => item.warranty && item.warranty.trim() !== '' && item.warranty !== '-'
+  );
+  const hasAnySerial = (invoice.items || []).some(
+    (item: any) => item.serialNo && item.serialNo.trim() !== '' && item.serialNo !== '-'
+  );
+  const hasAnyFoodType = (invoice.items || []).some(
+    (item: any) => item.foodType && item.foodType.trim() !== '' && item.foodType !== '-'
+  );
+  const hasAnyBarcode = (invoice.items || []).some(
+    (item: any) => item.barcode && item.barcode.trim() !== '' && item.barcode !== '-'
+  );
+  const hasAnyJarsDue = (invoice.items || []).some(
+    (item: any) => item.jarsDue && item.jarsDue.trim() !== '' && item.jarsDue !== '-'
+  );
+  const hasAnyDeposit = (invoice.items || []).some(
+    (item: any) => item.deposit && String(item.deposit).trim() !== '' && item.deposit !== '-'
+  );
+  const hasAnyStylist = (invoice.items || []).some(
+    (item: any) => item.stylist && item.stylist.trim() !== '' && item.stylist !== '-'
+  );
+  const hasAnyApptTime = (invoice.items || []).some(
+    (item: any) =>
+      item.appointmentTime && item.appointmentTime.trim() !== '' && item.appointmentTime !== '-'
+  );
+  const hasAnyProject = (invoice.items || []).some(
+    (item: any) => item.project && item.project.trim() !== '' && item.project !== '-'
+  );
+  const hasAnyPatient = (invoice.items || []).some(
+    (item: any) => item.patient && item.patient.trim() !== '' && item.patient !== '-'
+  );
+  const hasAnyProcedure = (invoice.items || []).some(
+    (item: any) => item.procedure && item.procedure.trim() !== '' && item.procedure !== '-'
+  );
+  const hasAnyRoom = (invoice.items || []).some(
+    (item: any) => item.room && item.room.trim() !== '' && item.room !== '-'
+  );
 
   if (hasAnySize) {
     cols.splice(2, 0, { label: 'SIZE', w: 12, align: 'center', id: 'size' });
@@ -241,6 +301,42 @@ export function generateInvoicePDF(
   }
   if (hasAnyMaterial) {
     cols.splice(2, 0, { label: 'MATERIAL', w: 24, align: 'center', id: 'material' });
+  }
+  if (hasAnyWarranty) {
+    cols.splice(2, 0, { label: 'WARRANTY', w: 20, align: 'center', id: 'warranty' });
+  }
+  if (hasAnySerial) {
+    cols.splice(2, 0, { label: 'SERIAL NO', w: 24, align: 'center', id: 'serial' });
+  }
+  if (hasAnyFoodType) {
+    cols.splice(2, 0, { label: 'TYPE', w: 20, align: 'center', id: 'foodType' });
+  }
+  if (hasAnyBarcode) {
+    cols.splice(2, 0, { label: 'BARCODE', w: 24, align: 'center', id: 'barcode' });
+  }
+  if (hasAnyJarsDue) {
+    cols.splice(2, 0, { label: 'JARS DUE', w: 18, align: 'center', id: 'jarsDue' });
+  }
+  if (hasAnyDeposit) {
+    cols.splice(2, 0, { label: 'DEPOSIT', w: 18, align: 'center', id: 'deposit' });
+  }
+  if (hasAnyStylist) {
+    cols.splice(2, 0, { label: 'STYLIST', w: 20, align: 'center', id: 'stylist' });
+  }
+  if (hasAnyApptTime) {
+    cols.splice(2, 0, { label: 'TIME', w: 20, align: 'center', id: 'apptTime' });
+  }
+  if (hasAnyProject) {
+    cols.splice(2, 0, { label: 'PROJECT', w: 24, align: 'center', id: 'project' });
+  }
+  if (hasAnyPatient) {
+    cols.splice(2, 0, { label: 'PATIENT', w: 20, align: 'center', id: 'patient' });
+  }
+  if (hasAnyProcedure) {
+    cols.splice(2, 0, { label: 'PROCEDURE', w: 20, align: 'center', id: 'procedure' });
+  }
+  if (hasAnyRoom) {
+    cols.splice(2, 0, { label: 'ROOM', w: 15, align: 'center', id: 'room' });
   }
 
   if (!hasAnyHSN) {
@@ -302,16 +398,29 @@ export function generateInvoicePDF(
       const tx = rcx + (col.align === 'center' ? col.w / 2 : col.align === 'right' ? col.w - 4 : 4);
       let val = '';
 
-      if (col.label === 'QTY') val = String(item.quantity);
-      else if (col.label === 'ITEM DESCRIPTION')
+      if (col.id === 'qty') val = String(item.quantity);
+      else if (col.id === 'desc')
         val = ''; // Handled separately for multi-line
-      else if (col.label === 'HSN') val = item.hsn || '-';
-      else if (col.label === 'SIZE') val = item.unit || (item as any).size || '-';
-      else if (col.label === 'COLOR') val = (item as any).color || '-';
-      else if (col.label === 'MATERIAL') val = (item as any).material || '-';
-      else if (col.label === 'PRICE') val = (item.unitPrice || 0).toLocaleString('en-IN');
-      else if (col.label === 'GST') val = Math.round(taxAmount).toLocaleString('en-IN');
-      else if (col.label === 'TOTAL') val = Math.round(rowTotal).toLocaleString('en-IN');
+      else if (col.id === 'hsn') val = item.hsn || '-';
+      else if (col.id === 'size') val = item.unit || (item as any).size || '-';
+      else if (col.id === 'color') val = (item as any).color || '-';
+      else if (col.id === 'material') val = (item as any).material || '-';
+      else if (col.id === 'serial') val = (item as any).serialNo || '-';
+      else if (col.id === 'warranty') val = (item as any).warranty || '-';
+      else if (col.id === 'foodType') val = (item as any).foodType || '-';
+      else if (col.id === 'barcode') val = (item as any).barcode || '-';
+      else if (col.id === 'jarsDue') val = (item as any).jarsDue || '-';
+      else if (col.id === 'deposit')
+        val = (item as any).deposit ? String((item as any).deposit) : '-';
+      else if (col.id === 'stylist') val = (item as any).stylist || '-';
+      else if (col.id === 'apptTime') val = (item as any).appointmentTime || '-';
+      else if (col.id === 'project') val = (item as any).project || '-';
+      else if (col.id === 'patient') val = (item as any).patient || '-';
+      else if (col.id === 'procedure') val = (item as any).procedure || '-';
+      else if (col.id === 'room') val = (item as any).room || '-';
+      else if (col.id === 'price') val = (item.unitPrice || 0).toLocaleString('en-IN');
+      else if (col.id === 'gst') val = Math.round(taxAmount).toLocaleString('en-IN');
+      else if (col.id === 'total') val = Math.round(rowTotal).toLocaleString('en-IN');
 
       if (col.label === 'ITEM DESCRIPTION') {
         pdf.text(nameLines, tx, y + 4);
@@ -459,7 +568,7 @@ export function generateInvoicePDF(
 
   const footerGap = 15;
   const iconSpace = 8;
-  
+
   // Calculate total width for centering
   let totalW = 0;
   items.forEach((item, i) => {
@@ -468,13 +577,13 @@ export function generateInvoicePDF(
   });
 
   let fx = (210 - totalW) / 2;
-  let fy = footerY + 10;
+  const fy = footerY + 10;
 
   items.forEach((item) => {
     setFont('bold', 8, primary);
     pdf.text(item.icon, fx, fy);
     const labelW = pdf.getTextWidth(item.icon);
-    
+
     setFont('normal', 8, textDark);
     pdf.text(item.text, fx + labelW + 2, fy);
     fx += labelW + 2 + pdf.getTextWidth(item.text) + footerGap;
@@ -485,7 +594,9 @@ export function generateInvoicePDF(
   const genByText = 'Generated by: roushani.vercel.app';
   const genByW = pdf.getTextWidth(genByText);
   pdf.text(genByText, 210 - margin, footerY + footerH - 7, { align: 'right' });
-  pdf.link(210 - margin - genByW, footerY + footerH - 10, genByW, 5, { url: 'https://roushani.vercel.app' });
+  pdf.link(210 - margin - genByW, footerY + footerH - 10, genByW, 5, {
+    url: 'https://roushani.vercel.app',
+  });
 
   return pdf;
 }

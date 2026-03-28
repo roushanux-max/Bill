@@ -139,13 +139,17 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
             const newSettings = JSON.parse(se.newValue) as BrandingSettings;
             setSettings(newSettings);
             applyBrandingStyles(newSettings, !!user);
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Failed to parse branding settings from storage event', e);
+          }
         }
         if (se.key === getUserKey('bill_store_info') && se.newValue) {
           try {
             const newStoreInfo = JSON.parse(se.newValue) as StoreInfo;
             setStoreInfo(newStoreInfo);
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Failed to parse store info from storage event', e);
+          }
         }
       } else {
         // Custom 'storage' event - full refresh

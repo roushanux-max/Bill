@@ -32,6 +32,7 @@ import {
   deleteProduct,
   subscribeToProducts,
 } from '@/shared/utils/storage';
+import { validateInput, ValidationRules } from '@/shared/utils/validation';
 import {
   Select,
   SelectContent,
@@ -56,6 +57,11 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'date'>('date');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string | null;
+    sellingPrice?: string | null;
+  }>({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -92,6 +98,7 @@ export default function Products() {
       gstRate: 18,
       unit: '',
     });
+    setValidationErrors({});
     setEditingProduct(null);
   };
 
@@ -119,8 +126,23 @@ export default function Products() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    let isValid = true;
+    const errors: any = {};
+
     if (!formData.name) {
-      toast.error('Please enter product name');
+      errors.name = 'Please enter product name';
+      isValid = false;
+    }
+
+    if (formData.sellingPrice <= 0) {
+      errors.sellingPrice = 'Price must be greater than 0';
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+
+    if (!isValid) {
+      toast.error('Please fix the validation errors in the form.');
       return;
     }
 
@@ -237,11 +259,21 @@ export default function Products() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      if (e.target.value.trim() === '') {
+                        setValidationErrors({ ...validationErrors, name: 'Product name is required' });
+                      } else {
+                        setValidationErrors({ ...validationErrors, name: null });
+                      }
+                    }}
                     placeholder="e.g., Iron Rack"
                     required
-                    className="text-sm"
+                    className={`text-sm ${validationErrors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   />
+                  {validationErrors.name && (
+                    <p className="text-red-500 text-[10px] mt-1 font-semibold">{validationErrors.name}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="hsnCode" className="text-sm">
@@ -263,15 +295,24 @@ export default function Products() {
                     <Input
                       id="sellingPrice"
                       type="number"
-                      value={formData.sellingPrice}
-                      onChange={(e) =>
-                        setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 })
-                      }
+                      value={formData.sellingPrice || ''}
+                      onChange={(e) => {
+                        const valFloat = parseFloat(e.target.value) || 0;
+                        setFormData({ ...formData, sellingPrice: valFloat });
+                        if (valFloat <= 0) {
+                           setValidationErrors({ ...validationErrors, sellingPrice: 'Price must be greater than 0' });
+                        } else {
+                           setValidationErrors({ ...validationErrors, sellingPrice: null });
+                        }
+                      }}
                       inputMode="decimal"
                       placeholder="0"
                       required
-                      className="text-sm"
+                      className={`text-sm ${validationErrors.sellingPrice ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                     />
+                    {validationErrors.sellingPrice && (
+                      <p className="text-red-500 text-[10px] mt-1 font-semibold">{validationErrors.sellingPrice}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gstRate" className="text-sm">

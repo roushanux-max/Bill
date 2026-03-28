@@ -97,7 +97,10 @@ export default function Dashboard() {
         return new Date(dateStr);
       };
 
-      const validInvoices = invoices.filter((inv) => (inv.grandTotal || 0) > 0);
+      // Only count invoices with a customer name AND a non-zero total
+      const validInvoices = invoices.filter(
+        (inv) => (inv.grandTotal || 0) > 0 && inv.customer?.name?.trim()
+      );
 
       const todayInvoices = validInvoices.filter((inv) => {
         const invDate = parseDateString(inv.date);
@@ -120,8 +123,12 @@ export default function Dashboard() {
         totalCustomers: customers.length,
         totalProducts: products.length,
       });
-      // Keep a short list of recent invoices for dashboard quick view
-      setRecentInvoices(invoices.slice(0, 6));
+      // Show all valid invoices in the recent list (sorted newest first)
+      setRecentInvoices(
+        [...validInvoices].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
       setIsInitialLoading(false);
 
       if (hasGuestDataToMigrate()) {
@@ -244,43 +251,75 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Recent Invoices */}
+        {/* Invoices List */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold">Recent Invoices</h3>
+            <h3 className="text-lg font-semibold">All Invoices</h3>
             <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>
-              View all
+              Manage
             </Button>
           </div>
           {isInitialLoading ? (
             <ListSkeleton count={3} />
           ) : recentInvoices.length === 0 ? (
-            <div className="text-sm text-slate-500">No invoices yet.</div>
+            <Card className="p-6 text-center border-dashed">
+              <div className="text-slate-400 mb-3">
+                <FileText className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm font-medium">No invoices yet</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Create your first invoice to see it here
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="bg-[var(--brand-color)] hover:bg-[var(--brand-color-hover)] text-white border-none"
+                onClick={() => navigate('/create-invoice')}
+              >
+                + Create Invoice
+              </Button>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 gap-2">
               {recentInvoices.map((inv) => (
-                <Card key={inv.id} className="p-3">
+                <Card
+                  key={inv.id}
+                  className="p-3 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() =>
+                    navigate(
+                      `/invoice-preview?id=${encodeURIComponent(inv.id)}&return=${encodeURIComponent('/dashboard')}`
+                    )
+                  }
+                >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">
-                        {inv.invoiceNumber} — {inv.customer?.name}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-800 text-sm">
+                          #{inv.invoiceNumber}
+                        </span>
+                        <span className="text-xs text-slate-400">—</span>
+                        <span className="font-medium text-slate-700 text-sm truncate">
+                          {inv.customer?.name}
+                        </span>
                       </div>
-                      <div className="text-xs text-slate-500">
-                        {inv.date} •{' '}
-                        {new Date(inv.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}{' '}
-                        • ₹{inv.grandTotal?.toLocaleString('en-IN')}
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {inv.date} • {inv.items?.length || 0} item
+                        {(inv.items?.length || 0) !== 1 ? 's' : ''}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-2">
+                      <span className="font-bold text-slate-900 text-sm">
+                        ₹{(inv.grandTotal || 0).toLocaleString('en-IN')}
+                      </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          navigate(`/invoice-preview?id=${encodeURIComponent(inv.id)}`)
-                        }
+                        className="h-7 px-2 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(
+                            `/invoice-preview?id=${encodeURIComponent(inv.id)}&return=${encodeURIComponent('/dashboard')}`
+                          );
+                        }}
                       >
                         View
                       </Button>
